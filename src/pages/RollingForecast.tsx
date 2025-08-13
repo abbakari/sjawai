@@ -436,7 +436,7 @@ const RollingForecast: React.FC = () => {
         }).filter(f => f.forecastTotal > 0);
 
         // Submit to workflow context
-        const workflowId = submitForApproval([], forecastData);
+        const workflowId = await submitForApproval([], forecastData);
 
         // Save original data and create submission copies
         DataPersistenceManager.saveRollingForecastData(savedForecastData);
