@@ -12,13 +12,15 @@ import UserCommunicationCenter from '../components/UserCommunicationCenter';
 import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
+import { useBudget } from '../contexts/BudgetContext';
 import { initializeCommunicationDemo } from '../utils/communicationDemo';
 
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman } = useStock();
+  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman, error: stockError, isLoading: stockLoading } = useStock();
+  const { error: budgetError, isLoading: budgetLoading } = useBudget();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
@@ -587,6 +589,24 @@ const Dashboard: React.FC = () => {
               : 'bg-red-600 text-white'
           }`}>
             {notification.message}
+          </div>
+        )}
+
+        {/* Error Display */}
+        {(stockError || budgetError) && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mx-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">System Errors</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  {stockError && <div>• {stockError}</div>}
+                  {budgetError && <div>• {budgetError}</div>}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
