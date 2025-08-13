@@ -854,6 +854,21 @@ const RollingForecast: React.FC = () => {
           <span className="text-blue-600 font-medium">Rolling Forecast</span>
         </div>
 
+        {/* Error Display */}
+        {budgetError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Budget Data Error</h3>
+                <div className="mt-2 text-sm text-red-700">{budgetError}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
