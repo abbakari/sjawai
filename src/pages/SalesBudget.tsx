@@ -1108,6 +1108,15 @@ const SalesBudget: React.FC = () => {
 
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
+              {activeView === 'item-wise' && (
+                <div className="bg-orange-50 border-l-4 border-orange-400 text-orange-800 p-3 rounded-r-lg flex items-center gap-2 mb-4">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-medium">Item-Wise Mode Active</p>
+                    <p className="text-xs text-orange-700">Customer column is hidden. Focus on item-only sales budget and forecast data.</p>
+                  </div>
+                </div>
+              )}
               {user?.role === 'salesman' ? (
                 <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
