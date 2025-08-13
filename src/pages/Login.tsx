@@ -38,9 +38,18 @@ const Login: React.FC = () => {
   ];
 
   const fillDemoCredentials = (email: string, password: string) => {
+    // Reset any loading states when filling demo credentials
+    setIsLoading(false);
     setEmail(email);
     setPassword(password);
   };
+
+  // Reset loading state if there's an error
+  useEffect(() => {
+    if (error) {
+      setIsLoading(false);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
