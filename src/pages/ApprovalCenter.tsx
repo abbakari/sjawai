@@ -91,9 +91,9 @@ const ApprovalCenter: React.FC = () => {
     approveItem,
     rejectItem,
     sendToSupplyChain,
-    addComment
+    addComment,
+    error: workflowError
   } = useWorkflow();
-  const { error: workflowError } = useWorkflow();
   
   const [selectedFilter, setSelectedFilter] = useState<WorkflowState | 'all'>('submitted');
   const [selectedType, setSelectedType] = useState<'all' | 'sales_budget' | 'rolling_forecast'>('all');
