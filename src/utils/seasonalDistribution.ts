@@ -53,38 +53,56 @@ export const SEASONAL_PATTERNS: DistributionPattern[] = [
   },
   {
     name: 'Moderate Seasonal',
-    description: 'Gentle seasonal decline',
+    description: 'Gentle holiday-aware distribution',
     distribution: {
-      'JAN': 0.105, // 10.5%
-      'FEB': 0.10, // 10%
-      'MAR': 0.095, // 9.5%
-      'APR': 0.09, // 9%
-      'MAY': 0.085, // 8.5%
-      'JUN': 0.08, // 8%
-      'JUL': 0.075, // 7.5%
-      'AUG': 0.07, // 7%
-      'SEP': 0.075, // 7.5%
-      'OCT': 0.08, // 8%
-      'NOV': 0.075, // 7.5%
-      'DEC': 0.07   // 7%
+      'JAN': 0.115, // 11.5% - Higher (New Year business)
+      'FEB': 0.105, // 10.5% - Higher (No holidays)
+      'MAR': 0.100, // 10% - Good business month
+      'APR': 0.095, // 9.5% - Spring business
+      'MAY': 0.090, // 9% - Good month
+      'JUN': 0.085, // 8.5% - Early summer
+      'JUL': 0.080, // 8% - Summer period
+      'AUG': 0.075, // 7.5% - Late summer
+      'SEP': 0.080, // 8% - Back to business
+      'OCT': 0.075, // 7.5% - Pre-holidays
+      'NOV': 0.060, // 6% - Holiday period
+      'DEC': 0.055   // 5.5% - Christmas period
     }
   },
   {
     name: 'Q1 Heavy',
-    description: 'Front-loaded for Q1, then even distribution',
+    description: 'Front-loaded for Q1 non-holiday months, minimal holiday allocation',
     distribution: {
-      'JAN': 0.15, // 15%
-      'FEB': 0.13, // 13%
-      'MAR': 0.12, // 12%
-      'APR': 0.067, // 6.7% (even for remaining 9 months)
-      'MAY': 0.067,
-      'JUN': 0.067,
-      'JUL': 0.067,
-      'AUG': 0.067,
-      'SEP': 0.067,
-      'OCT': 0.067,
-      'NOV': 0.067,
-      'DEC': 0.067
+      'JAN': 0.18, // 18% - Very high (Post-holiday surge)
+      'FEB': 0.16, // 16% - Very high (No holidays)
+      'MAR': 0.14, // 14% - High (Spring preparation)
+      'APR': 0.08, // 8% - Moderate
+      'MAY': 0.08, // 8% - Moderate
+      'JUN': 0.07, // 7% - Early summer
+      'JUL': 0.06, // 6% - Summer slowdown
+      'AUG': 0.06, // 6% - Late summer
+      'SEP': 0.07, // 7% - Back to business
+      'OCT': 0.06, // 6% - Pre-holidays
+      'NOV': 0.03, // 3% - Holiday period
+      'DEC': 0.02  // 2% - Christmas shutdown
+    }
+  },
+  {
+    name: 'Holiday Aware',
+    description: 'Maximum business focus during non-holiday periods',
+    distribution: {
+      'JAN': 0.145, // 14.5% - Peak business (Post-holiday recovery)
+      'FEB': 0.135, // 13.5% - Peak business (No holidays)
+      'MAR': 0.125, // 12.5% - High business (Spring season)
+      'APR': 0.115, // 11.5% - High business (Pre-summer)
+      'MAY': 0.105, // 10.5% - Good business month
+      'JUN': 0.090, // 9% - Early vacation impact
+      'JUL': 0.075, // 7.5% - Summer vacation period
+      'AUG': 0.070, // 7% - Late summer
+      'SEP': 0.085, // 8.5% - Back-to-business month
+      'OCT': 0.065, // 6.5% - Pre-holiday preparation
+      'NOV': 0.040, // 4% - Thanksgiving & holidays
+      'DEC': 0.030  // 3% - Christmas & New Year period
     }
   }
 ];
