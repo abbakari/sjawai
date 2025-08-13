@@ -198,9 +198,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       setNotifications(notificationData?.map(convertDatabaseToNotification) || []);
 
     } catch (err: any) {
-      const errorMessage = `Failed to load workflow data: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to load workflow data: ';
+      if (err?.message) {
+        errorMessage += err.message;
+      } else if (typeof err === 'string') {
+        errorMessage += err;
+      } else if (err?.code) {
+        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
       setError(errorMessage);
       console.error('Error loading workflow data:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }
