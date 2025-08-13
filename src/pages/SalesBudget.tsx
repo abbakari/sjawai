@@ -1143,9 +1143,9 @@ const SalesBudget: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    console.log('Switching to item-wise view');
+                    console.log('Switching to item-wise view - hiding customer column');
                     setActiveView('item-wise');
-                    showNotification('Switched to Item-Wise view', 'success');
+                    showNotification('Switched to Item-Wise view: Customer column hidden to focus on items only', 'success');
                   }}
                   className={`px-6 py-2 font-semibold transition-all duration-200 ${
                     activeView === 'item-wise'
