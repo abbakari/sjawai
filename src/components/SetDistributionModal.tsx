@@ -132,7 +132,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
       return;
     }
 
-    if (!itemQuantity && !percentageValue) {
+    if (distributionType !== 'seasonal' && !itemQuantity && !percentageValue) {
       alert('Please enter a quantity or percentage value');
       return;
     }
@@ -150,8 +150,25 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
 
       if (distributionType === 'equal') {
         distribution = distributeQuantityEqually(itemQuantity);
-      } else {
+      } else if (distributionType === 'percentage') {
         distribution = distributeByPercentage(item.budget2026, percentageValue);
+      } else if (distributionType === 'seasonal') {
+        // Use holiday-aware seasonal distribution based on existing BUD 2026 value
+        if (item.budget2026 > 0) {
+          const seasonalDistributions = applySeasonalDistribution(item.budget2026, 'Default Seasonal');
+          distribution = seasonalDistributions.map(dist => dist.value);
+        } else {
+          // If no BUD 2026 value, use input quantity with seasonal distribution
+          const quantityToDistribute = itemQuantity || 0;
+          if (quantityToDistribute > 0) {
+            const seasonalDistributions = applySeasonalDistribution(quantityToDistribute, 'Default Seasonal');
+            distribution = seasonalDistributions.map(dist => dist.value);
+          } else {
+            distribution = new Array(12).fill(0);
+          }
+        }
+      } else {
+        distribution = new Array(12).fill(0);
       }
 
       // Apply distribution to monthly data
