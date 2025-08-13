@@ -155,7 +155,15 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
 
   // Load all stock data from Supabase
   const loadStockData = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!isSupabaseConfigured()) {
+      setError('Database not configured. Please configure Supabase connection.');
+      return;
+    }
+
+    if (!user) {
+      setError('User not authenticated. Please log in to view stock data.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);

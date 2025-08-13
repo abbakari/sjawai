@@ -85,7 +85,15 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   // Load budgets from Supabase
   const loadBudgets = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!isSupabaseConfigured()) {
+      setError('Database not configured. Please configure Supabase connection.');
+      return;
+    }
+
+    if (!user) {
+      setError('User not authenticated. Please log in to view budget data.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
