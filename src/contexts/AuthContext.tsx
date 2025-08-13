@@ -152,7 +152,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             } catch (error) {
               console.error('Error parsing saved user:', error);
               localStorage.removeItem('user');
+              // Auto-login as admin for development
+              const defaultUser = MOCK_USERS['admin@example.com'];
+              setUser(defaultUser);
+              localStorage.setItem('user', JSON.stringify(defaultUser));
             }
+          } else {
+            // Auto-login as admin for development if no saved user
+            const defaultUser = MOCK_USERS['admin@example.com'];
+            setUser(defaultUser);
+            localStorage.setItem('user', JSON.stringify(defaultUser));
           }
           setIsLoading(false);
           return;
