@@ -168,7 +168,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
 
   // Load workflow data from Supabase
   const loadWorkflowData = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setWorkflowItems([]);
+      setNotifications([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setWorkflowItems([]);
+      setNotifications([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
