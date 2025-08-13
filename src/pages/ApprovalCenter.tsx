@@ -678,6 +678,21 @@ const ApprovalCenter: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Error Display */}
+        {workflowError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Workflow Data Error</h3>
+                <div className="mt-2 text-sm text-red-700">{workflowError}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Header with Department Context */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
