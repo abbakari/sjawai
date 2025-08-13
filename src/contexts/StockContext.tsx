@@ -138,89 +138,13 @@ interface StockProviderProps {
 }
 
 export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
-  const [stockRequests, setStockRequests] = useState<StockRequest[]>([
-    {
-      id: 'sr_001',
-      type: 'new_request',
-      title: 'Emergency Tyre Restock for Action Aid',
-      itemName: 'BF GOODRICH TYRE 235/85R16 120/116S TL AT/TA KO2',
-      category: 'Tyres',
-      brand: 'BF Goodrich',
-      requestedQuantity: 50,
-      currentStock: 7,
-      reason: 'Customer Action Aid needs immediate delivery, current stock insufficient',
-      customerName: 'Action Aid International (Tz)',
-      urgency: 'high',
-      status: 'sent_to_manager',
-      createdBy: 'John Salesman',
-      createdByRole: 'salesman',
-      createdAt: '2024-12-15T10:30:00Z',
-      sentToManagerAt: '2024-12-15T10:35:00Z',
-      estimatedCost: 17050,
-      supplierInfo: 'BF Goodrich Tanzania - 14 days lead time'
-    }
-  ]);
+  const [stockRequests, setStockRequests] = useState<StockRequest[]>([]);
 
-  const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([
-    {
-      id: 'sa_001',
-      itemName: 'BF GOODRICH TYRE 265/65R17 120/117S TL AT/TA KO2',
-      currentStock: 7,
-      minimumLevel: 15,
-      alertType: 'low_stock',
-      category: 'Tyres',
-      brand: 'BF Goodrich',
-      location: 'Warehouse A-2',
-      createdBy: 'John Salesman',
-      createdAt: '2024-12-15T09:00:00Z',
-      status: 'sent_to_manager',
-      priority: 'medium'
-    }
-  ]);
+  const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([]);
 
-  const [stockProjections, setStockProjections] = useState<StockProjection[]>([
-    {
-      id: 'sp_001',
-      itemName: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-      category: 'Tyres',
-      brand: 'Michelin',
-      currentStock: 127,
-      projectedDemand: 180,
-      projectionPeriod: '3_months',
-      seasonalFactor: 1.2,
-      notes: 'Expecting increased demand due to rainy season and new customer contracts',
-      createdBy: 'John Salesman',
-      createdAt: '2024-12-15T08:00:00Z',
-      status: 'draft'
-    }
-  ]);
+  const [stockProjections, setStockProjections] = useState<StockProjection[]>([]);
 
-  const [stockOverviews, setStockOverviews] = useState<StockOverview[]>([
-    {
-      id: 'so_001',
-      title: 'Weekly Stock Review - December 2024',
-      description: 'Comprehensive review of all tyre categories and customer demand patterns',
-      items: [
-        {
-          itemName: 'BF GOODRICH TYRE 235/85R16',
-          category: 'Tyres',
-          currentStock: 86,
-          status: 'good',
-          notes: 'Stable inventory level'
-        },
-        {
-          itemName: 'BF GOODRICH TYRE 265/65R17',
-          category: 'Tyres',
-          currentStock: 7,
-          status: 'critical',
-          notes: 'Below minimum level, needs immediate attention'
-        }
-      ],
-      createdBy: 'John Salesman',
-      createdAt: '2024-12-15T07:00:00Z',
-      status: 'draft'
-    }
-  ]);
+  const [stockOverviews, setStockOverviews] = useState<StockOverview[]>([]);
 
   const createStockRequest = (request: Omit<StockRequest, 'id' | 'createdAt' | 'status'>) => {
     const id = `sr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
