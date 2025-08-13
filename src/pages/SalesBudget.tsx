@@ -423,7 +423,7 @@ const SalesBudget: React.FC = () => {
 
           // Show notification about auto-distribution
           showNotification(
-            `Auto-distributed ${totalUnits} units using seasonal pattern: higher quantities in Jan-Feb, decreasing to Nov-Dec`,
+            `Auto-distributed ${totalUnits} units using holiday-aware pattern: higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
             'success'
           );
         } else {
