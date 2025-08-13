@@ -1933,16 +1933,23 @@ const SalesBudget: React.FC = () => {
                                         </button>
                                         <button
                                           onClick={() => {
-                                            const seasonalMultipliers = [0.8, 0.8, 0.9, 0.9, 1.0, 1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4];
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || 0;
-                                            const baseValue = totalBudget / 12;
-                                            setEditingMonthlyData(prev => ({
-                                              ...prev,
-                                              [row.id]: prev[row.id]?.map((month, index) => ({
-                                                ...month,
-                                                budgetValue: Math.round(baseValue * seasonalMultipliers[index])
-                                              })) || []
-                                            }));
+                                            if (totalBudget > 0) {
+                                              // Use holiday-aware seasonal distribution
+                                              const seasonalDistributions = applySeasonalDistribution(totalBudget, 'Default Seasonal');
+                                              setEditingMonthlyData(prev => ({
+                                                ...prev,
+                                                [row.id]: prev[row.id]?.map((month, index) => ({
+                                                  ...month,
+                                                  budgetValue: seasonalDistributions[index]?.value || 0
+                                                })) || []
+                                              }));
+                                              // Show notification about holiday-aware distribution
+                                              showNotification(
+                                                `Applied holiday-aware seasonal growth: Higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
+                                                'success'
+                                              );
+                                            }
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
                                         >
