@@ -33,7 +33,7 @@ export const TABLES = {
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return supabaseUrl !== 'YOUR_SUPABASE_URL' && supabaseAnonKey !== 'YOUR_SUPABASE_ANON_KEY'
+  return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
 }
 
 // Helper function for error handling
