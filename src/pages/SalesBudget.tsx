@@ -67,7 +67,7 @@ interface SalesBudgetItem {
 
 const SalesBudget: React.FC = () => {
   const { user } = useAuth();
-  const { addYearlyBudget, yearlyBudgets } = useBudget();
+  const { addYearlyBudget, yearlyBudgets, error: budgetError } = useBudget();
   const { submitForApproval, getNotificationsForUser } = useWorkflow();
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
