@@ -85,7 +85,17 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   // Load budgets from Supabase
   const loadBudgets = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setYearlyBudgets([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setYearlyBudgets([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
