@@ -2095,6 +2095,12 @@ const RollingForecast: React.FC = () => {
           onClose={() => setIsStockManagementModalOpen(false)}
         />
       )}
+
+      {/* Seasonal Growth Information Modal */}
+      <SeasonalDistributionInfo
+        isOpen={isSeasonalGrowthModalOpen}
+        onClose={() => setIsSeasonalGrowthModalOpen(false)}
+      />
     </Layout>
   );
 };
