@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { YearlyBudgetData } from './BudgetContext';
+import { supabase, isSupabaseConfigured, handleSupabaseError, TABLES } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 export type WorkflowState = 'draft' | 'submitted' | 'in_review' | 'approved' | 'rejected' | 'sent_to_supply_chain';
 export type WorkflowType = 'sales_budget' | 'rolling_forecast';
@@ -74,17 +76,20 @@ export interface WorkflowItem {
 export interface WorkflowContextType {
   workflowItems: WorkflowItem[];
   notifications: WorkflowNotification[];
-  submitForApproval: (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]) => string;
-  approveItem: (itemId: string, comment: string, managerId: string) => void;
-  rejectItem: (itemId: string, comment: string, managerId: string) => void;
-  addComment: (itemId: string, comment: string, userId: string, userRole: string, isFollowBack?: boolean) => void;
-  sendToSupplyChain: (itemId: string, managerId: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  submitForApproval: (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]) => Promise<string>;
+  approveItem: (itemId: string, comment: string, managerId: string) => Promise<void>;
+  rejectItem: (itemId: string, comment: string, managerId: string) => Promise<void>;
+  addComment: (itemId: string, comment: string, userId: string, userRole: string, isFollowBack?: boolean) => Promise<void>;
+  sendToSupplyChain: (itemId: string, managerId: string) => Promise<void>;
   getItemsByState: (state: WorkflowState) => WorkflowItem[];
   getItemsBySalesman: (salesmanName: string) => WorkflowItem[];
   getItemsByYear: (year: string) => WorkflowItem[];
   getNotificationsForUser: (userId: string, role: string) => WorkflowNotification[];
-  markNotificationAsRead: (notificationId: string) => void;
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
   getItemDetails: (itemId: string) => WorkflowItem | undefined;
+  refreshWorkflowData: () => Promise<void>;
 }
 
 const WorkflowContext = createContext<WorkflowContextType | undefined>(undefined);
@@ -103,243 +108,452 @@ interface WorkflowProviderProps {
 
 export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) => {
   const [workflowItems, setWorkflowItems] = useState<WorkflowItem[]>([]);
-
   const [notifications, setNotifications] = useState<WorkflowNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const generateYears = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let year = 2021; year <= currentYear + 1; year++) {
-      years.push(year.toString());
-    }
-    return years;
+  // Convert database row to WorkflowItem
+  const convertDatabaseToWorkflowItem = (row: any): WorkflowItem => {
+    const comments = row.workflow_comments?.map((comment: any) => ({
+      id: comment.id,
+      author: comment.author,
+      authorRole: comment.author_role,
+      message: comment.message,
+      timestamp: comment.created_at,
+      type: comment.type,
+      isFollowBack: comment.is_follow_back
+    })) || [];
+
+    return {
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      description: row.description,
+      createdBy: row.created_by,
+      createdByRole: row.created_by_role,
+      currentState: row.current_state,
+      submittedAt: row.submitted_at,
+      reviewedAt: row.reviewed_at,
+      reviewedBy: row.reviewed_by,
+      approvedBy: row.approved_by,
+      approvedAt: row.approved_at,
+      rejectedBy: row.rejected_by,
+      rejectedAt: row.rejected_at,
+      sentToSupplyChainAt: row.sent_to_supply_chain_at,
+      comments,
+      budgetData: row.budget_data || [],
+      forecastData: row.forecast_data || [],
+      customers: row.customers || [],
+      totalValue: parseFloat(row.total_value) || 0,
+      year: row.year,
+      priority: row.priority
+    };
   };
 
-  const submitForApproval = (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]) => {
-    const id = `wf_${Date.now()}`;
+  // Convert database row to WorkflowNotification
+  const convertDatabaseToNotification = (row: any): WorkflowNotification => ({
+    id: row.id,
+    recipientId: row.recipient_id,
+    recipientRole: row.recipient_role,
+    fromUser: row.from_user,
+    fromRole: row.from_role,
+    title: row.title,
+    message: row.message,
+    workflowItemId: row.workflow_item_id,
+    type: row.type,
+    timestamp: row.created_at,
+    read: row.is_read
+  });
+
+  // Load workflow data from Supabase
+  const loadWorkflowData = async () => {
+    if (!isSupabaseConfigured() || !user) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Load workflow items with comments
+      const { data: workflowData, error: workflowError } = await supabase
+        .from(TABLES.WORKFLOW_ITEMS)
+        .select(`
+          *,
+          workflow_comments (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (workflowError) throw workflowError;
+
+      // Load notifications
+      const { data: notificationData, error: notificationError } = await supabase
+        .from(TABLES.WORKFLOW_NOTIFICATIONS)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (notificationError) throw notificationError;
+
+      // Convert and set data
+      setWorkflowItems(workflowData?.map(convertDatabaseToWorkflowItem) || []);
+      setNotifications(notificationData?.map(convertDatabaseToNotification) || []);
+
+    } catch (err: any) {
+      const errorMessage = `Failed to load workflow data: ${err.message}`;
+      setError(errorMessage);
+      console.error('Error loading workflow data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load data when user changes
+  useEffect(() => {
+    if (user) {
+      loadWorkflowData();
+    } else {
+      setWorkflowItems([]);
+      setNotifications([]);
+    }
+  }, [user]);
+
+  const submitForApproval = async (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]): Promise<string> => {
+    if (!user) throw new Error('User must be logged in');
+
     const year = budgetData[0]?.year || new Date().getFullYear().toString();
     const customers = [...new Set([...budgetData.map(b => b.customer), ...(forecastData?.map(f => f.customer) || [])])];
     const totalValue = budgetData.reduce((sum, b) => sum + b.totalBudget, 0) +
                       (forecastData?.reduce((sum, f) => sum + f.forecastValue, 0) || 0);
 
-    const newItem: WorkflowItem = {
-      id,
-      type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
-      title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
-      description: `Submitted for manager approval - Original data preserved in tables for other purposes`,
-      createdBy: budgetData[0]?.createdBy || 'Unknown',
-      createdByRole: 'salesman',
-      currentState: 'submitted',
-      submittedAt: new Date().toISOString(),
-      customers,
-      totalValue,
-      year,
-      priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
-      comments: [
-        {
+    if (!isSupabaseConfigured()) {
+      // Fallback for development
+      const id = `wf_${Date.now()}`;
+      const newItem: WorkflowItem = {
+        id,
+        type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
+        title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
+        description: `Submitted for manager approval`,
+        createdBy: budgetData[0]?.createdBy || 'Unknown',
+        createdByRole: 'salesman',
+        currentState: 'submitted',
+        submittedAt: new Date().toISOString(),
+        customers,
+        totalValue,
+        year,
+        priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
+        comments: [{
           id: `c_${Date.now()}`,
           author: budgetData[0]?.createdBy || 'System',
           authorRole: 'salesman',
-          message: 'Data submitted for approval. Original data remains available in sales budget and rolling forecast tables for continued use and other purposes.',
+          message: 'Data submitted for approval.',
           timestamp: new Date().toISOString(),
           type: 'comment'
+        }],
+        budgetData,
+        forecastData
+      };
+
+      setWorkflowItems(prev => [...prev, newItem]);
+      return id;
+    }
+
+    try {
+      // Insert workflow item
+      const { data: workflowData, error: workflowError } = await supabase
+        .from(TABLES.WORKFLOW_ITEMS)
+        .insert({
+          type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
+          title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
+          description: `Submitted for manager approval`,
+          created_by: user.id,
+          created_by_role: 'salesman',
+          current_state: 'submitted',
+          submitted_at: new Date().toISOString(),
+          customers,
+          total_value: totalValue,
+          year,
+          priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
+          budget_data: budgetData,
+          forecast_data: forecastData
+        })
+        .select()
+        .single();
+
+      if (workflowError) throw workflowError;
+
+      // Add initial comment
+      await supabase
+        .from(TABLES.WORKFLOW_COMMENTS)
+        .insert({
+          workflow_item_id: workflowData.id,
+          author: user.id,
+          author_role: 'salesman',
+          message: 'Data submitted for approval.',
+          type: 'comment'
+        });
+
+      await loadWorkflowData();
+      return workflowData.id;
+
+    } catch (err: any) {
+      handleSupabaseError(err, 'submit for approval');
+      throw err;
+    }
+  };
+
+  const approveItem = async (itemId: string, comment: string, managerId: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      // Fallback for development
+      setWorkflowItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const approvalComment: WorkflowComment = {
+            id: `c_${Date.now()}`,
+            author: managerId,
+            authorRole: 'manager',
+            message: comment,
+            timestamp: new Date().toISOString(),
+            type: 'approval'
+          };
+
+          return {
+            ...item,
+            currentState: 'approved' as WorkflowState,
+            approvedBy: managerId,
+            approvedAt: new Date().toISOString(),
+            comments: [...item.comments, approvalComment]
+          };
         }
-      ],
-      budgetData,
-      forecastData
-    };
+        return item;
+      }));
+      return;
+    }
 
-    setWorkflowItems(prev => [...prev, newItem]);
+    try {
+      // Update workflow item
+      const { error: updateError } = await supabase
+        .from(TABLES.WORKFLOW_ITEMS)
+        .update({
+          current_state: 'approved',
+          approved_by: user?.id || managerId,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', itemId);
 
-    console.log(`Workflow ${id} created. Original data preserved in tables for other purposes.`);
-    return id;
-  };
+      if (updateError) throw updateError;
 
-  const approveItem = (itemId: string, comment: string, managerId: string) => {
-    setWorkflowItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const approvalComment: WorkflowComment = {
-          id: `c_${Date.now()}`,
-          author: managerId,
-          authorRole: 'manager',
+      // Add approval comment
+      await supabase
+        .from(TABLES.WORKFLOW_COMMENTS)
+        .insert({
+          workflow_item_id: itemId,
+          author: user?.id || managerId,
+          author_role: 'manager',
           message: comment,
-          timestamp: new Date().toISOString(),
           type: 'approval'
-        };
+        });
 
-        // Create notification for salesman
-        const notification: WorkflowNotification = {
-          id: `n_${Date.now()}`,
-          recipientId: item.createdBy,
-          recipientRole: 'salesman',
-          fromUser: managerId,
-          fromRole: 'manager',
-          title: `Your ${item.type.replace('_', ' ')} has been approved`,
-          message: `${comment} Note: Your original data remains available in the tables for continued use.`,
-          workflowItemId: itemId,
-          type: 'approval',
-          timestamp: new Date().toISOString(),
-          read: false
-        };
+      // Create notification (if needed)
+      // Implementation depends on notification requirements
 
-        setNotifications(prev => [...prev, notification]);
+      await loadWorkflowData();
 
-        return {
-          ...item,
-          currentState: 'approved' as WorkflowState,
-          approvedBy: managerId,
-          approvedAt: new Date().toISOString(),
-          comments: [...item.comments, approvalComment]
-        };
-      }
-      return item;
-    }));
+    } catch (err: any) {
+      handleSupabaseError(err, 'approve item');
+      throw err;
+    }
   };
 
-  const rejectItem = (itemId: string, comment: string, managerId: string) => {
-    setWorkflowItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const rejectionComment: WorkflowComment = {
-          id: `c_${Date.now()}`,
-          author: managerId,
-          authorRole: 'manager',
+  const rejectItem = async (itemId: string, comment: string, managerId: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      // Fallback for development
+      setWorkflowItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const rejectionComment: WorkflowComment = {
+            id: `c_${Date.now()}`,
+            author: managerId,
+            authorRole: 'manager',
+            message: comment,
+            timestamp: new Date().toISOString(),
+            type: 'rejection'
+          };
+
+          return {
+            ...item,
+            currentState: 'rejected' as WorkflowState,
+            rejectedBy: managerId,
+            rejectedAt: new Date().toISOString(),
+            comments: [...item.comments, rejectionComment]
+          };
+        }
+        return item;
+      }));
+      return;
+    }
+
+    try {
+      // Update workflow item
+      const { error: updateError } = await supabase
+        .from(TABLES.WORKFLOW_ITEMS)
+        .update({
+          current_state: 'rejected',
+          rejected_by: user?.id || managerId,
+          rejected_at: new Date().toISOString()
+        })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+
+      // Add rejection comment
+      await supabase
+        .from(TABLES.WORKFLOW_COMMENTS)
+        .insert({
+          workflow_item_id: itemId,
+          author: user?.id || managerId,
+          author_role: 'manager',
           message: comment,
-          timestamp: new Date().toISOString(),
           type: 'rejection'
-        };
+        });
 
-        // Create notification for salesman
-        const notification: WorkflowNotification = {
-          id: `n_${Date.now()}`,
-          recipientId: item.createdBy,
-          recipientRole: 'salesman',
-          fromUser: managerId,
-          fromRole: 'manager',
-          title: `Your ${item.type.replace('_', ' ')} has been rejected`,
-          message: `${comment} Your original data remains available in the tables for revision and resubmission.`,
-          workflowItemId: itemId,
-          type: 'rejection',
-          timestamp: new Date().toISOString(),
-          read: false
-        };
+      await loadWorkflowData();
 
-        setNotifications(prev => [...prev, notification]);
-
-        return {
-          ...item,
-          currentState: 'rejected' as WorkflowState,
-          rejectedBy: managerId,
-          rejectedAt: new Date().toISOString(),
-          comments: [...item.comments, rejectionComment]
-        };
-      }
-      return item;
-    }));
+    } catch (err: any) {
+      handleSupabaseError(err, 'reject item');
+      throw err;
+    }
   };
 
-  const addComment = (itemId: string, comment: string, userId: string, userRole: string, isFollowBack?: boolean) => {
-    setWorkflowItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const newComment: WorkflowComment = {
-          id: `c_${Date.now()}`,
-          author: userId,
-          authorRole: userRole,
+  const addComment = async (itemId: string, comment: string, userId: string, userRole: string, isFollowBack?: boolean): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      // Fallback for development
+      setWorkflowItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const newComment: WorkflowComment = {
+            id: `c_${Date.now()}`,
+            author: userId,
+            authorRole: userRole,
+            message: comment,
+            timestamp: new Date().toISOString(),
+            type: 'comment',
+            isFollowBack
+          };
+
+          return {
+            ...item,
+            comments: [...item.comments, newComment]
+          };
+        }
+        return item;
+      }));
+      return;
+    }
+
+    try {
+      await supabase
+        .from(TABLES.WORKFLOW_COMMENTS)
+        .insert({
+          workflow_item_id: itemId,
+          author: user?.id || userId,
+          author_role: userRole,
           message: comment,
-          timestamp: new Date().toISOString(),
           type: 'comment',
-          isFollowBack
-        };
+          is_follow_back: isFollowBack || false
+        });
 
-        // Create notification for the other party
-        const recipientRole = userRole === 'salesman' ? 'manager' : 'salesman';
-        const recipientId = userRole === 'salesman' ? (item.approvedBy || item.rejectedBy || 'Manager') : item.createdBy;
+      await loadWorkflowData();
 
-        const notification: WorkflowNotification = {
-          id: `n_${Date.now()}`,
-          recipientId: recipientId!,
-          recipientRole,
-          fromUser: userId,
-          fromRole: userRole,
-          title: `New ${isFollowBack ? 'follow-back' : 'comment'} on ${item.title}`,
-          message: comment,
-          workflowItemId: itemId,
-          type: isFollowBack ? 'follow_back' : 'comment',
-          timestamp: new Date().toISOString(),
-          read: false
-        };
-
-        setNotifications(prev => [...prev, notification]);
-
-        return {
-          ...item,
-          comments: [...item.comments, newComment]
-        };
-      }
-      return item;
-    }));
+    } catch (err: any) {
+      handleSupabaseError(err, 'add comment');
+      throw err;
+    }
   };
 
-  const sendToSupplyChain = (itemId: string, managerId: string) => {
-    setWorkflowItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        // Create notification for supply chain
-        const notification: WorkflowNotification = {
-          id: `n_${Date.now()}`,
-          recipientId: 'Supply Chain Team',
-          recipientRole: 'supply_chain',
-          fromUser: managerId,
-          fromRole: 'manager',
-          title: `New approved item for supply chain processing`,
-          message: `Approved ${item.type.replace('_', ' ')}: ${item.title}`,
-          workflowItemId: itemId,
-          type: 'supply_chain_request',
-          timestamp: new Date().toISOString(),
-          read: false
-        };
+  const sendToSupplyChain = async (itemId: string, managerId: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      // Fallback for development
+      setWorkflowItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          return {
+            ...item,
+            currentState: 'sent_to_supply_chain' as WorkflowState,
+            sentToSupplyChainAt: new Date().toISOString()
+          };
+        }
+        return item;
+      }));
+      return;
+    }
 
-        setNotifications(prev => [...prev, notification]);
+    try {
+      const { error } = await supabase
+        .from(TABLES.WORKFLOW_ITEMS)
+        .update({
+          current_state: 'sent_to_supply_chain',
+          sent_to_supply_chain_at: new Date().toISOString()
+        })
+        .eq('id', itemId);
 
-        return {
-          ...item,
-          currentState: 'sent_to_supply_chain' as WorkflowState,
-          sentToSupplyChainAt: new Date().toISOString()
-        };
-      }
-      return item;
-    }));
+      if (error) throw error;
+      await loadWorkflowData();
+
+    } catch (err: any) {
+      handleSupabaseError(err, 'send to supply chain');
+      throw err;
+    }
   };
 
-  const getItemsByState = (state: WorkflowState) => {
+  const getItemsByState = (state: WorkflowState): WorkflowItem[] => {
     return workflowItems.filter(item => item.currentState === state);
   };
 
-  const getItemsBySalesman = (salesmanName: string) => {
+  const getItemsBySalesman = (salesmanName: string): WorkflowItem[] => {
     return workflowItems.filter(item => item.createdBy === salesmanName);
   };
 
-  const getItemsByYear = (year: string) => {
+  const getItemsByYear = (year: string): WorkflowItem[] => {
     return workflowItems.filter(item => item.year === year);
   };
 
-  const getNotificationsForUser = (userId: string, role: string) => {
+  const getNotificationsForUser = (userId: string, role: string): WorkflowNotification[] => {
     return notifications.filter(notification => 
       notification.recipientId === userId || notification.recipientRole === role
     ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
 
-  const markNotificationAsRead = (notificationId: string) => {
-    setNotifications(prev => prev.map(notification =>
-      notification.id === notificationId ? { ...notification, read: true } : notification
-    ));
+  const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      setNotifications(prev => prev.map(notification =>
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      ));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from(TABLES.WORKFLOW_NOTIFICATIONS)
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+      await loadWorkflowData();
+
+    } catch (err: any) {
+      handleSupabaseError(err, 'mark notification as read');
+      throw err;
+    }
   };
 
-  const getItemDetails = (itemId: string) => {
+  const getItemDetails = (itemId: string): WorkflowItem | undefined => {
     return workflowItems.find(item => item.id === itemId);
+  };
+
+  const refreshWorkflowData = async (): Promise<void> => {
+    await loadWorkflowData();
   };
 
   const value: WorkflowContextType = {
     workflowItems,
     notifications,
+    isLoading,
+    error,
     submitForApproval,
     approveItem,
     rejectItem,
@@ -350,7 +564,8 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
     getItemsByYear,
     getNotificationsForUser,
     markNotificationAsRead,
-    getItemDetails
+    getItemDetails,
+    refreshWorkflowData
   };
 
   return (
