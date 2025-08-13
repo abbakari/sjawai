@@ -468,6 +468,21 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
             </div>
           )}
 
+          {distributionType === 'seasonal' && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-5 h-5 text-orange-600" />
+                <h3 className="font-medium text-orange-900">Holiday-Aware Seasonal Distribution</h3>
+              </div>
+              <div className="text-sm text-orange-800 space-y-1">
+                <p>• Uses existing BUD 2026 values for each item</p>
+                <p>• Higher allocation: Jan (13.5%), Feb (12.5%), Mar (11.5%), Apr (11%)</p>
+                <p>• Lower allocation: Nov (4.5%), Dec (3.5%) due to holidays</p>
+                <p>• Automatically accounts for business productivity during holiday periods</p>
+              </div>
+            </div>
+          )}
+
           {/* Summary */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="text-sm">
