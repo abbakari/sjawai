@@ -1634,31 +1634,29 @@ const SalesBudget: React.FC = () => {
                               </>
                             ) : (
                               <>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.item}>
-                                    <div className="font-medium text-gray-900 truncate">
-                                      {row.item}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {row.category} - {row.brand}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
+                                <td className="p-2 border-b border-r border-gray-200 text-xs" style={{maxWidth: '350px'}}>
                                   <div className="flex items-center justify-between">
-                                    <div
-                                      className={`truncate ${
-                                        user?.role === 'manager'
-                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                          : ''
-                                      }`}
-                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                                      onClick={() => handleCustomerClick(row.customer)}
-                                    >
-                                      {row.customer}
-                                      {user?.role === 'manager' && (
-                                        <span className="ml-1 text-blue-500">👑</span>
-                                      )}
+                                    <div className="truncate" title={row.item}>
+                                      <div className="font-medium text-gray-900 truncate">
+                                        {row.item}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {row.category} - {row.brand}
+                                      </div>
+                                      <div
+                                        className={`text-xs truncate mt-1 ${
+                                          user?.role === 'manager'
+                                            ? 'cursor-pointer hover:text-blue-600 hover:underline text-blue-600'
+                                            : 'text-blue-600'
+                                        }`}
+                                        title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                        onClick={() => handleCustomerClick(row.customer)}
+                                      >
+                                        Customer: {row.customer}
+                                        {user?.role === 'manager' && (
+                                          <span className="ml-1 text-blue-500">👑</span>
+                                        )}
+                                      </div>
                                     </div>
                                     {user?.role === 'manager' && (
                                       <button
@@ -1667,7 +1665,7 @@ const SalesBudget: React.FC = () => {
                                           setSelectedRowForViewOnly(row);
                                           setIsViewOnlyModalOpen(true);
                                         }}
-                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0"
                                         title="View monthly distribution"
                                       >
                                         +
@@ -1675,6 +1673,7 @@ const SalesBudget: React.FC = () => {
                                     )}
                                   </div>
                                 </td>
+                                {/* Customer column hidden in item-wise mode */}
                               </>
                             )}
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
