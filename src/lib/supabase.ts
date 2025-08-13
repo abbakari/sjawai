@@ -39,10 +39,8 @@ export const TABLES = {
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  // Return false to force fallback mode for demo
-  // Change this to return true when you have properly configured Supabase Auth users
-  return false;
-  // return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
+  // Enable Supabase database operations
+  return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
 }
 
 // Helper function for error handling
