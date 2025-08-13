@@ -203,7 +203,7 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
       setStockOverviews(overviewsData?.map(convertDatabaseToStockOverview) || []);
 
     } catch (err: any) {
-      const errorMessage = `Failed to load stock data: ${err.message}`;
+      const errorMessage = `Failed to load stock data: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       console.error('Error loading stock data:', err);
     } finally {
