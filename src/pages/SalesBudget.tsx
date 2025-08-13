@@ -396,10 +396,41 @@ const SalesBudget: React.FC = () => {
   const handleEditMonthlyData = (rowId: number) => {
     const row = tableData.find(item => item.id === rowId);
     if (row) {
+      // If user has manually entered a BUD 2025 value, auto-distribute it first
+      if (row.budget2025 > 0 && (!row.monthlyData || row.monthlyData.every(m => m.budgetValue === 0))) {
+        // Calculate units from budget2025 and rate
+        const totalUnits = Math.floor(row.budget2025 / (row.rate || 1));
+        if (totalUnits > 0) {
+          const seasonalDistributions = applySeasonalDistribution(totalUnits, 'Default Seasonal');
+          const distributedMonthlyData = convertToMonthlyBudget(
+            seasonalDistributions,
+            row.rate,
+            row.stock,
+            row.git
+          );
+
+          // Update the row with distributed data before editing
+          setTableData(prev => prev.map(item =>
+            item.id === rowId ? {
+              ...item,
+              monthlyData: distributedMonthlyData
+            } : item
+          ));
+
+          setEditingMonthlyData({
+            [rowId]: distributedMonthlyData
+          });
+        } else {
+          setEditingMonthlyData({
+            [rowId]: [...row.monthlyData]
+          });
+        }
+      } else {
+        setEditingMonthlyData({
+          [rowId]: [...row.monthlyData]
+        });
+      }
       setEditingRowId(rowId);
-      setEditingMonthlyData({
-        [rowId]: [...row.monthlyData]
-      });
     }
   };
 
