@@ -110,7 +110,20 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
       setYearlyBudgets(budgets);
     } catch (err: any) {
-      const errorMessage = `Failed to load budgets: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to load budgets';
+
+      if (err?.message) {
+        errorMessage += `: ${err.message}`;
+      } else if (err?.code) {
+        errorMessage += `: ${err.code}`;
+      } else if (typeof err === 'string') {
+        errorMessage += `: ${err}`;
+      } else if (err) {
+        errorMessage += `: ${JSON.stringify(err, null, 2)}`;
+      } else {
+        errorMessage += ': Unknown error';
+      }
+
       setError(errorMessage);
       console.error('Error loading budgets:', err);
     } finally {
