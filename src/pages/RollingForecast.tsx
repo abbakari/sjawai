@@ -893,6 +893,19 @@ const RollingForecast: React.FC = () => {
           </div>
         </div>
 
+        {/* Item Wise Mode Info */}
+        {activeView === 'item-wise' && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 text-orange-800 p-3 rounded-r-lg flex items-center gap-2 mb-4">
+            <div className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 text-xs font-bold">i</span>
+            </div>
+            <div>
+              <p className="font-medium">Item-Wise Mode Active</p>
+              <p className="text-xs text-orange-700">Customer column is hidden. Focus on item-only rolling forecast data.</p>
+            </div>
+          </div>
+        )}
+
         {/* Top Bar Metrics */}
         <div className="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
