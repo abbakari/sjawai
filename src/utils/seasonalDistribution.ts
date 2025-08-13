@@ -17,20 +17,20 @@ export interface DistributionPattern {
 export const SEASONAL_PATTERNS: DistributionPattern[] = [
   {
     name: 'Default Seasonal',
-    description: 'Higher quantities in Jan-Feb, decreasing to Nov-Dec',
+    description: 'Higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)',
     distribution: {
-      'JAN': 0.12, // 12% - Highest
-      'FEB': 0.11, // 11% - Second highest
-      'MAR': 0.10, // 10%
-      'APR': 0.095, // 9.5%
-      'MAY': 0.09, // 9%
-      'JUN': 0.085, // 8.5%
-      'JUL': 0.08, // 8%
-      'AUG': 0.075, // 7.5%
-      'SEP': 0.07, // 7%
-      'OCT': 0.065, // 6.5%
-      'NOV': 0.06, // 6% - Second lowest
-      'DEC': 0.055  // 5.5% - Lowest
+      'JAN': 0.135, // 13.5% - Highest (New Year recovery, no major holidays)
+      'FEB': 0.125, // 12.5% - High (No major holidays)
+      'MAR': 0.115, // 11.5% - High (No major holidays)
+      'APR': 0.110, // 11% - High (Easter varies, generally business-focused)
+      'MAY': 0.095, // 9.5% - Good business month
+      'JUN': 0.085, // 8.5% - Some vacation season starts
+      'JUL': 0.080, // 8% - Summer vacation period
+      'AUG': 0.075, // 7.5% - Late summer, back-to-business
+      'SEP': 0.080, // 8% - Back to business after summer
+      'OCT': 0.070, // 7% - Pre-holiday preparation
+      'NOV': 0.045, // 4.5% - Many holidays (Thanksgiving, etc.)
+      'DEC': 0.035  // 3.5% - Lowest (Christmas, New Year holidays)
     }
   },
   {
