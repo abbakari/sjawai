@@ -205,7 +205,20 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       return budgetData.id;
 
     } catch (err: any) {
-      const errorMessage = `Failed to create budget: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to create budget';
+
+      if (err?.message) {
+        errorMessage += `: ${err.message}`;
+      } else if (err?.code) {
+        errorMessage += `: ${err.code}`;
+      } else if (typeof err === 'string') {
+        errorMessage += `: ${err}`;
+      } else if (err) {
+        errorMessage += `: ${JSON.stringify(err, null, 2)}`;
+      } else {
+        errorMessage += ': Unknown error';
+      }
+
       setError(errorMessage);
       handleSupabaseError(err, 'create budget');
       throw new Error(errorMessage);
@@ -283,7 +296,20 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       await loadBudgets();
 
     } catch (err: any) {
-      const errorMessage = `Failed to update budget: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to update budget';
+
+      if (err?.message) {
+        errorMessage += `: ${err.message}`;
+      } else if (err?.code) {
+        errorMessage += `: ${err.code}`;
+      } else if (typeof err === 'string') {
+        errorMessage += `: ${err}`;
+      } else if (err) {
+        errorMessage += `: ${JSON.stringify(err, null, 2)}`;
+      } else {
+        errorMessage += ': Unknown error';
+      }
+
       setError(errorMessage);
       handleSupabaseError(err, 'update budget');
       throw new Error(errorMessage);
@@ -318,7 +344,20 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setYearlyBudgets(prev => prev.filter(b => b.id !== id));
 
     } catch (err: any) {
-      const errorMessage = `Failed to delete budget: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to delete budget';
+
+      if (err?.message) {
+        errorMessage += `: ${err.message}`;
+      } else if (err?.code) {
+        errorMessage += `: ${err.code}`;
+      } else if (typeof err === 'string') {
+        errorMessage += `: ${err}`;
+      } else if (err) {
+        errorMessage += `: ${JSON.stringify(err, null, 2)}`;
+      } else {
+        errorMessage += ': Unknown error';
+      }
+
       setError(errorMessage);
       handleSupabaseError(err, 'delete budget');
       throw new Error(errorMessage);
