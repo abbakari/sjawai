@@ -26,53 +26,54 @@ export const getDashboardStats = (user: User | null): DashboardStats => {
     };
   }
 
+  // Return minimal stats since data is now empty
   switch (user.role) {
     case 'admin':
       return {
-        totalBudget: 2500000,
-        totalSales: 2400000,
-        totalForecast: 2600000,
-        totalUnits: 15000,
-        budgetUtilization: 87,
-        salesGrowth: 18.2,
-        forecastAccuracy: 94.5,
-        activeUsers: 24
+        totalBudget: 0,
+        totalSales: 0,
+        totalForecast: 0,
+        totalUnits: 0,
+        budgetUtilization: 0,
+        salesGrowth: 0,
+        forecastAccuracy: 0,
+        activeUsers: 4
       };
 
     case 'salesman':
       return {
-        totalBudget: 156000,
-        totalSales: 145000,
-        totalForecast: 165000,
-        totalUnits: 850,
-        budgetUtilization: 92.9,
-        salesGrowth: 12.5,
-        forecastAccuracy: 94.0,
+        totalBudget: 0,
+        totalSales: 0,
+        totalForecast: 0,
+        totalUnits: 0,
+        budgetUtilization: 0,
+        salesGrowth: 0,
+        forecastAccuracy: 0,
         activeUsers: 1
       };
 
     case 'manager':
       return {
-        totalBudget: 850000,
-        totalSales: 780000,
-        totalForecast: 900000,
-        totalUnits: 4200,
-        budgetUtilization: 91.8,
-        salesGrowth: 15.0,
-        forecastAccuracy: 96.2,
-        activeUsers: 8
+        totalBudget: 0,
+        totalSales: 0,
+        totalForecast: 0,
+        totalUnits: 0,
+        budgetUtilization: 0,
+        salesGrowth: 0,
+        forecastAccuracy: 0,
+        activeUsers: 1
       };
 
     case 'supply_chain':
       return {
-        totalBudget: 1200000,
-        totalSales: 1100000,
-        totalForecast: 1250000,
-        totalUnits: 6800,
-        budgetUtilization: 91.7,
-        salesGrowth: 8.5,
-        forecastAccuracy: 97.8,
-        activeUsers: 6
+        totalBudget: 0,
+        totalSales: 0,
+        totalForecast: 0,
+        totalUnits: 0,
+        budgetUtilization: 0,
+        salesGrowth: 0,
+        forecastAccuracy: 0,
+        activeUsers: 1
       };
 
     default:
