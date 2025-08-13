@@ -96,34 +96,34 @@ export const getRoleSpecificStats = (user: User | null) => {
   switch (user.role) {
     case 'admin':
       return {
-        systemUsers: 24,
-        totalDepartments: 8,
+        systemUsers: 4,
+        totalDepartments: 4,
         systemUptime: 99.2,
-        globalTargets: 15
+        globalTargets: 0
       };
 
     case 'salesman':
       return {
-        personalTarget: 87,
-        remainingBudget: 45000,
-        customerCount: 12,
-        forecastAccuracy: 94
+        personalTarget: 0,
+        remainingBudget: 0,
+        customerCount: 0,
+        forecastAccuracy: 0
       };
 
     case 'manager':
       return {
-        teamSize: 8,
-        departmentBudget: 245000,
-        activeForecasts: 18,
-        teamPerformance: 91
+        teamSize: 0,
+        departmentBudget: 0,
+        activeForecasts: 0,
+        teamPerformance: 0
       };
 
     case 'supply_chain':
       return {
-        inventoryValue: 1200000,
-        stockAccuracy: 98.5,
-        ordersProcessed: 1247,
-        lowStockItems: 23
+        inventoryValue: 0,
+        stockAccuracy: 0,
+        ordersProcessed: 0,
+        lowStockItems: 0
       };
 
     default:
