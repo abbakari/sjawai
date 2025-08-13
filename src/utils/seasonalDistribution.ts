@@ -35,20 +35,20 @@ export const SEASONAL_PATTERNS: DistributionPattern[] = [
   },
   {
     name: 'Strong Seasonal',
-    description: 'More pronounced seasonal effect',
+    description: 'Very pronounced holiday-aware distribution',
     distribution: {
-      'JAN': 0.15, // 15% - Much higher
-      'FEB': 0.13, // 13%
-      'MAR': 0.11, // 11%
-      'APR': 0.10, // 10%
-      'MAY': 0.09, // 9%
-      'JUN': 0.08, // 8%
-      'JUL': 0.07, // 7%
-      'AUG': 0.06, // 6%
-      'SEP': 0.055, // 5.5%
-      'OCT': 0.05, // 5%
-      'NOV': 0.04, // 4%
-      'DEC': 0.035  // 3.5% - Much lower
+      'JAN': 0.16, // 16% - Much higher (Post-holiday business surge)
+      'FEB': 0.14, // 14% - High (No holidays, full business)
+      'MAR': 0.13, // 13% - High (Spring business season)
+      'APR': 0.12, // 12% - High (Pre-summer business)
+      'MAY': 0.10, // 10% - Good business month
+      'JUN': 0.08, // 8% - Early vacation season
+      'JUL': 0.07, // 7% - Summer slowdown
+      'AUG': 0.06, // 6% - Late summer
+      'SEP': 0.07, // 7% - Back to business
+      'OCT': 0.06, // 6% - Pre-holiday preparation
+      'NOV': 0.03, // 3% - Heavy holiday period
+      'DEC': 0.02  // 2% - Christmas/New Year shutdown
     }
   },
   {
