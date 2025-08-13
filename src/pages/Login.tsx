@@ -20,10 +20,19 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Add timeout protection
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      console.warn('Login timeout - resetting loading state');
+    }, 10000); // 10 second timeout
+
     try {
       await login(email, password);
+      clearTimeout(timeoutId);
       navigate('/dashboard');
     } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('Login error:', err);
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);
