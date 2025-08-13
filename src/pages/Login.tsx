@@ -141,7 +141,7 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            <div>
+            <div className="space-y-3">
               <button
                 type="submit"
                 disabled={isLoading || authLoading}
@@ -149,6 +149,19 @@ const Login: React.FC = () => {
               >
                 {isLoading || authLoading ? 'Signing in...' : 'Sign in'}
               </button>
+
+              {(isLoading || authLoading) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoading(false);
+                    console.log('Login state reset manually');
+                  }}
+                  className="w-full text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Reset if stuck
+                </button>
+              )}
             </div>
           </form>
 
