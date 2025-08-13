@@ -198,7 +198,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       setNotifications(notificationData?.map(convertDatabaseToNotification) || []);
 
     } catch (err: any) {
-      const errorMessage = `Failed to load workflow data: ${err.message}`;
+      const errorMessage = `Failed to load workflow data: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       console.error('Error loading workflow data:', err);
     } finally {
