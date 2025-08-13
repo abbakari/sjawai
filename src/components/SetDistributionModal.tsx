@@ -517,7 +517,11 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
             </button>
             <button
               onClick={handleApplyDistribution}
-              disabled={(!itemQuantity && !percentageValue) || !filterCustomer || filteredItems.length === 0}
+              disabled={
+                (distributionType !== 'seasonal' && !itemQuantity && !percentageValue) ||
+                !filterCustomer ||
+                filteredItems.length === 0
+              }
               className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Apply Distribution to {filteredItems.length} Item(s)
