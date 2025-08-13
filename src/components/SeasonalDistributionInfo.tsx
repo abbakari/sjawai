@@ -27,7 +27,7 @@ const SeasonalDistributionInfo: React.FC<SeasonalDistributionInfoProps> = ({ isO
                 Seasonal Distribution Patterns
               </h2>
               <p className="text-blue-100 mt-1">
-                Automatic allocation with higher quantities in January, decreasing to November-December
+                Holiday-aware allocation: Higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)
               </p>
             </div>
             <button
