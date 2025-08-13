@@ -873,7 +873,7 @@ const RollingForecast: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  console.log('Switching to item-wise view');
+                  console.log('Switching to item-wise view - hiding customer column');
                   setActiveView('item-wise');
                 }}
                 className={`px-6 py-2 font-semibold transition-all duration-200 ${
