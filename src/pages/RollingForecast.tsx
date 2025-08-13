@@ -17,6 +17,7 @@ import RollingForecastReport from '../components/RollingForecastReport';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import { applySeasonalDistribution, convertToMonthlyBudget } from '../utils/seasonalDistribution';
+import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -62,6 +63,7 @@ const RollingForecast: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -1122,8 +1124,17 @@ const RollingForecast: React.FC = () => {
               </button>
 
               <button
+                onClick={() => setIsSeasonalGrowthModalOpen(true)}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2 mb-2"
+                title="View holiday-aware seasonal growth patterns and distribution logic"
+              >
+                <Calendar className="w-4 h-4" />
+                Seasonal Growth
+              </button>
+
+              <button
                 onClick={() => setIsStockManagementModalOpen(true)}
-                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
                 title={user?.role === 'manager' ? "Manage all salesman stock requests" : "Manage stock requests and alerts"}
               >
                 <Package className="w-4 h-4" />
