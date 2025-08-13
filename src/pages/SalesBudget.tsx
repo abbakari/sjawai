@@ -31,8 +31,10 @@ import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
+import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
 
 interface MonthlyBudget {
   month: string;
@@ -73,7 +75,7 @@ const SalesBudget: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState('');
   const [selectedYear2025, setSelectedYear2025] = useState('2025');
   const [selectedYear2026, setSelectedYear2026] = useState('2026');
-  const [activeView, setActiveView] = useState('customer-item');
+  const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
@@ -91,6 +93,7 @@ const SalesBudget: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -395,10 +398,47 @@ const SalesBudget: React.FC = () => {
   const handleEditMonthlyData = (rowId: number) => {
     const row = tableData.find(item => item.id === rowId);
     if (row) {
+      // If user has manually entered a BUD 2025 value, auto-distribute it first
+      if (row.budget2025 > 0 && (!row.monthlyData || row.monthlyData.every(m => m.budgetValue === 0))) {
+        // Calculate units from budget2025 and rate
+        const totalUnits = Math.floor(row.budget2025 / (row.rate || 1));
+        if (totalUnits > 0) {
+          const seasonalDistributions = applySeasonalDistribution(totalUnits, 'Default Seasonal');
+          const distributedMonthlyData = convertToMonthlyBudget(
+            seasonalDistributions,
+            row.rate,
+            row.stock,
+            row.git
+          );
+
+          // Update the row with distributed data before editing
+          setTableData(prev => prev.map(item =>
+            item.id === rowId ? {
+              ...item,
+              monthlyData: distributedMonthlyData
+            } : item
+          ));
+
+          setEditingMonthlyData({
+            [rowId]: distributedMonthlyData
+          });
+
+          // Show notification about auto-distribution
+          showNotification(
+            `Auto-distributed ${totalUnits} units using holiday-aware pattern: higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
+            'success'
+          );
+        } else {
+          setEditingMonthlyData({
+            [rowId]: [...row.monthlyData]
+          });
+        }
+      } else {
+        setEditingMonthlyData({
+          [rowId]: [...row.monthlyData]
+        });
+      }
       setEditingRowId(rowId);
-      setEditingMonthlyData({
-        [rowId]: [...row.monthlyData]
-      });
     }
   };
 
@@ -610,46 +650,27 @@ const SalesBudget: React.FC = () => {
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
   };
 
-  // Auto-distribute when user enters quantity in BUD 2026 column
+  // Auto-distribute when user enters quantity in BUD 2026 column using seasonal distribution
   const handleBudget2026Change = (itemId: number, value: number) => {
-    const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
-      const baseAmount = Math.floor(quantity / 12);
-      const remainder = quantity % 12;
+    const distributeQuantitySeasonally = (quantity: number): MonthlyBudget[] => {
+        // Use seasonal distribution for automatic allocation
+      const seasonalDistributions = applySeasonalDistribution(quantity, 'Default Seasonal');
 
-      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
-      return months.map((month, index) => {
-        let monthlyValue = baseAmount;
-
-        // First fill January to December
-        if (remainder > 0 && index < remainder) {
-          monthlyValue += 1;
-        }
-        // If still have remainder after filling Jan-Dec, continue backward from Dec
-        else if (remainder > 12) {
-          const extraRemainder = remainder - 12;
-          const backwardIndex = 11 - (index - 12);
-          if (index >= 12 - extraRemainder && backwardIndex >= 0) {
-            monthlyValue += 1;
-          }
-        }
-
-        return {
-          month,
-          budgetValue: monthlyValue,
-          actualValue: 0,
-          rate: 100,
-          stock: 0,
-          git: 0,
-          discount: 0
-        };
-      });
+      return seasonalDistributions.map(dist => ({
+        month: dist.month,
+        budgetValue: dist.value,
+        actualValue: 0,
+        rate: 100,
+        stock: 0,
+        git: 0,
+        discount: 0
+      }));
     };
 
     setTableData(prevData =>
       prevData.map(item => {
         if (item.id === itemId) {
-          const newMonthlyData = distributeQuantityEqually(value);
+          const newMonthlyData = distributeQuantitySeasonally(value);
           const newBudgetValue2026 = value * (item.rate || 1);
 
           return {
@@ -663,8 +684,15 @@ const SalesBudget: React.FC = () => {
       })
     );
 
-    // Also update editing monthly data
-    const newMonthlyData = distributeQuantityEqually(value);
+    // Also update editing monthly data and show notification
+    const newMonthlyData = distributeQuantitySeasonally(value);
+
+    if (value > 0) {
+      showNotification(
+        `Applied holiday-aware distribution: ${value} units allocated with higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
+        'success'
+      );
+    }
     setEditingMonthlyData(prev => ({
       ...prev,
       [itemId]: newMonthlyData
@@ -1044,8 +1072,16 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download, Set Distribution, and Admin Stock Buttons */}
+              {/* Download, Set Distribution, Seasonal Growth, and Admin Stock Buttons */}
               <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setIsSeasonalGrowthModalOpen(true)}
+                  className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors transform hover:scale-105 active:scale-95"
+                  title="View holiday-aware seasonal growth patterns and distribution logic"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>Seasonal Growth</span>
+                </button>
                 <button
                   onClick={() => setIsSetDistributionModalOpen(true)}
                   className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
@@ -1082,6 +1118,15 @@ const SalesBudget: React.FC = () => {
 
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
+              {activeView === 'item-wise' && (
+                <div className="bg-orange-50 border-l-4 border-orange-400 text-orange-800 p-3 rounded-r-lg flex items-center gap-2 mb-4">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-medium">Item-Wise Mode Active</p>
+                    <p className="text-xs text-orange-700">Customer column is hidden. Focus on item-only sales budget and forecast data.</p>
+                  </div>
+                </div>
+              )}
               {user?.role === 'salesman' ? (
                 <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
@@ -1117,16 +1162,16 @@ const SalesBudget: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    console.log('Switching to item-wise view');
+                    console.log('Switching to item-wise view - hiding customer column');
                     setActiveView('item-wise');
-                    showNotification('Switched to Item-Wise view', 'success');
+                    showNotification('Switched to Item-Wise view: Customer column hidden to focus on items only', 'success');
                   }}
                   className={`px-6 py-2 font-semibold transition-all duration-200 ${
                     activeView === 'item-wise'
                       ? 'bg-orange-500 text-white shadow-md transform scale-105'
                       : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
                   }`}
-                  title="View data organized by items and their customers"
+                  title="Item-focused view: Hide customer column to focus only on item data for sales budget and forecast"
                 >
                   Item Wise
                 </button>
@@ -1489,7 +1534,7 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '��️'}
+                    {budgetGrowth === 0 && '���️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
@@ -1652,31 +1697,29 @@ const SalesBudget: React.FC = () => {
                               </>
                             ) : (
                               <>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.item}>
-                                    <div className="font-medium text-gray-900 truncate">
-                                      {row.item}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {row.category} - {row.brand}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
+                                <td className="p-2 border-b border-r border-gray-200 text-xs" style={{maxWidth: '350px'}}>
                                   <div className="flex items-center justify-between">
-                                    <div
-                                      className={`truncate ${
-                                        user?.role === 'manager'
-                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                          : ''
-                                      }`}
-                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                                      onClick={() => handleCustomerClick(row.customer)}
-                                    >
-                                      {row.customer}
-                                      {user?.role === 'manager' && (
-                                        <span className="ml-1 text-blue-500">👑</span>
-                                      )}
+                                    <div className="truncate" title={row.item}>
+                                      <div className="font-medium text-gray-900 truncate">
+                                        {row.item}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {row.category} - {row.brand}
+                                      </div>
+                                      <div
+                                        className={`text-xs truncate mt-1 ${
+                                          user?.role === 'manager'
+                                            ? 'cursor-pointer hover:text-blue-600 hover:underline text-blue-600'
+                                            : 'text-blue-600'
+                                        }`}
+                                        title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                        onClick={() => handleCustomerClick(row.customer)}
+                                      >
+                                        Customer: {row.customer}
+                                        {user?.role === 'manager' && (
+                                          <span className="ml-1 text-blue-500">👑</span>
+                                        )}
+                                      </div>
                                     </div>
                                     {user?.role === 'manager' && (
                                       <button
@@ -1685,7 +1728,7 @@ const SalesBudget: React.FC = () => {
                                           setSelectedRowForViewOnly(row);
                                           setIsViewOnlyModalOpen(true);
                                         }}
-                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0"
                                         title="View monthly distribution"
                                       >
                                         +
@@ -1693,6 +1736,7 @@ const SalesBudget: React.FC = () => {
                                     )}
                                   </div>
                                 </td>
+                                {/* Customer column hidden in item-wise mode */}
                               </>
                             )}
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
@@ -1889,16 +1933,23 @@ const SalesBudget: React.FC = () => {
                                         </button>
                                         <button
                                           onClick={() => {
-                                            const seasonalMultipliers = [0.8, 0.8, 0.9, 0.9, 1.0, 1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4];
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || 0;
-                                            const baseValue = totalBudget / 12;
-                                            setEditingMonthlyData(prev => ({
-                                              ...prev,
-                                              [row.id]: prev[row.id]?.map((month, index) => ({
-                                                ...month,
-                                                budgetValue: Math.round(baseValue * seasonalMultipliers[index])
-                                              })) || []
-                                            }));
+                                            if (totalBudget > 0) {
+                                              // Use holiday-aware seasonal distribution
+                                              const seasonalDistributions = applySeasonalDistribution(totalBudget, 'Default Seasonal');
+                                              setEditingMonthlyData(prev => ({
+                                                ...prev,
+                                                [row.id]: prev[row.id]?.map((month, index) => ({
+                                                  ...month,
+                                                  budgetValue: seasonalDistributions[index]?.value || 0
+                                                })) || []
+                                              }));
+                                              // Show notification about holiday-aware distribution
+                                              showNotification(
+                                                `Applied holiday-aware seasonal growth: Higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
+                                                'success'
+                                              );
+                                            }
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
                                         >
@@ -2128,6 +2179,12 @@ const SalesBudget: React.FC = () => {
             items={tableData}
           />
         )}
+
+        {/* Seasonal Growth Information Modal */}
+        <SeasonalDistributionInfo
+          isOpen={isSeasonalGrowthModalOpen}
+          onClose={() => setIsSeasonalGrowthModalOpen(false)}
+        />
       </div>
     </Layout>
   );

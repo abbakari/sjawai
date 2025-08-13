@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon, Package } from 'lucide-react';
+import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon, Package, Calendar } from 'lucide-react';
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +16,8 @@ import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import RollingForecastReport from '../components/RollingForecastReport';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { applySeasonalDistribution, convertToMonthlyBudget } from '../utils/seasonalDistribution';
+import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -34,6 +36,7 @@ const RollingForecast: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
+  const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectAll, setSelectAll] = useState(false);
@@ -60,6 +63,7 @@ const RollingForecast: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -139,7 +143,14 @@ const RollingForecast: React.FC = () => {
       stock: 86,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 10, OCT: 8, NOV: 6, DEC: 6 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '2',
@@ -151,7 +162,14 @@ const RollingForecast: React.FC = () => {
       stock: 7,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 8, FEB: 6, MAR: 10, APR: 12, MAY: 8, JUN: 6, JUL: 10, AUG: 12, SEP: 8, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(80, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '3',
@@ -163,7 +181,14 @@ const RollingForecast: React.FC = () => {
       stock: 22,
       git: 100,
       eta: '2025-08-24',
-      budgetDistribution: { JAN: 15, FEB: 12, MAR: 18, APR: 20, MAY: 15, JUN: 12, JUL: 18, AUG: 20, SEP: 15, OCT: 5, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(150, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '4',
@@ -175,7 +200,14 @@ const RollingForecast: React.FC = () => {
       stock: 0,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 20, FEB: 15, MAR: 25, APR: 30, MAY: 20, JUN: 15, JUL: 25, AUG: 30, SEP: 20, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(200, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '5',
@@ -187,7 +219,14 @@ const RollingForecast: React.FC = () => {
       stock: 15,
       git: 50,
       eta: '2025-09-15',
-      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 0, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(90, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     }
   ]);
 
@@ -819,19 +858,55 @@ const RollingForecast: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="rounded" />
-              <span className="text-sm text-gray-700">Item-wise</span>
-            </label>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-              Customer-Item
-            </button>
+            <div className="flex shadow-sm rounded-md overflow-hidden">
+              <button
+                onClick={() => {
+                  console.log('Switching to customer-item view');
+                  setActiveView('customer-item');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'customer-item'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View data organized by customer and their items"
+              >
+                Customer-Item
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Switching to item-wise view - hiding customer column');
+                  setActiveView('item-wise');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'item-wise'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="Item-focused view: Hide customer column to focus only on item data for rolling forecast"
+              >
+                Item Wise
+              </button>
+            </div>
             {/* Follow-backs button for salesman and manager */}
             {(user?.role === 'salesman' || user?.role === 'manager') && (
               <FollowBacksButton />
             )}
           </div>
         </div>
+
+        {/* Item Wise Mode Info */}
+        {activeView === 'item-wise' && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 text-orange-800 p-3 rounded-r-lg flex items-center gap-2 mb-4">
+            <div className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 text-xs font-bold">i</span>
+            </div>
+            <div>
+              <p className="font-medium">Item-Wise Mode Active</p>
+              <p className="text-xs text-orange-700">Customer column is hidden. Focus on item-only rolling forecast data.</p>
+            </div>
+          </div>
+        )}
 
         {/* Top Bar Metrics */}
         <div className="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -1049,8 +1124,17 @@ const RollingForecast: React.FC = () => {
               </button>
 
               <button
+                onClick={() => setIsSeasonalGrowthModalOpen(true)}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2 mb-2"
+                title="View holiday-aware seasonal growth patterns and distribution logic"
+              >
+                <Calendar className="w-4 h-4" />
+                Seasonal Growth
+              </button>
+
+              <button
                 onClick={() => setIsStockManagementModalOpen(true)}
-                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
                 title={user?.role === 'manager' ? "Manage all salesman stock requests" : "Manage stock requests and alerts"}
               >
                 <Package className="w-4 h-4" />
@@ -1266,24 +1350,41 @@ const RollingForecast: React.FC = () => {
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th
-                    className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48"
-                    onClick={() => handleSort('customer')}
-                  >
-                    <div className="flex items-center gap-1">
-                      CUSTOMER
-                      {getSortIcon('customer')}
-                    </div>
-                  </th>
-                  <th
-                    className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-64"
-                    onClick={() => handleSort('item')}
-                  >
-                    <div className="flex items-center gap-1">
-                      ITEM
-                      {getSortIcon('item')}
-                    </div>
-                  </th>
+                  {activeView === 'customer-item' ? (
+                    <>
+                      <th
+                        className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48"
+                        onClick={() => handleSort('customer')}
+                      >
+                        <div className="flex items-center gap-1">
+                          CUSTOMER
+                          {getSortIcon('customer')}
+                        </div>
+                      </th>
+                      <th
+                        className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-64"
+                        onClick={() => handleSort('item')}
+                      >
+                        <div className="flex items-center gap-1">
+                          ITEM
+                          {getSortIcon('item')}
+                        </div>
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th
+                        className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-80"
+                        onClick={() => handleSort('item')}
+                      >
+                        <div className="flex items-center gap-1">
+                          ITEM - CUSTOMER
+                          {getSortIcon('item')}
+                        </div>
+                      </th>
+                      {/* Customer column hidden in item-wise mode */}
+                    </>
+                  )}
                   <th
                     className="px-1 sm:px-2 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('bud25')}
@@ -1361,60 +1462,120 @@ const RollingForecast: React.FC = () => {
                           onChange={() => handleRowSelect(row.id)}
                         />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <div className="flex items-center justify-between">
-                          <div
-                            className={`${
-                              user?.role === 'manager'
-                                ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                : ''
-                            }`}
-                            title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                            onClick={() => handleCustomerClick(row.customer)}
-                          >
-                            {row.customer}
-                            {user?.role === 'manager' && (
-                              <span className="ml-1 text-blue-500">👑</span>
-                            )}
-                          </div>
-                          {user?.role === 'manager' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (user?.role === 'manager') {
-                                  // Convert row data to monthly format for view-only modal
-                                  const monthlyData = getShortMonthNames().map(month => ({
-                                    month,
-                                    budgetValue: getMonthlyData(row.id)[month] || 0,
-                                    actualValue: 0,
-                                    rate: 100,
-                                    stock: row.stock,
-                                    git: row.git,
-                                    discount: 0
-                                  }));
+                      {activeView === 'customer-item' ? (
+                        <>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between">
+                              <div
+                                className={`${
+                                  user?.role === 'manager'
+                                    ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                    : ''
+                                }`}
+                                title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                onClick={() => handleCustomerClick(row.customer)}
+                              >
+                                {row.customer}
+                                {user?.role === 'manager' && (
+                                  <span className="ml-1 text-blue-500">👑</span>
+                                )}
+                              </div>
+                              {user?.role === 'manager' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (user?.role === 'manager') {
+                                      // Convert row data to monthly format for view-only modal
+                                      const monthlyData = getShortMonthNames().map(month => ({
+                                        month,
+                                        budgetValue: getMonthlyData(row.id)[month] || 0,
+                                        actualValue: 0,
+                                        rate: 100,
+                                        stock: row.stock,
+                                        git: row.git,
+                                        discount: 0
+                                      }));
 
-                                  setSelectedRowForViewOnly({
-                                    ...row,
-                                    monthlyData,
-                                    category: 'TYRE SERVICE',
-                                    brand: 'Various'
-                                  });
-                                  setIsViewOnlyModalOpen(true);
-                                } else {
-                                  handleExpandRow(row.id);
-                                }
-                              }}
-                              className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
-                            >
-                              +
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {row.item}
-                      </td>
+                                      setSelectedRowForViewOnly({
+                                        ...row,
+                                        monthlyData,
+                                        category: 'TYRE SERVICE',
+                                        brand: 'Various'
+                                      });
+                                      setIsViewOnlyModalOpen(true);
+                                    } else {
+                                      handleExpandRow(row.id);
+                                    }
+                                  }}
+                                  className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                  title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {row.item}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900" style={{maxWidth: '320px'}}>
+                            <div className="flex items-center justify-between">
+                              <div className="truncate">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {row.item}
+                                </div>
+                                <div
+                                  className={`text-xs truncate mt-1 ${
+                                    user?.role === 'manager'
+                                      ? 'cursor-pointer hover:text-blue-600 hover:underline text-blue-600'
+                                      : 'text-blue-600'
+                                  }`}
+                                  title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                  onClick={() => handleCustomerClick(row.customer)}
+                                >
+                                  Customer: {row.customer}
+                                  {user?.role === 'manager' && (
+                                    <span className="ml-1 text-blue-500">👑</span>
+                                  )}
+                                </div>
+                              </div>
+                              {user?.role === 'manager' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Convert row data to monthly format for view-only modal
+                                    const monthlyData = getShortMonthNames().map(month => ({
+                                      month,
+                                      budgetValue: getMonthlyData(row.id)[month] || 0,
+                                      actualValue: 0,
+                                      rate: 100,
+                                      stock: row.stock,
+                                      git: row.git,
+                                      discount: 0
+                                    }));
+
+                                    setSelectedRowForViewOnly({
+                                      ...row,
+                                      monthlyData,
+                                      category: 'TYRE SERVICE',
+                                      brand: 'Various'
+                                    });
+                                    setIsViewOnlyModalOpen(true);
+                                  }}
+                                  className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0"
+                                  title="View monthly forecast distribution"
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          {/* Customer column hidden in item-wise mode */}
+                        </>
+                      )}
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {row.bud25}
                       </td>
@@ -1934,6 +2095,12 @@ const RollingForecast: React.FC = () => {
           onClose={() => setIsStockManagementModalOpen(false)}
         />
       )}
+
+      {/* Seasonal Growth Information Modal */}
+      <SeasonalDistributionInfo
+        isOpen={isSeasonalGrowthModalOpen}
+        onClose={() => setIsSeasonalGrowthModalOpen(false)}
+      />
     </Layout>
   );
 };

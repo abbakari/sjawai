@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { X, PieChart, Search, Calculator, Percent, Filter, ChevronDown } from 'lucide-react';
+import { X, PieChart, Search, Calculator, Percent, Filter, ChevronDown, Calendar } from 'lucide-react';
+import { applySeasonalDistribution } from '../utils/seasonalDistribution';
 
 interface MonthlyBudget {
   month: string;
@@ -43,7 +44,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
   selectedItem,
   onApplyDistribution
 }) => {
-  const [distributionType, setDistributionType] = useState<'equal' | 'percentage'>('equal');
+  const [distributionType, setDistributionType] = useState<'equal' | 'percentage' | 'seasonal'>('equal');
   const [filterCustomer, setFilterCustomer] = useState(selectedCustomer || '');
   const [filterCategory, setFilterCategory] = useState(selectedCategory || '');
   const [filterBrand, setFilterBrand] = useState(selectedBrand || '');
@@ -131,7 +132,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
       return;
     }
 
-    if (!itemQuantity && !percentageValue) {
+    if (distributionType !== 'seasonal' && !itemQuantity && !percentageValue) {
       alert('Please enter a quantity or percentage value');
       return;
     }
@@ -149,8 +150,25 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
 
       if (distributionType === 'equal') {
         distribution = distributeQuantityEqually(itemQuantity);
-      } else {
+      } else if (distributionType === 'percentage') {
         distribution = distributeByPercentage(item.budget2026, percentageValue);
+      } else if (distributionType === 'seasonal') {
+        // Use holiday-aware seasonal distribution based on existing BUD 2026 value
+        if (item.budget2026 > 0) {
+          const seasonalDistributions = applySeasonalDistribution(item.budget2026, 'Default Seasonal');
+          distribution = seasonalDistributions.map(dist => dist.value);
+        } else {
+          // If no BUD 2026 value, use input quantity with seasonal distribution
+          const quantityToDistribute = itemQuantity || 0;
+          if (quantityToDistribute > 0) {
+            const seasonalDistributions = applySeasonalDistribution(quantityToDistribute, 'Default Seasonal');
+            distribution = seasonalDistributions.map(dist => dist.value);
+          } else {
+            distribution = new Array(12).fill(0);
+          }
+        }
+      } else {
+        distribution = new Array(12).fill(0);
       }
 
       // Apply distribution to monthly data
@@ -385,6 +403,24 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   </div>
                 </div>
               </label>
+
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="distributionType"
+                  value="seasonal"
+                  checked={distributionType === 'seasonal'}
+                  onChange={(e) => setDistributionType(e.target.value as any)}
+                  className="mr-3"
+                />
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-orange-600" />
+                  <div>
+                    <div className="font-medium">Seasonal Growth Distribution</div>
+                    <div className="text-sm text-gray-600">Holiday-aware: Higher in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)</div>
+                  </div>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -466,7 +502,11 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
             </button>
             <button
               onClick={handleApplyDistribution}
-              disabled={(!itemQuantity && !percentageValue) || !filterCustomer || filteredItems.length === 0}
+              disabled={
+                (distributionType !== 'seasonal' && !itemQuantity && !percentageValue) ||
+                !filterCustomer ||
+                filteredItems.length === 0
+              }
               className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Apply Distribution to {filteredItems.length} Item(s)
