@@ -420,6 +420,12 @@ const SalesBudget: React.FC = () => {
           setEditingMonthlyData({
             [rowId]: distributedMonthlyData
           });
+
+          // Show notification about auto-distribution
+          showNotification(
+            `Auto-distributed ${totalUnits} units using seasonal pattern: higher quantities in Jan-Feb, decreasing to Nov-Dec`,
+            'success'
+          );
         } else {
           setEditingMonthlyData({
             [rowId]: [...row.monthlyData]
@@ -645,7 +651,7 @@ const SalesBudget: React.FC = () => {
   // Auto-distribute when user enters quantity in BUD 2026 column using seasonal distribution
   const handleBudget2026Change = (itemId: number, value: number) => {
     const distributeQuantitySeasonally = (quantity: number): MonthlyBudget[] => {
-      // Use seasonal distribution for automatic allocation
+        // Use seasonal distribution for automatic allocation
       const seasonalDistributions = applySeasonalDistribution(quantity, 'Default Seasonal');
 
       return seasonalDistributions.map(dist => ({
@@ -676,8 +682,15 @@ const SalesBudget: React.FC = () => {
       })
     );
 
-    // Also update editing monthly data
+    // Also update editing monthly data and show notification
     const newMonthlyData = distributeQuantitySeasonally(value);
+
+    if (value > 0) {
+      showNotification(
+        `Applied seasonal distribution: ${value} units allocated with higher quantities in Jan-Feb, decreasing to Nov-Dec`,
+        'success'
+      );
+    }
     setEditingMonthlyData(prev => ({
       ...prev,
       [itemId]: newMonthlyData
