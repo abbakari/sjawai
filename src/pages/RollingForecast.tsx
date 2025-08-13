@@ -16,6 +16,7 @@ import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import RollingForecastReport from '../components/RollingForecastReport';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { applySeasonalDistribution, convertToMonthlyBudget } from '../utils/seasonalDistribution';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -140,7 +141,14 @@ const RollingForecast: React.FC = () => {
       stock: 86,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 10, OCT: 8, NOV: 6, DEC: 6 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '2',
@@ -152,7 +160,14 @@ const RollingForecast: React.FC = () => {
       stock: 7,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 8, FEB: 6, MAR: 10, APR: 12, MAY: 8, JUN: 6, JUL: 10, AUG: 12, SEP: 8, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(80, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '3',
@@ -164,7 +179,14 @@ const RollingForecast: React.FC = () => {
       stock: 22,
       git: 100,
       eta: '2025-08-24',
-      budgetDistribution: { JAN: 15, FEB: 12, MAR: 18, APR: 20, MAY: 15, JUN: 12, JUL: 18, AUG: 20, SEP: 15, OCT: 5, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(150, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '4',
@@ -176,7 +198,14 @@ const RollingForecast: React.FC = () => {
       stock: 0,
       git: 0,
       eta: '',
-      budgetDistribution: { JAN: 20, FEB: 15, MAR: 25, APR: 30, MAY: 20, JUN: 15, JUL: 25, AUG: 30, SEP: 20, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(200, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     },
     {
       id: '5',
@@ -188,7 +217,14 @@ const RollingForecast: React.FC = () => {
       stock: 15,
       git: 50,
       eta: '2025-09-15',
-      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 0, OCT: 0, NOV: 0, DEC: 0 }
+      budgetDistribution: (() => {
+        const seasonalDist = applySeasonalDistribution(90, 'Default Seasonal');
+        const distribution: {[key: string]: number} = {};
+        seasonalDist.forEach(item => {
+          distribution[item.month] = item.value;
+        });
+        return distribution;
+      })()
     }
   ]);
 
