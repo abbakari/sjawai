@@ -374,7 +374,7 @@ const RollingForecast: React.FC = () => {
 
 
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (user?.role === 'salesman') {
       // Submit for manager approval while preserving data
       try {
