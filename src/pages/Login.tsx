@@ -11,6 +11,11 @@ const Login: React.FC = () => {
   const { login, error, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Reset loading states on mount to prevent stuck states
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
