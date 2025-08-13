@@ -881,7 +881,7 @@ const RollingForecast: React.FC = () => {
                     ? 'bg-orange-500 text-white shadow-md transform scale-105'
                     : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
                 }`}
-                title="View data organized by items only (customer column hidden)"
+                title="Item-focused view: Hide customer column to focus only on item data for rolling forecast"
               >
                 Item Wise
               </button>
