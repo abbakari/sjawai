@@ -125,13 +125,14 @@ const SeasonalDistributionInfo: React.FC<SeasonalDistributionInfoProps> = ({ isO
 
           {/* Pattern Benefits */}
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-semibold text-green-900 mb-2">Benefits of Seasonal Distribution:</h3>
+            <h3 className="font-semibold text-green-900 mb-2">Benefits of Holiday-Aware Distribution:</h3>
             <ul className="text-sm text-green-800 space-y-1">
-              <li>• Higher quantities allocated early in the year when demand is typically strongest</li>
-              <li>• Gradual decrease towards end of year reflecting seasonal patterns</li>
-              <li>• Helps with cash flow management and inventory planning</li>
-              <li>• Aligns with business cycles and customer buying patterns</li>
-              <li>• Reduces year-end inventory surplus</li>
+              <li>• Higher quantities allocated to non-holiday months (Jan-Apr) when business operates at full capacity</li>
+              <li>• Reduced allocation during holiday months (Nov-Dec) when business activity is minimal</li>
+              <li>• Accounts for actual working days and business productivity</li>
+              <li>• Helps with cash flow management and inventory planning around holidays</li>
+              <li>• Aligns with real business cycles and customer availability patterns</li>
+              <li>• Reduces inventory surplus during low-activity holiday periods</li>
             </ul>
           </div>
 
