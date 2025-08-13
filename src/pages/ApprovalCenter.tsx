@@ -15,7 +15,7 @@ import {
   Target,
   TrendingUp,
   Bell,
-  AlertCircle,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
   DollarSign,
