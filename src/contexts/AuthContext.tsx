@@ -162,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
-          setError(error.message);
+          setError(error?.message || error || 'Authentication error');
         } else if (session && mounted) {
           setSession(session);
           const convertedUser = await convertSupabaseUser(session.user);
