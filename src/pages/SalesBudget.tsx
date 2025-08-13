@@ -687,7 +687,7 @@ const SalesBudget: React.FC = () => {
 
     if (value > 0) {
       showNotification(
-        `Applied seasonal distribution: ${value} units allocated with higher quantities in Jan-Feb, decreasing to Nov-Dec`,
+        `Applied holiday-aware distribution: ${value} units allocated with higher quantities in non-holiday months (Jan-Apr), reduced in holiday months (Nov-Dec)`,
         'success'
       );
     }
