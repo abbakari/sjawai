@@ -1021,6 +1021,20 @@ const SalesBudget: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100 font-sans">
+        {/* Error Display */}
+        {budgetError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 m-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Budget Data Error</h3>
+                <div className="mt-2 text-sm text-red-700">{budgetError}</div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Main Content Container */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 m-4 overflow-hidden">
           {/* Stats Cards Row */}
