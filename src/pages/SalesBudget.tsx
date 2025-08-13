@@ -31,6 +31,7 @@ import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
+import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
@@ -92,6 +93,7 @@ const SalesBudget: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -1070,8 +1072,16 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download, Set Distribution, and Admin Stock Buttons */}
+              {/* Download, Set Distribution, Seasonal Growth, and Admin Stock Buttons */}
               <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setIsSeasonalGrowthModalOpen(true)}
+                  className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors transform hover:scale-105 active:scale-95"
+                  title="View holiday-aware seasonal growth patterns and distribution logic"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>Seasonal Growth</span>
+                </button>
                 <button
                   onClick={() => setIsSetDistributionModalOpen(true)}
                   className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
