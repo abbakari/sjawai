@@ -2172,6 +2172,12 @@ const SalesBudget: React.FC = () => {
             items={tableData}
           />
         )}
+
+        {/* Seasonal Growth Information Modal */}
+        <SeasonalDistributionInfo
+          isOpen={isSeasonalGrowthModalOpen}
+          onClose={() => setIsSeasonalGrowthModalOpen(false)}
+        />
       </div>
     </Layout>
   );
