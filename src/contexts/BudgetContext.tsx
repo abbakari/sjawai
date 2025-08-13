@@ -110,7 +110,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
       setYearlyBudgets(budgets);
     } catch (err: any) {
-      const errorMessage = `Failed to load budgets: ${err.message}`;
+      const errorMessage = `Failed to load budgets: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       console.error('Error loading budgets:', err);
     } finally {
@@ -192,7 +192,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       return budgetData.id;
 
     } catch (err: any) {
-      const errorMessage = `Failed to create budget: ${err.message}`;
+      const errorMessage = `Failed to create budget: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       handleSupabaseError(err, 'create budget');
       throw new Error(errorMessage);
@@ -270,7 +270,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       await loadBudgets();
 
     } catch (err: any) {
-      const errorMessage = `Failed to update budget: ${err.message}`;
+      const errorMessage = `Failed to update budget: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       handleSupabaseError(err, 'update budget');
       throw new Error(errorMessage);
@@ -305,7 +305,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setYearlyBudgets(prev => prev.filter(b => b.id !== id));
 
     } catch (err: any) {
-      const errorMessage = `Failed to delete budget: ${err.message}`;
+      const errorMessage = `Failed to delete budget: ${err?.message || err || 'Unknown error'}`;
       setError(errorMessage);
       handleSupabaseError(err, 'delete budget');
       throw new Error(errorMessage);
