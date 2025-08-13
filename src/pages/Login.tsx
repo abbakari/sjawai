@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
@@ -11,14 +11,28 @@ const Login: React.FC = () => {
   const { login, error, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Reset loading states on mount to prevent stuck states
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Add timeout protection
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      console.warn('Login timeout - resetting loading state');
+    }, 10000); // 10 second timeout
+
     try {
       await login(email, password);
+      clearTimeout(timeoutId);
       navigate('/dashboard');
     } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('Login error:', err);
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);
@@ -33,9 +47,18 @@ const Login: React.FC = () => {
   ];
 
   const fillDemoCredentials = (email: string, password: string) => {
+    // Reset any loading states when filling demo credentials
+    setIsLoading(false);
     setEmail(email);
     setPassword(password);
   };
+
+  // Reset loading state if there's an error
+  useEffect(() => {
+    if (error) {
+      setIsLoading(false);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -118,7 +141,7 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            <div>
+            <div className="space-y-3">
               <button
                 type="submit"
                 disabled={isLoading || authLoading}
@@ -126,6 +149,19 @@ const Login: React.FC = () => {
               >
                 {isLoading || authLoading ? 'Signing in...' : 'Sign in'}
               </button>
+
+              {(isLoading || authLoading) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoading(false);
+                    console.log('Login state reset manually');
+                  }}
+                  className="w-full text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Reset if stuck
+                </button>
+              )}
             </div>
           </form>
 

@@ -168,7 +168,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
 
   // Load workflow data from Supabase
   const loadWorkflowData = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setWorkflowItems([]);
+      setNotifications([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setWorkflowItems([]);
+      setNotifications([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -198,9 +210,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       setNotifications(notificationData?.map(convertDatabaseToNotification) || []);
 
     } catch (err: any) {
-      const errorMessage = `Failed to load workflow data: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to load workflow data: ';
+      if (err?.message) {
+        errorMessage += err.message;
+      } else if (typeof err === 'string') {
+        errorMessage += err;
+      } else if (err?.code) {
+        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
       setError(errorMessage);
       console.error('Error loading workflow data:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }
@@ -219,10 +241,14 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
   const submitForApproval = async (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]): Promise<string> => {
     if (!user) throw new Error('User must be logged in');
 
-    const year = budgetData[0]?.year || new Date().getFullYear().toString();
+    // Handle both budget and forecast data safely
+    const year = budgetData[0]?.year || forecastData?.[0]?.year || new Date().getFullYear().toString();
     const customers = [...new Set([...budgetData.map(b => b.customer), ...(forecastData?.map(f => f.customer) || [])])];
     const totalValue = budgetData.reduce((sum, b) => sum + b.totalBudget, 0) +
                       (forecastData?.reduce((sum, f) => sum + f.forecastValue, 0) || 0);
+
+    // Determine creator from budget or forecast data
+    const createdBy = budgetData[0]?.createdBy || forecastData?.[0]?.createdBy || user.name;
 
     if (!isSupabaseConfigured()) {
       // Fallback for development
@@ -230,9 +256,9 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       const newItem: WorkflowItem = {
         id,
         type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
-        title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
+        title: `${year} ${forecastData && forecastData.length > 0 ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
         description: `Submitted for manager approval`,
-        createdBy: budgetData[0]?.createdBy || 'Unknown',
+        createdBy,
         createdByRole: 'salesman',
         currentState: 'submitted',
         submittedAt: new Date().toISOString(),
@@ -242,7 +268,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
         priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
         comments: [{
           id: `c_${Date.now()}`,
-          author: budgetData[0]?.createdBy || 'System',
+          author: createdBy,
           authorRole: 'salesman',
           message: 'Data submitted for approval.',
           timestamp: new Date().toISOString(),

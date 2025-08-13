@@ -85,7 +85,17 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   // Load budgets from Supabase
   const loadBudgets = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setYearlyBudgets([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setYearlyBudgets([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -110,9 +120,19 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
       setYearlyBudgets(budgets);
     } catch (err: any) {
-      const errorMessage = `Failed to load budgets: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to load budgets: ';
+      if (err?.message) {
+        errorMessage += err.message;
+      } else if (typeof err === 'string') {
+        errorMessage += err;
+      } else if (err?.code) {
+        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
       setError(errorMessage);
       console.error('Error loading budgets:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }

@@ -155,7 +155,23 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
 
   // Load all stock data from Supabase
   const loadStockData = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setStockRequests([]);
+      setStockAlerts([]);
+      setStockProjections([]);
+      setStockOverviews([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setStockRequests([]);
+      setStockAlerts([]);
+      setStockProjections([]);
+      setStockOverviews([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -203,9 +219,19 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
       setStockOverviews(overviewsData?.map(convertDatabaseToStockOverview) || []);
 
     } catch (err: any) {
-      const errorMessage = `Failed to load stock data: ${err?.message || err || 'Unknown error'}`;
+      let errorMessage = 'Failed to load stock data: ';
+      if (err?.message) {
+        errorMessage += err.message;
+      } else if (typeof err === 'string') {
+        errorMessage += err;
+      } else if (err?.code) {
+        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
       setError(errorMessage);
       console.error('Error loading stock data:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
     } finally {
       setIsLoading(false);
     }

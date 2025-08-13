@@ -1,17 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
 // These will be set via environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fillhumxgqahodknjxji.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpbGxodW14Z3FhaG9ka25qeGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzE1MjUsImV4cCI6MjA3MDY0NzUyNX0.mWHmgKt-MJZiBuy1IkUrjK5-RATF8NwGbWD4xLIrsmA'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hbzkhvcvzwznknitaucj.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiemtodmN2end6bmtuaXRhdWNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwODUyOTAsImV4cCI6MjA3MDY2MTI5MH0.yv7IQjILUmKdjCIZlX6DDy3xVu8sYPHfXRYsyB0FwXE'
 
 // Log configuration for debugging
 console.log('Supabase Configuration:', {
   url: supabaseUrl,
   hasKey: !!supabaseAnonKey,
-  keyPrefix: supabaseAnonKey.substring(0, 20) + '...'
+  keyPrefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'Not configured',
+  fallbackMode: !supabaseUrl || !supabaseAnonKey
 })
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl || 'http://localhost:3000', supabaseAnonKey || 'dummy')
 
 // Database table names
 export const TABLES = {
@@ -33,6 +34,7 @@ export const TABLES = {
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
+  // Enable Supabase database operations
   return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
 }
 

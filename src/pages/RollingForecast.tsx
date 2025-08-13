@@ -374,7 +374,7 @@ const RollingForecast: React.FC = () => {
 
 
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (user?.role === 'salesman') {
       // Submit for manager approval while preserving data
       try {
@@ -436,7 +436,7 @@ const RollingForecast: React.FC = () => {
         }).filter(f => f.forecastTotal > 0);
 
         // Submit to workflow context
-        const workflowId = submitForApproval([], forecastData);
+        const workflowId = await submitForApproval([], forecastData);
 
         // Save original data and create submission copies
         DataPersistenceManager.saveRollingForecastData(savedForecastData);

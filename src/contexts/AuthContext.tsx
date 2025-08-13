@@ -216,7 +216,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         const mockUser = MOCK_USERS[email];
-        
+
         if (!mockUser) {
           throw new Error('Invalid email or password');
         }
@@ -232,6 +232,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        return;
+      }
+
+      // Handle demo users with simplified auth (no Supabase Auth required)
+      if (email.includes('@example.com') && password === 'password') {
+        // Get user from database directly
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .single();
+
+        if (error || !userData) {
+          throw new Error('Demo user not found in database');
+        }
+
+        const user: User = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role as UserRole,
+          department: userData.department,
+          permissions: ROLE_PERMISSIONS[userData.role as UserRole],
+          isActive: userData.is_active,
+          createdAt: userData.created_at,
+          lastLogin: new Date().toISOString()
+        };
+
+        // Update last login in database
+        await supabase
+          .from('users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', userData.id);
+
+        setUser(user);
         return;
       }
 
