@@ -1,17 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 
 // These will be set via environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fillhumxgqahodknjxji.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpbGxodW14Z3FhaG9ka25qeGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzE1MjUsImV4cCI6MjA3MDY0NzUyNX0.mWHmgKt-MJZiBuy1IkUrjK5-RATF8NwGbWD4xLIrsmA'
+// For development/demo, comment out these lines to disable Supabase and use fallback auth
+// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fillhumxgqahodknjxji.supabase.co'
+// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpbGxodW14Z3FhaG9ka25qeGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzE1MjUsImV4cCI6MjA3MDY0NzUyNX0.mWHmgKt-MJZiBuy1IkUrjK5-RATF8NwGbWD4xLIrsmA'
+
+// Temporary fallback for demo - disable Supabase to use mock authentication
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Log configuration for debugging
 console.log('Supabase Configuration:', {
   url: supabaseUrl,
   hasKey: !!supabaseAnonKey,
-  keyPrefix: supabaseAnonKey.substring(0, 20) + '...'
+  keyPrefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'Not configured',
+  fallbackMode: !supabaseUrl || !supabaseAnonKey
 })
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl || 'http://localhost:3000', supabaseAnonKey || 'dummy')
 
 // Database table names
 export const TABLES = {
@@ -33,7 +39,10 @@ export const TABLES = {
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
+  // Return false to force fallback mode for demo
+  // Change this to return true when you have properly configured Supabase Auth users
+  return false;
+  // return supabaseUrl.startsWith('https://') && supabaseAnonKey.startsWith('eyJ')
 }
 
 // Helper function for error handling
