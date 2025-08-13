@@ -224,3 +224,27 @@ export const getSeasonalFactor = (month: string, pattern: string = 'Default Seas
   const monthlyPercentage = selectedPattern.distribution[month.toUpperCase()] || 0;
   return monthlyPercentage * 12; // Convert to factor (average would be 1.0)
 };
+
+/**
+ * Get holiday information for a month
+ * @param month - Month to check
+ * @returns Holiday information
+ */
+export const getHolidayInfo = (month: string): { hasHolidays: boolean; description: string; businessImpact: 'high' | 'medium' | 'low' } => {
+  const holidayData: { [key: string]: { hasHolidays: boolean; description: string; businessImpact: 'high' | 'medium' | 'low' } } = {
+    'JAN': { hasHolidays: false, description: 'Post-holiday business recovery period', businessImpact: 'high' },
+    'FEB': { hasHolidays: false, description: 'No major holidays, full business operations', businessImpact: 'high' },
+    'MAR': { hasHolidays: false, description: 'Spring business season, no major holidays', businessImpact: 'high' },
+    'APR': { hasHolidays: false, description: 'Good business month, Easter varies', businessImpact: 'high' },
+    'MAY': { hasHolidays: false, description: 'Strong business month', businessImpact: 'medium' },
+    'JUN': { hasHolidays: false, description: 'Early vacation season begins', businessImpact: 'medium' },
+    'JUL': { hasHolidays: false, description: 'Summer vacation period', businessImpact: 'medium' },
+    'AUG': { hasHolidays: false, description: 'Late summer, some vacation impact', businessImpact: 'medium' },
+    'SEP': { hasHolidays: false, description: 'Back-to-business after summer', businessImpact: 'medium' },
+    'OCT': { hasHolidays: false, description: 'Pre-holiday business preparation', businessImpact: 'medium' },
+    'NOV': { hasHolidays: true, description: 'Thanksgiving and multiple holidays', businessImpact: 'low' },
+    'DEC': { hasHolidays: true, description: 'Christmas and New Year holidays', businessImpact: 'low' }
+  };
+
+  return holidayData[month.toUpperCase()] || { hasHolidays: false, description: 'Unknown month', businessImpact: 'medium' };
+};
