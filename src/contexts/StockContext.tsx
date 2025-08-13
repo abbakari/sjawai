@@ -155,7 +155,23 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
 
   // Load all stock data from Supabase
   const loadStockData = async () => {
-    if (!isSupabaseConfigured() || !user) return;
+    if (!user) {
+      setStockRequests([]);
+      setStockAlerts([]);
+      setStockProjections([]);
+      setStockOverviews([]);
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      // Fallback mode - provide empty data but no error
+      setStockRequests([]);
+      setStockAlerts([]);
+      setStockProjections([]);
+      setStockOverviews([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
