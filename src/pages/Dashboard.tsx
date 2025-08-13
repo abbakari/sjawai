@@ -18,7 +18,7 @@ import { initializeCommunicationDemo } from '../utils/communicationDemo';
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman } = useStock();
+  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman, error: stockError, isLoading: stockLoading } = useStock();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
