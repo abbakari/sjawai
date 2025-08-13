@@ -602,8 +602,8 @@ const Dashboard: React.FC = () => {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">System Errors</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  {stockError && <div>• {stockError}</div>}
-                  {budgetError && <div>• {budgetError}</div>}
+                  {stockError && <div>• Error loading stock data: {typeof stockError === 'string' ? stockError : stockError?.message || stockError || 'Unknown error'}</div>}
+                  {budgetError && <div>• Error loading budgets: {typeof budgetError === 'string' ? budgetError : budgetError?.message || budgetError || 'Unknown error'}</div>}
                 </div>
               </div>
             </div>
