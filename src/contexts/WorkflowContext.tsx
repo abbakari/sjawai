@@ -219,10 +219,14 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
   const submitForApproval = async (budgetData: YearlyBudgetData[], forecastData?: ForecastData[]): Promise<string> => {
     if (!user) throw new Error('User must be logged in');
 
-    const year = budgetData[0]?.year || new Date().getFullYear().toString();
+    // Handle both budget and forecast data safely
+    const year = budgetData[0]?.year || forecastData?.[0]?.year || new Date().getFullYear().toString();
     const customers = [...new Set([...budgetData.map(b => b.customer), ...(forecastData?.map(f => f.customer) || [])])];
     const totalValue = budgetData.reduce((sum, b) => sum + b.totalBudget, 0) +
                       (forecastData?.reduce((sum, f) => sum + f.forecastValue, 0) || 0);
+
+    // Determine creator from budget or forecast data
+    const createdBy = budgetData[0]?.createdBy || forecastData?.[0]?.createdBy || user.name;
 
     if (!isSupabaseConfigured()) {
       // Fallback for development
@@ -230,9 +234,9 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       const newItem: WorkflowItem = {
         id,
         type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
-        title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
+        title: `${year} ${forecastData && forecastData.length > 0 ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
         description: `Submitted for manager approval`,
-        createdBy: budgetData[0]?.createdBy || 'Unknown',
+        createdBy,
         createdByRole: 'salesman',
         currentState: 'submitted',
         submittedAt: new Date().toISOString(),
@@ -242,7 +246,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
         priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
         comments: [{
           id: `c_${Date.now()}`,
-          author: budgetData[0]?.createdBy || 'System',
+          author: createdBy,
           authorRole: 'salesman',
           message: 'Data submitted for approval.',
           timestamp: new Date().toISOString(),
