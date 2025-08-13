@@ -33,6 +33,7 @@ import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
 
 interface MonthlyBudget {
   month: string;
@@ -73,7 +74,7 @@ const SalesBudget: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState('');
   const [selectedYear2025, setSelectedYear2025] = useState('2025');
   const [selectedYear2026, setSelectedYear2026] = useState('2026');
-  const [activeView, setActiveView] = useState('customer-item');
+  const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
@@ -610,46 +611,27 @@ const SalesBudget: React.FC = () => {
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
   };
 
-  // Auto-distribute when user enters quantity in BUD 2026 column
+  // Auto-distribute when user enters quantity in BUD 2026 column using seasonal distribution
   const handleBudget2026Change = (itemId: number, value: number) => {
-    const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
-      const baseAmount = Math.floor(quantity / 12);
-      const remainder = quantity % 12;
+    const distributeQuantitySeasonally = (quantity: number): MonthlyBudget[] => {
+      // Use seasonal distribution for automatic allocation
+      const seasonalDistributions = applySeasonalDistribution(quantity, 'Default Seasonal');
 
-      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
-      return months.map((month, index) => {
-        let monthlyValue = baseAmount;
-
-        // First fill January to December
-        if (remainder > 0 && index < remainder) {
-          monthlyValue += 1;
-        }
-        // If still have remainder after filling Jan-Dec, continue backward from Dec
-        else if (remainder > 12) {
-          const extraRemainder = remainder - 12;
-          const backwardIndex = 11 - (index - 12);
-          if (index >= 12 - extraRemainder && backwardIndex >= 0) {
-            monthlyValue += 1;
-          }
-        }
-
-        return {
-          month,
-          budgetValue: monthlyValue,
-          actualValue: 0,
-          rate: 100,
-          stock: 0,
-          git: 0,
-          discount: 0
-        };
-      });
+      return seasonalDistributions.map(dist => ({
+        month: dist.month,
+        budgetValue: dist.value,
+        actualValue: 0,
+        rate: 100,
+        stock: 0,
+        git: 0,
+        discount: 0
+      }));
     };
 
     setTableData(prevData =>
       prevData.map(item => {
         if (item.id === itemId) {
-          const newMonthlyData = distributeQuantityEqually(value);
+          const newMonthlyData = distributeQuantitySeasonally(value);
           const newBudgetValue2026 = value * (item.rate || 1);
 
           return {
@@ -664,7 +646,7 @@ const SalesBudget: React.FC = () => {
     );
 
     // Also update editing monthly data
-    const newMonthlyData = distributeQuantityEqually(value);
+    const newMonthlyData = distributeQuantitySeasonally(value);
     setEditingMonthlyData(prev => ({
       ...prev,
       [itemId]: newMonthlyData
@@ -1489,7 +1471,7 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '��️'}
+                    {budgetGrowth === 0 && '���️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
