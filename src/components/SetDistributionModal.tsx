@@ -287,7 +287,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded border max-h-20 overflow-y-auto">
                     {customerCombinations.map((combo, idx) => (
                       <div key={combo.id} className="text-xs">
-                        {idx + 1}. {combo.combination} (Budget: {combo.budget2026})
+                        {idx + 1}. {combo.combination} (Budget {currentTargetYear}: {combo.budget2026})
                       </div>
                     ))}
                   </div>
