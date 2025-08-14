@@ -98,6 +98,7 @@ const SalesBudget: React.FC = () => {
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
+  const [isDiscountManagementModalOpen, setIsDiscountManagementModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -1393,7 +1394,7 @@ const SalesBudget: React.FC = () => {
                 selectedCategory ? 'border-green-400 bg-green-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  �� CATEGORY:
+                  📦 CATEGORY:
                   {selectedCategory && <span className="text-green-600">✓</span>}
                 </label>
                 <select
