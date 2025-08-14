@@ -410,27 +410,27 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           <h3 className="text-lg font-medium text-gray-900 mb-4">Report Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm text-blue-700 mb-1">Total Budget 2025</div>
+              <div className="text-sm text-blue-700 mb-1">Total Budget {selectedBaseYear}</div>
               <div className="text-2xl font-bold text-blue-900">
-                {reportData.reduce((sum, row) => sum + row.BUDGET2025, 0).toLocaleString()}
+                {reportData.reduce((sum, row) => sum + row.BUDGET_YEAR, 0).toLocaleString()}
               </div>
               <div className="text-xs text-blue-600">Units</div>
             </div>
-            
+
             <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm text-green-700 mb-1">Total Forecast 2025</div>
+              <div className="text-sm text-green-700 mb-1">Total Forecast {selectedTargetYear}</div>
               <div className="text-2xl font-bold text-green-900">
-                {reportData.reduce((sum, row) => sum + row.FORECAST2025, 0).toLocaleString()}
+                {reportData.reduce((sum, row) => sum + row.FORECAST_YEAR, 0).toLocaleString()}
               </div>
               <div className="text-xs text-green-600">Units</div>
             </div>
-            
+
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-sm text-purple-700 mb-1">Variance</div>
               <div className="text-2xl font-bold text-purple-900">
                 {(() => {
-                  const totalBudget = reportData.reduce((sum, row) => sum + row.BUDGET2025, 0);
-                  const totalForecast = reportData.reduce((sum, row) => sum + row.FORECAST2025, 0);
+                  const totalBudget = reportData.reduce((sum, row) => sum + row.BUDGET_YEAR, 0);
+                  const totalForecast = reportData.reduce((sum, row) => sum + row.FORECAST_YEAR, 0);
                   const variance = totalForecast - totalBudget;
                   const percentage = totalBudget > 0 ? ((variance / totalBudget) * 100).toFixed(1) : '0.0';
                   return `${variance >= 0 ? '+' : ''}${percentage}%`;
