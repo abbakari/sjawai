@@ -238,9 +238,73 @@ const SalesBudget: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
+  // Load data from backend
+  const loadBudgetData = async () => {
+    try {
+      setIsLoadingData(true);
+      setDataError(null);
+
+      const budgets = await salesBudgetService.getAllBudgets();
+      console.log('Loaded budgets from backend:', budgets);
+
+      // Transform backend data to match component interface
+      const transformedData: SalesBudgetItem[] = budgets.map(budget => ({
+        id: budget.id,
+        selected: false,
+        customer: budget.customer,
+        item: budget.item,
+        category: budget.category,
+        brand: budget.brand,
+        itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
+        budget2025: budget.budget_2025,
+        actual2025: budget.actual_2025,
+        budget2026: budget.budget_2026,
+        rate: budget.rate,
+        stock: budget.stock,
+        git: budget.git,
+        budgetValue2026: budget.budgetValue2026 || (budget.budget_2026 * budget.rate),
+        discount: budget.discount,
+        monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
+          month: month.short,
+          budgetValue: 0,
+          actualValue: 0,
+          rate: budget.rate,
+          stock: budget.stock,
+          git: budget.git,
+          discount: 0
+        }))
+      }));
+
+      setOriginalTableData(transformedData);
+      setTableData(transformedData);
+
+      // Save to localStorage for BI integration
+      localStorage.setItem('salesBudgetData', JSON.stringify(transformedData));
+
+    } catch (error) {
+      console.error('Failed to load budget data:', error);
+      setDataError('Failed to load budget data from server');
+
+      // Fallback to initialData if available
+      if (initialData.length > 0) {
+        setOriginalTableData(initialData);
+        setTableData(initialData);
+      }
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadBudgetData();
+  }, []);
+
   // Save budget data to localStorage for BI integration
   useEffect(() => {
-    localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
+    if (tableData.length > 0) {
+      localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
+    }
   }, [tableData]);
 
   // Load global stock data set by admin
