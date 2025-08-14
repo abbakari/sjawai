@@ -108,6 +108,10 @@ class ApiService {
     });
   }
 
+  async getForecastById(id: number) {
+    return this.request(`/forecasts/${id}/`);
+  }
+
   // Users API
   async getUsers() {
     return this.request('/users/');
