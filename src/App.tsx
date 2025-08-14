@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import { StockProvider } from './contexts/StockContext';
