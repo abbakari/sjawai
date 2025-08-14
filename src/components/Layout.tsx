@@ -22,6 +22,7 @@ import { useAuth, hasPermission, canAccessDashboard, getUserRoleName } from '../
 import { UserRole } from '../types/auth';
 import Navbar from './Navbar';
 import PasswordModal from './PasswordModal';
+import ApiStatus from './ApiStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
