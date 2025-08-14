@@ -143,7 +143,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         ],
         metadata: {
           budgetAmount: 250000,
-          period: 'Q1 2026',
+          period: `Q1 ${new Date().getFullYear() + 1}`,
           categories: ['TYRE SERVICE']
         }
       },
