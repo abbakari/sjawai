@@ -92,7 +92,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
         category: item.category,
         brand: item.brand,
         item: item.item,
-        budget2026: item.budget2026,
+        budget2026: getYearValue(item, currentTargetYear, 'budget'),
         combination: `${item.category} - ${item.brand} - ${item.item}`
       }));
 
