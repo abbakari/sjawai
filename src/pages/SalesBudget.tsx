@@ -19,7 +19,8 @@ import {
   Send,
   Package,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  Percent
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
