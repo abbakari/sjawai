@@ -240,18 +240,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     'color': 'blue'
                 },
                 {
-                    'title': 'System Reports',
-                    'description': 'View system analytics',
-                    'url': '/reports/',
-                    'icon_svg': self.get_icon_svg('chart'),
+                    'title': 'Global Budget Management',
+                    'description': 'Manage all organizational budgets',
+                    'url': '/sales-budget/',
+                    'icon_svg': self.get_icon_svg('pie-chart'),
                     'color': 'green'
                 },
                 {
-                    'title': 'Global Targets',
-                    'description': 'Set organization goals',
-                    'url': '/budget-allocation/',
-                    'icon_svg': self.get_icon_svg('target'),
+                    'title': 'Global Forecast Management',
+                    'description': 'Oversee all forecast planning',
+                    'url': '/rolling-forecast/',
+                    'icon_svg': self.get_icon_svg('chart'),
                     'color': 'purple'
+                },
+                {
+                    'title': 'System Analytics',
+                    'description': 'View system-wide analytics',
+                    'url': '/reports/',
+                    'icon_svg': self.get_icon_svg('target'),
+                    'color': 'orange'
                 },
                 {
                     'title': 'Advanced Admin',
@@ -271,18 +278,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     'color': 'blue'
                 },
                 {
-                    'title': 'Team Performance',
-                    'description': 'Monitor team progress',
-                    'url': '/reports/',
-                    'icon_svg': self.get_icon_svg('users'),
+                    'title': 'Team Forecast Management',
+                    'description': 'Oversee team forecast planning',
+                    'url': '/rolling-forecast/',
+                    'icon_svg': self.get_icon_svg('chart'),
                     'color': 'green'
                 },
                 {
                     'title': 'Approval Center',
-                    'description': 'Review submissions',
+                    'description': 'Review team submissions',
                     'url': '/approval-center/',
                     'icon_svg': self.get_icon_svg('check-circle'),
                     'color': 'purple'
+                },
+                {
+                    'title': 'Team Performance',
+                    'description': 'Monitor team progress',
+                    'url': '/reports/',
+                    'icon_svg': self.get_icon_svg('users'),
+                    'color': 'orange'
                 }
             ]
         elif role == 'salesman':
@@ -319,18 +333,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     'color': 'blue'
                 },
                 {
-                    'title': 'Stock Analytics',
-                    'description': 'Analyze inventory trends',
-                    'url': '/reports/',
-                    'icon_svg': self.get_icon_svg('trending-up'),
+                    'title': 'Budget Analysis',
+                    'description': 'View budget data for planning',
+                    'url': '/sales-budget/',
+                    'icon_svg': self.get_icon_svg('pie-chart'),
                     'color': 'green'
+                },
+                {
+                    'title': 'Demand Forecasting',
+                    'description': 'Review forecast data for procurement',
+                    'url': '/rolling-forecast/',
+                    'icon_svg': self.get_icon_svg('chart'),
+                    'color': 'purple'
                 },
                 {
                     'title': 'Distribution',
                     'description': 'Manage distribution',
                     'url': '/distribution-management/',
                     'icon_svg': self.get_icon_svg('truck'),
-                    'color': 'purple'
+                    'color': 'orange'
                 }
             ]
         else:
