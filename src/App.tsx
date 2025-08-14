@@ -17,6 +17,7 @@ import ApprovalCenter from './pages/ApprovalCenter';
 import AdminPanel from './pages/AdminPanel';
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
+import ApiTest from './pages/ApiTest';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
