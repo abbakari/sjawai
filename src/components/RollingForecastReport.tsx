@@ -391,10 +391,10 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                     ))}
                     
                     <td className="px-3 py-3 text-center text-sm font-medium text-gray-900 border-r border-gray-200">
-                      {row.BUDGET2025}
+                      {row.BUDGET_YEAR}
                     </td>
                     <td className="px-3 py-3 text-center text-sm font-medium text-green-600">
-                      {row.FORECAST2025}
+                      {row.FORECAST_YEAR}
                     </td>
                   </tr>
                 ))
