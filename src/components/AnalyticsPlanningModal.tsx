@@ -30,14 +30,15 @@ const AnalyticsPlanningModal: React.FC<AnalyticsPlanningModalProps> = ({ isOpen,
     ]
   };
 
+  const currentYear = getCurrentYear();
   const forecastAnalytics = {
     accuracy: '94.2%',
     confidence: 'High',
     predictions: [
-      { period: 'Q1 2025', forecast: '$2.8M', confidence: '92%' },
-      { period: 'Q2 2025', forecast: '$3.1M', confidence: '88%' },
-      { period: 'Q3 2025', forecast: '$3.4M', confidence: '85%' },
-      { period: 'Q4 2025', forecast: '$3.7M', confidence: '82%' }
+      { period: `Q1 ${currentYear}`, forecast: '$2.8M', confidence: '92%' },
+      { period: `Q2 ${currentYear}`, forecast: '$3.1M', confidence: '88%' },
+      { period: `Q3 ${currentYear}`, forecast: '$3.4M', confidence: '85%' },
+      { period: `Q4 ${currentYear}`, forecast: '$3.7M', confidence: '82%' }
     ]
   };
 
