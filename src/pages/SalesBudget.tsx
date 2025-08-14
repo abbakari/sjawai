@@ -600,7 +600,7 @@ const SalesBudget: React.FC = () => {
           DataPersistenceManager.saveSalesBudgetData([savedData]);
         }
 
-        showNotification(`✅ Monthly budget data saved to database. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount).`, 'success');
+        showNotification(`✅ Monthly budget data saved to database. Net value: $${netBudgetValue.toLocaleString()} (after $${finalDiscount.toLocaleString()} automatic discount applied).`, 'success');
 
       } catch (error) {
         console.error('Failed to save monthly data:', error);
@@ -1743,7 +1743,7 @@ const SalesBudget: React.FC = () => {
                           ? 'bg-green-200 text-green-800'
                           : 'bg-orange-200 text-orange-800'
                       }`}>
-                        {budgetGrowth > 0 ? '���� Growing!' : '⚠️ Declining'}
+                        {budgetGrowth > 0 ? '🚀 Growing!' : '⚠️ Declining'}
                       </span>
                     </div>
                   )}
