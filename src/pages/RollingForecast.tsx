@@ -81,16 +81,9 @@ const RollingForecast: React.FC = () => {
   const [showReportView, setShowReportView] = useState(false);
   const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
 
-  // Helper function to get value for any year from dynamic data structure
+  // Use centralized helper function for year value access
   const getYearValue = (item: any, year: string, type: 'budget' | 'actual'): number => {
-    switch (type) {
-      case 'budget':
-        return item.yearlyBudgets?.[year] || (year === '2025' ? item.bud25 || 0 : 0);
-      case 'actual':
-        return item.yearlyActuals?.[year] || (year === '2025' ? item.ytd25 || 0 : 0);
-      default:
-        return 0;
-    }
+    return getYearValueUtil(item, year, type);
   };
 
   // Sample data
