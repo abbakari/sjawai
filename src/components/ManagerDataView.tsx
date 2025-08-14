@@ -287,13 +287,40 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                 Forecast Data ({forecastData.length})
               </button>
             </div>
-            <button
-              onClick={exportData}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Year Selectors */}
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <label className="text-xs font-medium text-gray-600">Years:</label>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedBaseYear}
+                  onChange={(e) => setSelectedBaseYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-gray-500">to</span>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedTargetYear}
+                  onChange={(e) => setSelectedTargetYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={exportData}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
