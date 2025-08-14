@@ -141,7 +141,7 @@ const SeasonalDistributionInfo: React.FC<SeasonalDistributionInfoProps> = ({ isO
             <h3 className="font-semibold text-yellow-900 mb-2">How It Works:</h3>
             <div className="text-sm text-yellow-800 space-y-2">
               <p>
-                <strong>Automatic Application:</strong> When you enter a quantity in the BUD 2026 column, 
+                <strong>Automatic Application:</strong> When you enter a quantity in the target year budget column, 
                 the system automatically distributes it across months using the seasonal pattern.
               </p>
               <p>
