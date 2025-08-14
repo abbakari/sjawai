@@ -110,6 +110,27 @@ export class SalesBudgetService {
   }
 
   private transformBackendToFrontend(backendItem: any): SalesBudgetItem {
+    // Create dynamic year data structure
+    const yearly_budgets: { [year: string]: number } = {};
+    const yearly_actuals: { [year: string]: number } = {};
+    const yearly_values: { [year: string]: number } = {};
+
+    // Populate from backend dynamic fields if available
+    if (backendItem.yearly_budgets) {
+      Object.assign(yearly_budgets, backendItem.yearly_budgets);
+    }
+    if (backendItem.yearly_actuals) {
+      Object.assign(yearly_actuals, backendItem.yearly_actuals);
+    }
+    if (backendItem.yearly_values) {
+      Object.assign(yearly_values, backendItem.yearly_values);
+    }
+
+    // Legacy compatibility - populate from specific fields
+    if (backendItem.budget_2025 !== undefined) yearly_budgets['2025'] = backendItem.budget_2025;
+    if (backendItem.actual_2025 !== undefined) yearly_actuals['2025'] = backendItem.actual_2025;
+    if (backendItem.budget_2026 !== undefined) yearly_budgets['2026'] = backendItem.budget_2026;
+
     return {
       id: backendItem.id,
       selected: false,
@@ -117,19 +138,23 @@ export class SalesBudgetService {
       item: backendItem.item,
       category: backendItem.category,
       brand: backendItem.brand,
-      itemCombined: `${backendItem.item} (${backendItem.category} - ${backendItem.brand})`,
-      budget_2025: backendItem.budget_2025 || 0,
-      actual_2025: backendItem.actual_2025 || 0,
-      budget_2026: backendItem.budget_2026 || 0,
+      itemCombined: backendItem.itemCombined || `${backendItem.item} (${backendItem.category} - ${backendItem.brand})`,
+      yearly_budgets,
+      yearly_actuals,
+      yearly_values,
       rate: backendItem.rate || 0,
       stock: backendItem.stock || 0,
       git: backendItem.git || 0,
-      budgetValue2026: (backendItem.budget_2026 || 0) * (backendItem.rate || 1),
+      budgetValue2026: backendItem.budgetValue2026 || ((backendItem.budget_2026 || 0) * (backendItem.rate || 1)),
       discount: backendItem.discount || 0,
       monthly_data: Array.isArray(backendItem.monthly_data) ? backendItem.monthly_data : [],
       created_by: backendItem.created_by,
       created_at: backendItem.created_at,
-      updated_at: backendItem.updated_at
+      updated_at: backendItem.updated_at,
+      // Legacy compatibility fields
+      budget_2025: backendItem.budget_2025 || 0,
+      actual_2025: backendItem.actual_2025 || 0,
+      budget_2026: backendItem.budget_2026 || 0
     };
   }
 
