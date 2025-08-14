@@ -1279,6 +1279,16 @@ const SalesBudget: React.FC = () => {
                     <span>Admin Stock</span>
                   </button>
                 )}
+                {(user?.role === 'admin' || user?.role === 'manager') && (
+                  <button
+                    onClick={() => setIsDiscountManagementModalOpen(true)}
+                    className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
+                    title="Manage category and brand discount rules"
+                  >
+                    <Percent className="w-5 h-5" />
+                    <span>Discounts</span>
+                  </button>
+                )}
                 <button
                   onClick={handleDownloadBudget}
                   className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors transform hover:scale-105 active:scale-95"
