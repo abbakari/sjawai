@@ -169,10 +169,10 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
           }
         ],
         metadata: {
-          shipmentId: 'SH_2025_001',
+          shipmentId: `SH_${new Date().getFullYear()}_001`,
           affectedCustomers: ['Action Aid International (Tz)', 'ADVENT CONSTRUCTION LTD.'],
-          originalETA: '2025-02-15',
-          newETA: '2025-03-01'
+          originalETA: `${new Date().getFullYear()}-02-15`,
+          newETA: `${new Date().getFullYear()}-03-01`
         }
       },
       {
