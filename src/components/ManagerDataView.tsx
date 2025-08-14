@@ -3,6 +3,12 @@ import { X, Eye, Filter, Download, Users, Calendar, TrendingUp, Package } from '
 import { useAuth } from '../contexts/AuthContext';
 import DataPersistenceManager, { SavedBudgetData, SavedForecastData } from '../utils/dataPersistence';
 import CustomerForecastModal from './CustomerForecastModal';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface ManagerDataViewProps {
   isOpen: boolean;
