@@ -205,17 +205,19 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <BudgetProvider>
-        <WorkflowProvider>
-          <StockProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </StockProvider>
-        </WorkflowProvider>
-      </BudgetProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BudgetProvider>
+          <WorkflowProvider>
+            <StockProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </StockProvider>
+          </WorkflowProvider>
+        </BudgetProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
