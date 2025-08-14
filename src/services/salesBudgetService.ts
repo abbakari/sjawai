@@ -164,9 +164,15 @@ export class SalesBudgetService {
       item: frontendItem.item || '',
       category: frontendItem.category || '',
       brand: frontendItem.brand || '',
-      budget_2025: frontendItem.budget_2025 || 0,
-      actual_2025: frontendItem.actual_2025 || 0,
-      budget_2026: frontendItem.budget_2026 || 0,
+      year: new Date().getFullYear().toString(), // Default to current year
+      // Dynamic year data
+      yearly_budgets: frontendItem.yearly_budgets || {},
+      yearly_actuals: frontendItem.yearly_actuals || {},
+      yearly_values: frontendItem.yearly_values || {},
+      // Legacy compatibility fields
+      budget_2025: frontendItem.budget_2025 || frontendItem.yearly_budgets?.['2025'] || 0,
+      actual_2025: frontendItem.actual_2025 || frontendItem.yearly_actuals?.['2025'] || 0,
+      budget_2026: frontendItem.budget_2026 || frontendItem.yearly_budgets?.['2026'] || 0,
       rate: frontendItem.rate || 0,
       stock: frontendItem.stock || 0,
       git: frontendItem.git || 0,
