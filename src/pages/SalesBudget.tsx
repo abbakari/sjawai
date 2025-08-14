@@ -1119,6 +1119,20 @@ const SalesBudget: React.FC = () => {
 
   const budgetGrowth = totalBudget2025 > 0 ? ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100 : 0;
 
+  // Show loading state
+  if (isLoadingData) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-100 font-sans flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading budget data from database...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100 font-sans">
@@ -1660,7 +1674,7 @@ const SalesBudget: React.FC = () => {
                           ? 'bg-green-200 text-green-800'
                           : 'bg-orange-200 text-orange-800'
                       }`}>
-                        {budgetGrowth > 0 ? '🚀 Growing!' : '⚠️ Declining'}
+                        {budgetGrowth > 0 ? '🚀 Growing!' : '��️ Declining'}
                       </span>
                     </div>
                   )}
