@@ -162,7 +162,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
       'CUSTOMER', 'ITEM', 'BRAND', 'CATEGORY',
       'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
       'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-      'BUDGET2025', 'FORECAST2025'
+      `BUDGET${selectedBaseYear}`, `FORECAST${selectedTargetYear}`
     ];
 
     const csvContent = [
