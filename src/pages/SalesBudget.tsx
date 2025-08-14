@@ -1136,7 +1136,30 @@ const SalesBudget: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100 font-sans">
-        {/* Error Display */}
+        {/* Data Loading Error Display */}
+        {dataError && (
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-4 m-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-orange-800">Data Loading Warning</h3>
+                <div className="mt-2 text-sm text-orange-700">{dataError}</div>
+                <div className="mt-2">
+                  <button
+                    onClick={loadBudgetData}
+                    className="bg-orange-100 hover:bg-orange-200 text-orange-800 text-xs px-3 py-1 rounded"
+                  >
+                    Retry Loading
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Budget Context Error Display */}
         {budgetError && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 m-4">
             <div className="flex">
@@ -1674,7 +1697,7 @@ const SalesBudget: React.FC = () => {
                           ? 'bg-green-200 text-green-800'
                           : 'bg-orange-200 text-orange-800'
                       }`}>
-                        {budgetGrowth > 0 ? '🚀 Growing!' : '��️ Declining'}
+                        {budgetGrowth > 0 ? '🚀 Growing!' : '⚠️ Declining'}
                       </span>
                     </div>
                   )}
