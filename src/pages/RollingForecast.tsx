@@ -156,7 +156,6 @@ const RollingForecast: React.FC = () => {
   const [tableData, setTableData] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
-  const [usingFallbackData, setUsingFallbackData] = useState(false);
 
   // Load data from backend
   const loadForecastData = async () => {
