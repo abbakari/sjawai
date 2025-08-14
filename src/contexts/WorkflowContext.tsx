@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { YearlyBudgetData } from './BudgetContext';
-import { supabase, isSupabaseConfigured, handleSupabaseError, TABLES } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 export type WorkflowState = 'draft' | 'submitted' | 'in_review' | 'approved' | 'rejected' | 'sent_to_supply_chain';
@@ -166,7 +165,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
     read: row.is_read
   });
 
-  // Load workflow data from Supabase
+  // Load workflow data from local storage
   const loadWorkflowData = async () => {
     if (!user) {
       setWorkflowItems([]);
@@ -174,57 +173,28 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       return;
     }
 
-    if (!isSupabaseConfigured()) {
-      // Fallback mode - provide empty data but no error
+    try {
+      const savedWorkflowItems = localStorage.getItem('workflow_items');
+      const savedNotifications = localStorage.getItem('workflow_notifications');
+
+      if (savedWorkflowItems) {
+        setWorkflowItems(JSON.parse(savedWorkflowItems));
+      } else {
+        setWorkflowItems([]);
+      }
+
+      if (savedNotifications) {
+        setNotifications(JSON.parse(savedNotifications));
+      } else {
+        setNotifications([]);
+      }
+
+      setError(null);
+    } catch (err: any) {
+      console.error('Error loading workflow data from localStorage:', err);
       setWorkflowItems([]);
       setNotifications([]);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Load workflow items with comments
-      const { data: workflowData, error: workflowError } = await supabase
-        .from(TABLES.WORKFLOW_ITEMS)
-        .select(`
-          *,
-          workflow_comments (*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (workflowError) throw workflowError;
-
-      // Load notifications
-      const { data: notificationData, error: notificationError } = await supabase
-        .from(TABLES.WORKFLOW_NOTIFICATIONS)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (notificationError) throw notificationError;
-
-      // Convert and set data
-      setWorkflowItems(workflowData?.map(convertDatabaseToWorkflowItem) || []);
-      setNotifications(notificationData?.map(convertDatabaseToNotification) || []);
-
-    } catch (err: any) {
-      let errorMessage = 'Failed to load workflow data: ';
-      if (err?.message) {
-        errorMessage += err.message;
-      } else if (typeof err === 'string') {
-        errorMessage += err;
-      } else if (err?.code) {
-        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
-      } else {
-        errorMessage += 'Unknown error occurred';
-      }
-      setError(errorMessage);
-      console.error('Error loading workflow data:', err);
-      console.error('Error details:', JSON.stringify(err, null, 2));
-    } finally {
-      setIsLoading(false);
+      setError('Failed to load workflow data from local storage');
     }
   };
 
@@ -250,8 +220,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
     // Determine creator from budget or forecast data
     const createdBy = budgetData[0]?.createdBy || forecastData?.[0]?.createdBy || user.name;
 
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
+    try {
       const id = `wf_${Date.now()}`;
       const newItem: WorkflowItem = {
         id,
@@ -278,58 +247,20 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
         forecastData
       };
 
-      setWorkflowItems(prev => [...prev, newItem]);
+      const updatedItems = [...workflowItems, newItem];
+      setWorkflowItems(updatedItems);
+      localStorage.setItem('workflow_items', JSON.stringify(updatedItems));
+
       return id;
-    }
-
-    try {
-      // Insert workflow item
-      const { data: workflowData, error: workflowError } = await supabase
-        .from(TABLES.WORKFLOW_ITEMS)
-        .insert({
-          type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
-          title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
-          description: `Submitted for manager approval`,
-          created_by: user.id,
-          created_by_role: 'salesman',
-          current_state: 'submitted',
-          submitted_at: new Date().toISOString(),
-          customers,
-          total_value: totalValue,
-          year,
-          priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
-          budget_data: budgetData,
-          forecast_data: forecastData
-        })
-        .select()
-        .single();
-
-      if (workflowError) throw workflowError;
-
-      // Add initial comment
-      await supabase
-        .from(TABLES.WORKFLOW_COMMENTS)
-        .insert({
-          workflow_item_id: workflowData.id,
-          author: user.id,
-          author_role: 'salesman',
-          message: 'Data submitted for approval.',
-          type: 'comment'
-        });
-
-      await loadWorkflowData();
-      return workflowData.id;
-
     } catch (err: any) {
-      handleSupabaseError(err, 'submit for approval');
+      console.error('Error submitting for approval:', err);
       throw err;
     }
   };
 
   const approveItem = async (itemId: string, comment: string, managerId: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
-      setWorkflowItems(prev => prev.map(item => {
+    try {
+      const updatedItems = workflowItems.map(item => {
         if (item.id === itemId) {
           const approvalComment: WorkflowComment = {
             id: `c_${Date.now()}`,
@@ -349,49 +280,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           };
         }
         return item;
-      }));
-      return;
-    }
+      });
 
-    try {
-      // Update workflow item
-      const { error: updateError } = await supabase
-        .from(TABLES.WORKFLOW_ITEMS)
-        .update({
-          current_state: 'approved',
-          approved_by: user?.id || managerId,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', itemId);
-
-      if (updateError) throw updateError;
-
-      // Add approval comment
-      await supabase
-        .from(TABLES.WORKFLOW_COMMENTS)
-        .insert({
-          workflow_item_id: itemId,
-          author: user?.id || managerId,
-          author_role: 'manager',
-          message: comment,
-          type: 'approval'
-        });
-
-      // Create notification (if needed)
-      // Implementation depends on notification requirements
-
-      await loadWorkflowData();
-
+      setWorkflowItems(updatedItems);
+      localStorage.setItem('workflow_items', JSON.stringify(updatedItems));
     } catch (err: any) {
-      handleSupabaseError(err, 'approve item');
+      console.error('Error approving item:', err);
       throw err;
     }
   };
 
   const rejectItem = async (itemId: string, comment: string, managerId: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
-      setWorkflowItems(prev => prev.map(item => {
+    try {
+      const updatedItems = workflowItems.map(item => {
         if (item.id === itemId) {
           const rejectionComment: WorkflowComment = {
             id: `c_${Date.now()}`,
@@ -411,46 +312,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           };
         }
         return item;
-      }));
-      return;
-    }
+      });
 
-    try {
-      // Update workflow item
-      const { error: updateError } = await supabase
-        .from(TABLES.WORKFLOW_ITEMS)
-        .update({
-          current_state: 'rejected',
-          rejected_by: user?.id || managerId,
-          rejected_at: new Date().toISOString()
-        })
-        .eq('id', itemId);
-
-      if (updateError) throw updateError;
-
-      // Add rejection comment
-      await supabase
-        .from(TABLES.WORKFLOW_COMMENTS)
-        .insert({
-          workflow_item_id: itemId,
-          author: user?.id || managerId,
-          author_role: 'manager',
-          message: comment,
-          type: 'rejection'
-        });
-
-      await loadWorkflowData();
-
+      setWorkflowItems(updatedItems);
+      localStorage.setItem('workflow_items', JSON.stringify(updatedItems));
     } catch (err: any) {
-      handleSupabaseError(err, 'reject item');
+      console.error('Error rejecting item:', err);
       throw err;
     }
   };
 
   const addComment = async (itemId: string, comment: string, userId: string, userRole: string, isFollowBack?: boolean): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
-      setWorkflowItems(prev => prev.map(item => {
+    try {
+      const updatedItems = workflowItems.map(item => {
         if (item.id === itemId) {
           const newComment: WorkflowComment = {
             id: `c_${Date.now()}`,
@@ -468,34 +342,19 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           };
         }
         return item;
-      }));
-      return;
-    }
+      });
 
-    try {
-      await supabase
-        .from(TABLES.WORKFLOW_COMMENTS)
-        .insert({
-          workflow_item_id: itemId,
-          author: user?.id || userId,
-          author_role: userRole,
-          message: comment,
-          type: 'comment',
-          is_follow_back: isFollowBack || false
-        });
-
-      await loadWorkflowData();
-
+      setWorkflowItems(updatedItems);
+      localStorage.setItem('workflow_items', JSON.stringify(updatedItems));
     } catch (err: any) {
-      handleSupabaseError(err, 'add comment');
+      console.error('Error adding comment:', err);
       throw err;
     }
   };
 
   const sendToSupplyChain = async (itemId: string, managerId: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
-      setWorkflowItems(prev => prev.map(item => {
+    try {
+      const updatedItems = workflowItems.map(item => {
         if (item.id === itemId) {
           return {
             ...item,
@@ -504,24 +363,12 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           };
         }
         return item;
-      }));
-      return;
-    }
+      });
 
-    try {
-      const { error } = await supabase
-        .from(TABLES.WORKFLOW_ITEMS)
-        .update({
-          current_state: 'sent_to_supply_chain',
-          sent_to_supply_chain_at: new Date().toISOString()
-        })
-        .eq('id', itemId);
-
-      if (error) throw error;
-      await loadWorkflowData();
-
+      setWorkflowItems(updatedItems);
+      localStorage.setItem('workflow_items', JSON.stringify(updatedItems));
     } catch (err: any) {
-      handleSupabaseError(err, 'send to supply chain');
+      console.error('Error sending to supply chain:', err);
       throw err;
     }
   };
@@ -545,24 +392,15 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
   };
 
   const markNotificationAsRead = async (notificationId: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      setNotifications(prev => prev.map(notification =>
-        notification.id === notificationId ? { ...notification, read: true } : notification
-      ));
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from(TABLES.WORKFLOW_NOTIFICATIONS)
-        .update({ is_read: true })
-        .eq('id', notificationId);
+      const updatedNotifications = notifications.map(notification =>
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      );
 
-      if (error) throw error;
-      await loadWorkflowData();
-
+      setNotifications(updatedNotifications);
+      localStorage.setItem('workflow_notifications', JSON.stringify(updatedNotifications));
     } catch (err: any) {
-      handleSupabaseError(err, 'mark notification as read');
+      console.error('Error marking notification as read:', err);
       throw err;
     }
   };
