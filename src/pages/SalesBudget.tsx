@@ -1543,7 +1543,7 @@ const SalesBudget: React.FC = () => {
                 selectedCustomer ? 'border-blue-400 bg-blue-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  👤 CUSTOMER:
+                  ��� CUSTOMER:
                   {selectedCustomer && <span className="text-blue-600">✓</span>}
                 </label>
                 <select
@@ -1866,7 +1866,7 @@ const SalesBudget: React.FC = () => {
                     {budgetGrowth === 0 && '���️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
-                  <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
+                  <p className="text-xs text-gray-600">From {selectedBaseYear} to {selectedTargetYear}</p>
                   {budgetGrowth !== -100 && totalBudget2026 > 0 && (
                     <div className="mt-1">
                       <span className={`inline-block px-1.5 py-0.5 text-xs rounded-full font-medium ${
