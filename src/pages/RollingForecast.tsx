@@ -163,9 +163,14 @@ const RollingForecast: React.FC = () => {
     try {
       setIsLoadingData(true);
       setDataError(null);
+      setUsingFallbackData(false);
 
       const forecasts = await rollingForecastService.getAllForecasts();
       console.log('Loaded forecasts (with potential fallback):', forecasts);
+
+      // Check if we're using fallback data
+      const isFallback = forecasts.length > 0 && forecasts[0]._isFallbackData;
+      setUsingFallbackData(isFallback);
 
       setTableData(forecasts);
 
