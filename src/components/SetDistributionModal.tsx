@@ -501,7 +501,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div>• {itemQuantity} items distributed across 12 months (Jan→Dec priority)</div>
                 )}
                 {distributionType === 'percentage' && percentageValue > 0 && (
-                  <div>• {percentageValue}% of each item's BUD 2026 distributed equally</div>
+                  <div>• {percentageValue}% of each item's BUD {currentTargetYear} distributed equally</div>
                 )}
               </div>
             </div>
