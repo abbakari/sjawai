@@ -1148,7 +1148,7 @@ const SalesBudget: React.FC = () => {
           item: row.item,
           category: row.category,
           brand: row.brand,
-          year: selectedYear2026,
+          year: selectedTargetYear,
           totalBudget: row.budgetValue2026,
           monthlyData: row.monthlyData,
           createdBy: user?.name || 'Unknown',
@@ -1813,7 +1813,7 @@ const SalesBudget: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">{/* Animated when data changes */}
               <div className="bg-white p-2 rounded shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Budget {selectedYear2025}</p>
+                  <p className="text-xs text-gray-600 font-medium">Budget {selectedBaseYear}</p>
                   <p className="text-lg font-bold text-blue-900 transition-colors duration-300">${totalBudget2025.toLocaleString()}</p>
                   <p className="text-xs text-blue-600 font-medium">
                     {totalUnits2025.toLocaleString()} Units
@@ -1822,7 +1822,7 @@ const SalesBudget: React.FC = () => {
               </div>
               <div className="bg-white p-2 rounded shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Actual {selectedYear2025}</p>
+                  <p className="text-xs text-gray-600 font-medium">Actual {selectedBaseYear}</p>
                   <p className="text-lg font-bold text-green-900 transition-colors duration-300">${totalActual2025.toLocaleString()}</p>
                   <p className="text-xs text-green-600 font-medium">
                     {totalActualUnits2025.toLocaleString()} Units
@@ -2244,7 +2244,7 @@ const SalesBudget: React.FC = () => {
                                   <div className="mb-4">
                                     <h4 className="text-lg font-semibold flex items-center gap-2">
                                       <Calendar className="w-5 h-5" />
-                                      Monthly Budget Data for {selectedYear2026}
+                                      Monthly Budget Data for {selectedTargetYear}
                                     </h4>
                                     <p className="text-sm text-gray-600 mt-1">Enter budget values for each month using the simplified 2-row layout</p>
                                   </div>
@@ -2449,7 +2449,7 @@ const SalesBudget: React.FC = () => {
           onClose={() => setIsYearlyBudgetModalOpen(false)}
           onSave={handleYearlyBudgetSave}
           selectedCustomer={selectedCustomer}
-          year={selectedYear2026}
+          year={selectedTargetYear}
         />
 
         {user?.role === 'manager' || user?.role === 'admin' ? (
