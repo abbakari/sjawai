@@ -1,27 +1,32 @@
 import { MonthlyForecast, BudgetImpact, CustomerItemForecast, BudgetHistory, YearlyForecastSummary, CustomerAnalytics } from '../types/forecast';
 
-// Budget targets by year (example data - would come from database)
-const BUDGET_TARGETS_BY_YEAR: { [year: number]: { [month: string]: number } } = {
-  2021: {
+// Dynamic budget target generation
+const generateBudgetTargetsForYear = (year: number): { [month: string]: number } => {
+  // Base year (2021) targets
+  const baseTargets = {
     'Jan': 120000, 'Feb': 125000, 'Mar': 130000, 'Apr': 128000, 'May': 135000, 'Jun': 140000,
     'Jul': 145000, 'Aug': 148000, 'Sep': 142000, 'Oct': 145000, 'Nov': 155000, 'Dec': 170000
-  },
-  2022: {
-    'Jan': 130000, 'Feb': 135000, 'Mar': 140000, 'Apr': 138000, 'May': 145000, 'Jun': 150000,
-    'Jul': 155000, 'Aug': 158000, 'Sep': 152000, 'Oct': 155000, 'Nov': 165000, 'Dec': 180000
-  },
-  2023: {
-    'Jan': 140000, 'Feb': 145000, 'Mar': 150000, 'Apr': 148000, 'May': 155000, 'Jun': 160000,
-    'Jul': 165000, 'Aug': 168000, 'Sep': 162000, 'Oct': 165000, 'Nov': 175000, 'Dec': 190000
-  },
-  2024: {
-    'Jan': 150000, 'Feb': 160000, 'Mar': 170000, 'Apr': 165000, 'May': 175000, 'Jun': 180000,
-    'Jul': 185000, 'Aug': 190000, 'Sep': 175000, 'Oct': 180000, 'Nov': 200000, 'Dec': 220000
-  },
-  2025: {
-    'Jan': 160000, 'Feb': 170000, 'Mar': 180000, 'Apr': 175000, 'May': 185000, 'Jun': 190000,
-    'Jul': 195000, 'Aug': 200000, 'Sep': 185000, 'Oct': 190000, 'Nov': 210000, 'Dec': 230000
+  };
+
+  // Apply yearly growth factor (8% per year from base year 2021)
+  const growthFactor = Math.pow(1.08, year - 2021);
+
+  const yearlyTargets: { [month: string]: number } = {};
+  Object.entries(baseTargets).forEach(([month, baseValue]) => {
+    yearlyTargets[month] = Math.round(baseValue * growthFactor);
+  });
+
+  return yearlyTargets;
+};
+
+// Dynamic budget targets cache
+const BUDGET_TARGETS_CACHE: { [year: number]: { [month: string]: number } } = {};
+
+const getBudgetTargetsForYear = (year: number): { [month: string]: number } => {
+  if (!BUDGET_TARGETS_CACHE[year]) {
+    BUDGET_TARGETS_CACHE[year] = generateBudgetTargetsForYear(year);
   }
+  return BUDGET_TARGETS_CACHE[year];
 };
 
 const getYearlyBudgetTarget = (year: number): number => {
