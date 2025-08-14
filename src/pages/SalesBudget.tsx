@@ -562,7 +562,7 @@ const SalesBudget: React.FC = () => {
             monthlyData: updatedMonthlyData,
             budget2026: budgetValue2026,
             budgetValue2026: netBudgetValue,
-            discount: totalDiscount
+            discount: finalDiscount
           } : item
         ));
 
