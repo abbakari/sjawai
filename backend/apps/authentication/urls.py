@@ -14,6 +14,7 @@ urlpatterns = [
     
     # User Profile Management
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('me/', views.ProfileView.as_view(), name='current_user'),
     path('password/change/', views.PasswordChangeView.as_view(), name='password_change'),
     path('preferences/', views.UserPreferencesView.as_view(), name='preferences'),
     
