@@ -948,7 +948,12 @@ const SalesBudget: React.FC = () => {
 
         const createdBudget = await salesBudgetService.createBudget(newBudgetData);
 
-        // Transform to component format
+        // Transform to component format and apply automatic discount
+        const baseBudgetValue = createdBudget.budgetValue2026 || 0;
+        const discountMultiplier = discountService.getCategoryDiscount(createdBudget.category, createdBudget.brand);
+        const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+        const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
         const newRow: SalesBudgetItem = {
           id: createdBudget.id,
           selected: false,
@@ -963,8 +968,8 @@ const SalesBudget: React.FC = () => {
           rate: createdBudget.rate,
           stock: createdBudget.stock,
           git: createdBudget.git,
-          budgetValue2026: createdBudget.budgetValue2026 || 0,
-          discount: createdBudget.discount,
+          budgetValue2026: discountedBudgetValue,
+          discount: calculatedDiscount,
           monthlyData: createdBudget.monthly_data
         };
 
