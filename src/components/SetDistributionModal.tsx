@@ -374,7 +374,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div key={item.id} className="text-sm text-green-700 bg-white p-2 rounded border">
                     <div className="font-medium">{item.customer}</div>
                     <div className="text-xs">{item.category} - {item.brand} - {item.item}</div>
-                    <div className="text-xs text-gray-600">Current Budget 2026: {item.budget2026}</div>
+                    <div className="text-xs text-gray-600">Current Budget {currentTargetYear}: {getYearValue(item, currentTargetYear, 'budget')}</div>
                   </div>
                 ))}
               </div>
