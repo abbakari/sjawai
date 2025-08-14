@@ -1,318 +1,172 @@
-from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate, login, logout
-from django.utils import timezone
-from django.db import transaction
-from .serializers import (
-    CustomTokenObtainPairSerializer, 
-    LoginSerializer, 
-    UserSerializer,
-    UserRegistrationSerializer,
-    PasswordChangeSerializer,
-    UserProfileSerializer,
-    UserPreferencesSerializer
-)
-from apps.users.models import User, UserSession, UserPreferences
+"""
+Django Authentication Views
+Custom authentication views for STMBudget
+"""
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.views.generic import TemplateView
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.http import JsonResponse
+import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    """Custom JWT token view matching frontend expectations"""
-    serializer_class = CustomTokenObtainPairSerializer
+class LoginView(DjangoLoginView):
+    """Custom login view"""
+    template_name = 'auth/login.html'
+    redirect_authenticated_user = True
+    success_url = reverse_lazy('dashboard')
     
-    def post(self, request, *args, **kwargs):
-        try:
-            response = super().post(request, *args, **kwargs)
-            
-            if response.status_code == 200:
-                # Track user session
-                user_email = request.data.get('email')
-                user = User.objects.get(email=user_email)
-                
-                # Create session record
-                UserSession.objects.create(
-                    user=user,
-                    session_key=request.session.session_key or 'api_session',
-                    ip_address=request.META.get('REMOTE_ADDR', ''),
-                    user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
-                )
-                
-                logger.info(f"User {user.email} successfully logged in")
-            
-            return response
-            
-        except Exception as e:
-            logger.error(f"Login error: {str(e)}")
-            return Response(
-                {'error': 'Login failed'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-class LoginView(APIView):
-    """Login view for session-based authentication (alternative to JWT)"""
-    permission_classes = [permissions.AllowAny]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_title': 'Sign In - STMBudget',
+            'show_navbar': False,
+            'show_footer': False
+        })
+        return context
     
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+    def form_valid(self, form):
+        """Security checks and user validation"""
+        user = form.get_user()
         
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            
-            # Login user (creates session)
-            login(request, user)
-            
-            # Update last login
-            user.last_login_time = timezone.now()
-            user.save(update_fields=['last_login_time'])
-            
-            # Create session record
-            UserSession.objects.create(
-                user=user,
-                session_key=request.session.session_key,
-                ip_address=request.META.get('REMOTE_ADDR', ''),
-                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
-            )
-            
-            return Response({
-                'user': UserSerializer(user).data,
+        # Check if user is active
+        if not user.is_active:
+            messages.error(self.request, 'Your account is inactive. Please contact support.')
+            return self.form_invalid(form)
+        
+        # Log successful login
+        logger.info(f"User {user.username} logged in successfully")
+        
+        # Login user
+        auth_login(self.request, user)
+        
+        # Check if this is an AJAX request
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'redirect': self.get_success_url(),
                 'message': 'Login successful'
             })
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LogoutView(APIView):
-    """Logout view"""
-    permission_classes = [permissions.IsAuthenticated]
+        messages.success(self.request, f'Welcome back, {user.get_full_name() or user.username}!')
+        return super().form_valid(form)
     
-    def post(self, request):
+    def form_invalid(self, form):
+        """Handle login errors"""
+        # Check if this is an AJAX request
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors,
+                'message': 'Login failed. Please check your credentials.'
+            }, status=400)
+        
+        return super().form_invalid(form)
+    
+    def get_success_url(self):
+        """Determine redirect URL after login"""
+        # Check for next parameter
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return next_url
+        
+        # Role-based redirect
+        user = self.request.user
+        if hasattr(user, 'role'):
+            role = user.role
+            if role == 'admin':
+                return reverse_lazy('advanced_admin')
+            elif role == 'manager':
+                return reverse_lazy('approval_center')
+            elif role == 'supply_chain':
+                return reverse_lazy('inventory_management')
+        
+        # Default to dashboard
+        return reverse_lazy('dashboard')
+
+class LogoutView(TemplateView):
+    """Custom logout view"""
+    
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            username = request.user.username
+            auth_logout(request)
+            logger.info(f"User {username} logged out")
+            messages.success(request, 'You have been logged out successfully.')
+        
+        return redirect('login')
+
+class APILoginView(TemplateView):
+    """API endpoint for AJAX login"""
+    
+    def post(self, request, *args, **kwargs):
         try:
-            # Deactivate user sessions
-            if hasattr(request.user, 'sessions'):
-                request.user.sessions.filter(is_active=True).update(is_active=False)
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
             
-            # If using JWT, blacklist the token
-            if 'refresh' in request.data:
-                refresh_token = RefreshToken(request.data['refresh'])
-                refresh_token.blacklist()
+            if not username or not password:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Username and password are required'
+                }, status=400)
             
-            # Session logout
-            logout(request)
+            # Authenticate user
+            user = authenticate(request, username=username, password=password)
             
-            logger.info(f"User {request.user.email} logged out")
-            
-            return Response({'message': 'Logout successful'})
-            
+            if user is not None:
+                if user.is_active:
+                    auth_login(request, user)
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'user': {
+                            'id': user.id,
+                            'username': user.username,
+                            'name': user.get_full_name() or user.username,
+                            'email': user.email,
+                            'role': getattr(user, 'role', 'user'),
+                            'department': getattr(user, 'department', '')
+                        },
+                        'redirect': self.get_redirect_url(user),
+                        'message': 'Login successful'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Your account is inactive. Please contact support.'
+                    }, status=400)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid username or password'
+                }, status=400)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid JSON data'
+            }, status=400)
         except Exception as e:
-            logger.error(f"Logout error: {str(e)}")
-            return Response(
-                {'error': 'Logout failed'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-class RegisterView(APIView):
-    """User registration view"""
-    permission_classes = [permissions.AllowAny]  # Or restrict based on your needs
+            logger.error(f"Login error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'An error occurred during login'
+            }, status=500)
     
-    def post(self, request):
-        serializer = UserRegistrationSerializer(data=request.data)
+    def get_redirect_url(self, user):
+        """Get redirect URL based on user role"""
+        role = getattr(user, 'role', 'user')
         
-        if serializer.is_valid():
-            with transaction.atomic():
-                user = serializer.save()
-                
-                # Create JWT tokens
-                refresh = RefreshToken.for_user(user)
-                
-                logger.info(f"New user registered: {user.email}")
-                
-                return Response({
-                    'user': UserSerializer(user).data,
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    'message': 'Registration successful'
-                }, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProfileView(APIView):
-    """User profile management"""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get(self, request):
-        """Get current user profile"""
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
-    
-    def put(self, request):
-        """Update user profile"""
-        serializer = UserProfileSerializer(
-            request.user, 
-            data=request.data, 
-            partial=True
-        )
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(UserSerializer(request.user).data)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PasswordChangeView(APIView):
-    """Change user password"""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def post(self, request):
-        serializer = PasswordChangeSerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        
-        if serializer.is_valid():
-            user = request.user
-            user.set_password(serializer.validated_data['new_password'])
-            user.save()
-            
-            logger.info(f"Password changed for user: {user.email}")
-            
-            return Response({'message': 'Password changed successfully'})
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserPreferencesView(APIView):
-    """User preferences management"""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get(self, request):
-        """Get user preferences"""
-        try:
-            preferences = request.user.preferences
-            serializer = UserPreferencesSerializer(preferences)
-            return Response(serializer.data)
-        except UserPreferences.DoesNotExist:
-            # Create default preferences if they don't exist
-            preferences = UserPreferences.objects.create(user=request.user)
-            serializer = UserPreferencesSerializer(preferences)
-            return Response(serializer.data)
-    
-    def put(self, request):
-        """Update user preferences"""
-        try:
-            preferences = request.user.preferences
-        except UserPreferences.DoesNotExist:
-            preferences = UserPreferences.objects.create(user=request.user)
-        
-        serializer = UserPreferencesSerializer(
-            preferences,
-            data=request.data,
-            partial=True
-        )
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def user_permissions(request):
-    """Get user permissions and role information"""
-    user = request.user
-    
-    return Response({
-        'role': user.role,
-        'role_display': user.get_role_display(),
-        'permissions': user.role_permissions,
-        'accessible_dashboards': user.accessible_dashboards,
-        'department': user.department,
-        'manager': user.manager.name if user.manager else None
-    })
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def check_permission(request):
-    """Check if user has specific permission"""
-    resource = request.data.get('resource')
-    action = request.data.get('action')
-    
-    if not resource or not action:
-        return Response(
-            {'error': 'Resource and action are required'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    has_permission = request.user.has_permission(resource, action)
-    
-    return Response({
-        'has_permission': has_permission,
-        'resource': resource,
-        'action': action
-    })
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def check_dashboard_access(request):
-    """Check if user can access specific dashboard"""
-    dashboard_name = request.data.get('dashboard_name')
-    
-    if not dashboard_name:
-        return Response(
-            {'error': 'Dashboard name is required'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    can_access = request.user.can_access_dashboard(dashboard_name)
-    
-    return Response({
-        'can_access': can_access,
-        'dashboard_name': dashboard_name
-    })
-
-
-class SessionInfoView(APIView):
-    """Get current session information"""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get(self, request):
-        try:
-            # Get active session
-            session = request.user.sessions.filter(
-                session_key=request.session.session_key,
-                is_active=True
-            ).first()
-            
-            session_data = {
-                'session_key': request.session.session_key,
-                'ip_address': request.META.get('REMOTE_ADDR', ''),
-                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                'created_at': session.created_at if session else None,
-                'last_activity': session.last_activity if session else None
-            }
-            
-            return Response({
-                'user': UserSerializer(request.user).data,
-                'session': session_data,
-                'server_time': timezone.now()
-            })
-            
-        except Exception as e:
-            logger.error(f"Session info error: {str(e)}")
-            return Response(
-                {'error': 'Failed to get session info'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if role == 'admin':
+            return '/advanced-admin/'
+        elif role == 'manager':
+            return '/approval-center/'
+        elif role == 'supply_chain':
+            return '/inventory-management/'
+        else:
+            return '/dashboard/'
