@@ -900,7 +900,7 @@ const RollingForecast: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for {selectedBaseYear}-{selectedTargetYear}</h1>
           <div className="flex items-center gap-4">
             <div className="flex shadow-sm rounded-md overflow-hidden">
               <button
