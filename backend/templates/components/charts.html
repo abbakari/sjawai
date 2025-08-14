@@ -1,0 +1,577 @@
+<!-- Charts Components for Django Templates -->
+
+<!-- Budget Allocation Pie Chart -->
+<div id="budgetAllocationChart" class="chart-container hidden">
+    <canvas id="budgetAllocationCanvas" width="400" height="300"></canvas>
+    <div class="chart-legend" id="budgetAllocationLegend"></div>
+</div>
+
+<!-- Sales Trend Line Chart -->
+<div id="salesTrendChart" class="chart-container hidden">
+    <canvas id="salesTrendCanvas" width="400" height="300"></canvas>
+</div>
+
+<!-- Budget Comparison Bar Chart -->
+<div id="budgetComparisonChart" class="chart-container hidden">
+    <canvas id="budgetComparisonCanvas" width="400" height="300"></canvas>
+</div>
+
+<!-- Gauge Chart for Performance -->
+<div id="gaugeChart" class="chart-container hidden">
+    <canvas id="gaugeCanvas" width="300" height="200"></canvas>
+    <div class="gauge-value" id="gaugeValue">0%</div>
+</div>
+
+<style>
+/* Chart styling */
+.chart-container {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+    margin-bottom: 1.5rem;
+}
+
+.chart-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.chart-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.gauge-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -20%);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Responsive charts */
+@media (max-width: 640px) {
+    .chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-legend {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .gauge-value {
+        font-size: 1.25rem;
+    }
+}
+
+/* Chart animations */
+.chart-fade-in {
+    animation: chartFadeIn 0.6s ease-out;
+}
+
+@keyframes chartFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chart hover effects */
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+<script>
+// Chart.js configuration and utilities
+class STMCharts {
+    constructor() {
+        this.charts = {};
+        this.colors = {
+            primary: '#3b82f6',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            purple: '#8b5cf6',
+            cyan: '#06b6d4',
+            gray: '#6b7280'
+        };
+        this.colorPalette = [
+            this.colors.primary,
+            this.colors.success,
+            this.colors.warning,
+            this.colors.danger,
+            this.colors.purple,
+            this.colors.cyan
+        ];
+    }
+
+    // Initialize all charts
+    init() {
+        // Load Chart.js if not already loaded
+        if (typeof Chart === 'undefined') {
+            this.loadChartJS(() => {
+                this.initializeCharts();
+            });
+        } else {
+            this.initializeCharts();
+        }
+    }
+
+    loadChartJS(callback) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    initializeCharts() {
+        // Set Chart.js defaults
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        Chart.defaults.color = '#6b7280';
+        Chart.defaults.borderColor = '#e5e7eb';
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.padding = 20;
+        Chart.defaults.responsive = true;
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.animation.duration = 800;
+        Chart.defaults.animation.easing = 'easeOutQuart';
+    }
+
+    // Create Budget Allocation Pie Chart
+    createBudgetAllocationChart(containerId, data) {
+        const container = document.getElementById(containerId);
+        const canvas = container.querySelector('canvas');
+        
+        if (!canvas) return null;
+
+        const ctx = canvas.getContext('2d');
+        
+        const chartData = {
+            labels: data.map(item => item.name),
+            datasets: [{
+                data: data.map(item => item.value),
+                backgroundColor: this.colorPalette.slice(0, data.length),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverBorderWidth: 3,
+                hoverBorderColor: '#ffffff'
+            }]
+        };
+
+        const options = {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        generateLabels: (chart) => {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                const value = data[index]?.value || 0;
+                                const amount = data[index]?.amount || 0;
+                                label.text += ` ${value}% ($${(amount/1000).toFixed(0)}k)`;
+                            });
+                            
+                            return labels;
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const item = data[context.dataIndex];
+                            return `${context.label}: ${item.value}% ($${(item.amount/1000).toFixed(0)}k)`;
+                        }
+                    }
+                }
+            }
+        };
+
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: chartData,
+            options: options
+        });
+
+        container.classList.remove('hidden');
+        container.classList.add('chart-fade-in');
+        
+        this.charts[containerId] = chart;
+        return chart;
+    }
+
+    // Create Sales Trend Line Chart
+    createSalesTrendChart(containerId, data) {
+        const container = document.getElementById(containerId);
+        const canvas = container.querySelector('canvas');
+        
+        if (!canvas) return null;
+
+        const ctx = canvas.getContext('2d');
+        
+        const chartData = {
+            labels: data.map(item => item.month),
+            datasets: [
+                {
+                    label: 'Actual Sales',
+                    data: data.map(item => item.sales),
+                    borderColor: this.colors.primary,
+                    backgroundColor: this.colors.primary + '20',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: this.colors.primary,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Budget',
+                    data: data.map(item => item.budget),
+                    borderColor: this.colors.success,
+                    backgroundColor: this.colors.success + '20',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: this.colors.success,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                },
+                {
+                    label: 'Forecast',
+                    data: data.map(item => item.forecast),
+                    borderColor: this.colors.warning,
+                    backgroundColor: this.colors.warning + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: this.colors.warning,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                }
+            ]
+        };
+
+        const options = {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value / 1000).toFixed(0) + 'k';
+                        }
+                    },
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: $${(context.parsed.y / 1000).toFixed(0)}k`;
+                        }
+                    }
+                }
+            }
+        };
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: options
+        });
+
+        container.classList.remove('hidden');
+        container.classList.add('chart-fade-in');
+        
+        this.charts[containerId] = chart;
+        return chart;
+    }
+
+    // Create Budget Comparison Bar Chart
+    createBudgetComparisonChart(containerId, data) {
+        const container = document.getElementById(containerId);
+        const canvas = container.querySelector('canvas');
+        
+        if (!canvas) return null;
+
+        const ctx = canvas.getContext('2d');
+        
+        const chartData = {
+            labels: data.map(item => item.category),
+            datasets: [
+                {
+                    label: 'Allocated',
+                    data: data.map(item => item.allocated),
+                    backgroundColor: this.colors.primary,
+                    borderRadius: 6,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Spent',
+                    data: data.map(item => item.spent),
+                    backgroundColor: this.colors.success,
+                    borderRadius: 6,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Remaining',
+                    data: data.map(item => item.remaining),
+                    backgroundColor: this.colors.warning,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }
+            ]
+        };
+
+        const options = {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value / 1000).toFixed(0) + 'k';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: $${(context.parsed.y / 1000).toFixed(0)}k`;
+                        }
+                    }
+                }
+            }
+        };
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: options
+        });
+
+        container.classList.remove('hidden');
+        container.classList.add('chart-fade-in');
+        
+        this.charts[containerId] = chart;
+        return chart;
+    }
+
+    // Create Gauge Chart for Performance
+    createGaugeChart(containerId, value, max = 100) {
+        const container = document.getElementById(containerId);
+        const canvas = container.querySelector('canvas');
+        const valueElement = container.querySelector('.gauge-value');
+        
+        if (!canvas) return null;
+
+        const ctx = canvas.getContext('2d');
+        
+        const percentage = (value / max) * 100;
+        const angle = (percentage / 100) * Math.PI;
+        
+        const chartData = {
+            datasets: [{
+                data: [percentage, 100 - percentage],
+                backgroundColor: [
+                    percentage >= 80 ? this.colors.success :
+                    percentage >= 60 ? this.colors.warning :
+                    this.colors.danger,
+                    '#e5e7eb'
+                ],
+                borderWidth: 0,
+                circumference: Math.PI,
+                rotation: -Math.PI
+            }]
+        };
+
+        const options = {
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            cutout: '75%'
+        };
+
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: chartData,
+            options: options
+        });
+
+        // Update value display
+        if (valueElement) {
+            valueElement.textContent = Math.round(percentage) + '%';
+            valueElement.style.color = percentage >= 80 ? this.colors.success :
+                                      percentage >= 60 ? this.colors.warning :
+                                      this.colors.danger;
+        }
+
+        container.classList.remove('hidden');
+        container.classList.add('chart-fade-in');
+        
+        this.charts[containerId] = chart;
+        return chart;
+    }
+
+    // Update chart data
+    updateChart(chartId, newData) {
+        const chart = this.charts[chartId];
+        if (chart) {
+            chart.data = newData;
+            chart.update('active');
+        }
+    }
+
+    // Destroy chart
+    destroyChart(chartId) {
+        const chart = this.charts[chartId];
+        if (chart) {
+            chart.destroy();
+            delete this.charts[chartId];
+        }
+    }
+
+    // Destroy all charts
+    destroyAll() {
+        Object.keys(this.charts).forEach(chartId => {
+            this.destroyChart(chartId);
+        });
+    }
+
+    // Show loading state
+    showLoading(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.classList.add('loading');
+        }
+    }
+
+    // Hide loading state
+    hideLoading(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.classList.remove('loading');
+        }
+    }
+
+    // Format currency for display
+    formatCurrency(value) {
+        return `$${(value / 1000).toFixed(0)}k`;
+    }
+
+    // Generate random data for demo
+    generateSampleData() {
+        return {
+            budgetAllocation: [
+                { name: 'Marketing', value: 30, amount: 150000 },
+                { name: 'Operations', value: 25, amount: 125000 },
+                { name: 'Technology', value: 20, amount: 100000 },
+                { name: 'Sales', value: 15, amount: 75000 },
+                { name: 'HR', value: 10, amount: 50000 }
+            ],
+            salesTrend: [
+                { month: 'Jan', sales: 120000, budget: 110000, forecast: 115000 },
+                { month: 'Feb', sales: 135000, budget: 125000, forecast: 130000 },
+                { month: 'Mar', sales: 148000, budget: 140000, forecast: 145000 },
+                { month: 'Apr', sales: 162000, budget: 155000, forecast: 160000 },
+                { month: 'May', sales: 178000, budget: 170000, forecast: 175000 },
+                { month: 'Jun', sales: 195000, budget: 185000, forecast: 190000 }
+            ],
+            budgetComparison: [
+                { category: 'Q1', allocated: 200000, spent: 180000, remaining: 20000 },
+                { category: 'Q2', allocated: 220000, spent: 205000, remaining: 15000 },
+                { category: 'Q3', allocated: 240000, spent: 210000, remaining: 30000 },
+                { category: 'Q4', allocated: 260000, spent: 190000, remaining: 70000 }
+            ]
+        };
+    }
+}
+
+// Initialize global charts instance
+window.STMCharts = new STMCharts();
+
+// Initialize charts when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.STMCharts) {
+        window.STMCharts.init();
+    }
+});
+
+// Export for use in other scripts
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = STMCharts;
+}
+</script>
