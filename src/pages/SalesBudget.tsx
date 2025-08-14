@@ -46,7 +46,8 @@ import {
   getYearValue as getYearValueUtil,
   setYearValue,
   createSampleYearlyData,
-  transformLegacyToYearly
+  transformLegacyToYearly,
+  getCurrentYear
 } from '../utils/dynamicYearUtils';
 
 interface MonthlyBudget {
