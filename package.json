@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"python3 backend/simple_server.py\" \"vite\"",
+    "dev:frontend": "vite",
+    "dev:backend": "python3 backend/simple_server.py",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
