@@ -416,7 +416,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <Percent className="w-4 h-4 text-green-600" />
                   <div>
                     <div className="font-medium">Percentage Distribution</div>
-                    <div className="text-sm text-gray-600">Enter percentage of BUD 2026</div>
+                    <div className="text-sm text-gray-600">Enter percentage of BUD {currentTargetYear}</div>
                   </div>
                 </div>
               </label>
