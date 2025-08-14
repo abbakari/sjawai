@@ -1691,10 +1691,184 @@ function loadCustomerBreakdown() {
     `;
 }
 
+// Role-based functionality
+function initializeRoleBasedFeatures() {
+    const userRole = '{{ user.role|default:"user" }}';
+
+    switch(userRole) {
+        case 'manager':
+            initializeManagerInterface();
+            break;
+        case 'supply_chain':
+            initializeSupplyChainInterface();
+            break;
+        case 'admin':
+            initializeAdminInterface();
+            break;
+        default:
+            initializeSalesmanInterface();
+    }
+}
+
+function initializeManagerInterface() {
+    // Show manager-specific interface
+    const managerInterface = document.getElementById('managerInterface');
+    if (managerInterface) {
+        managerInterface.classList.remove('hidden');
+    }
+
+    // Load manager-specific data
+    loadManagerMetrics();
+
+    // Update data preservation indicators for team
+    updateTeamDataIndicators();
+}
+
+function initializeSupplyChainInterface() {
+    // Show supply chain-specific interface
+    const scInterface = document.getElementById('supplyChainInterface');
+    if (scInterface) {
+        scInterface.classList.remove('hidden');
+    }
+
+    // Load supply chain metrics
+    loadSupplyChainMetrics();
+
+    // Hide customer management buttons
+    const addCustomerBtn = document.querySelector('[onclick="openNewCustomerModal()"]');
+    if (addCustomerBtn) {
+        addCustomerBtn.style.display = 'none';
+    }
+}
+
+function initializeAdminInterface() {
+    // Load admin-specific data
+    loadGlobalMetrics();
+    updateGlobalDataIndicators();
+}
+
+function initializeSalesmanInterface() {
+    // Standard salesman interface - no additional setup needed
+    updatePersonalDataIndicators();
+}
+
+function loadManagerMetrics() {
+    // Simulate loading manager metrics
+    setTimeout(() => {
+        document.getElementById('managerTotalTeamForecasts').textContent = '45';
+        document.getElementById('managerApprovedForecasts').textContent = '32';
+        document.getElementById('managerPendingApprovals').textContent = '13';
+
+        document.getElementById('teamItemsCount').textContent = '45';
+        document.getElementById('teamSubmittedCount').textContent = '32';
+        document.getElementById('teamPendingCount').textContent = '13';
+    }, 500);
+}
+
+function loadSupplyChainMetrics() {
+    // Simulate loading supply chain metrics
+    setTimeout(() => {
+        document.getElementById('scInventoryValue').textContent = '$1.2M';
+        document.getElementById('scForecastDemand').textContent = '1,247';
+        document.getElementById('scStockAccuracy').textContent = '98.5%';
+    }, 500);
+}
+
+function loadGlobalMetrics() {
+    // Simulate loading global admin metrics
+    setTimeout(() => {
+        document.getElementById('globalItemsCount').textContent = '342';
+        document.getElementById('globalSubmittedCount').textContent = '234';
+        document.getElementById('globalActiveUsers').textContent = '24';
+    }, 500);
+}
+
+function updatePersonalDataIndicators() {
+    // Update personal data indicators for salesman
+    setTimeout(() => {
+        const items = forecastManager ? forecastManager.filteredData.length : 8;
+        const submitted = Math.floor(items * 0.6);
+        const draft = items - submitted;
+
+        document.getElementById('myItemsCount').textContent = items.toString();
+        document.getElementById('mySubmittedCount').textContent = submitted.toString();
+        document.getElementById('myDraftCount').textContent = draft.toString();
+    }, 500);
+}
+
+function updateTeamDataIndicators() {
+    // Already handled in loadManagerMetrics
+}
+
+function updateGlobalDataIndicators() {
+    // Already handled in loadGlobalMetrics
+}
+
+// Role-specific action handlers
+function openGlobalAnalytics() {
+    showToast('Opening global analytics dashboard...', 'info');
+    // Navigate to global analytics
+}
+
+function openUserManagement() {
+    window.location.href = '/user-management/';
+}
+
+function openApprovalCenter() {
+    window.location.href = '/approval-center/';
+}
+
+function openTeamOverview() {
+    showToast('Opening team overview...', 'info');
+    // Show team overview modal or navigate
+}
+
+function openInventoryPlanning() {
+    showToast('Opening inventory planning module...', 'info');
+    // Navigate to inventory planning
+}
+
+function openDistributionView() {
+    showToast('Opening distribution view...', 'info');
+    // Navigate to distribution management
+}
+
+function openStockManagement() {
+    showToast('Opening stock management...', 'info');
+    // Open stock management modal
+}
+
+function openTeamForecastView() {
+    showToast('Loading team forecast data...', 'info');
+    // Switch to team view
+    forecastManager.currentView = 'team-view';
+    forecastManager.loadTeamForecastData();
+}
+
+function openBulkApprovalModal() {
+    showToast('Opening bulk approval interface...', 'info');
+    // Open bulk approval modal
+}
+
+function openInventoryPlanningModal() {
+    showToast('Opening inventory planning tools...', 'info');
+    // Open inventory planning modal
+}
+
+function openDistributionModal() {
+    showToast('Opening distribution planning...', 'info');
+    // Open distribution modal
+}
+
 // Initialize forecast manager
 let forecastManager;
 document.addEventListener('DOMContentLoaded', function() {
     forecastManager = new RollingForecastManager();
+
+    // Initialize role-based features after forecast manager is ready
+    setTimeout(() => {
+        initializeRoleBasedFeatures();
+    }, 1000);
 });
 </script>
 {% endblock %}
