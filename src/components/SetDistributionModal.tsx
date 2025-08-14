@@ -1,6 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { X, PieChart, Search, Calculator, Percent, Filter, ChevronDown, Calendar } from 'lucide-react';
 import { applySeasonalDistribution } from '../utils/seasonalDistribution';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface MonthlyBudget {
   month: string;
@@ -19,8 +25,10 @@ interface SalesBudgetItem {
   item: string;
   category: string;
   brand: string;
-  budget2026: number;
+  yearlyBudgets?: { [year: string]: number };
   monthlyData: MonthlyBudget[];
+  // Legacy compatibility
+  budget2026?: number;
 }
 
 interface SetDistributionModalProps {
@@ -31,6 +39,7 @@ interface SetDistributionModalProps {
   selectedCategory: string;
   selectedBrand: string;
   selectedItem: string;
+  selectedTargetYear?: string; // Add year prop
   onApplyDistribution: (distributionData: { [itemId: number]: MonthlyBudget[] }) => void;
 }
 
@@ -42,8 +51,14 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
   selectedCategory,
   selectedBrand,
   selectedItem,
+  selectedTargetYear,
   onApplyDistribution
 }) => {
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [currentTargetYear, setCurrentTargetYear] = useState(selectedTargetYear || defaultYears.targetYear);
+
   const [distributionType, setDistributionType] = useState<'equal' | 'percentage' | 'seasonal'>('equal');
   const [filterCustomer, setFilterCustomer] = useState(selectedCustomer || '');
   const [filterCategory, setFilterCategory] = useState(selectedCategory || '');
@@ -77,7 +92,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
         category: item.category,
         brand: item.brand,
         item: item.item,
-        budget2026: item.budget2026,
+        budget2026: getYearValue(item, currentTargetYear, 'budget'),
         combination: `${item.category} - ${item.brand} - ${item.item}`
       }));
 
@@ -151,14 +166,16 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
       if (distributionType === 'equal') {
         distribution = distributeQuantityEqually(itemQuantity);
       } else if (distributionType === 'percentage') {
-        distribution = distributeByPercentage(item.budget2026, percentageValue);
+        const currentBudget = getYearValue(item, currentTargetYear, 'budget');
+        distribution = distributeByPercentage(currentBudget, percentageValue);
       } else if (distributionType === 'seasonal') {
-        // Use holiday-aware seasonal distribution based on existing BUD 2026 value
-        if (item.budget2026 > 0) {
-          const seasonalDistributions = applySeasonalDistribution(item.budget2026, 'Default Seasonal');
+        // Use holiday-aware seasonal distribution based on existing target year budget value
+        const currentBudget = getYearValue(item, currentTargetYear, 'budget');
+        if (currentBudget > 0) {
+          const seasonalDistributions = applySeasonalDistribution(currentBudget, 'Default Seasonal');
           distribution = seasonalDistributions.map(dist => dist.value);
         } else {
-          // If no BUD 2026 value, use input quantity with seasonal distribution
+          // If no target year budget value, use input quantity with seasonal distribution
           const quantityToDistribute = itemQuantity || 0;
           if (quantityToDistribute > 0) {
             const seasonalDistributions = applySeasonalDistribution(quantityToDistribute, 'Default Seasonal');
@@ -206,18 +223,36 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Set Distribution</h2>
                 <p className="text-sm text-gray-600">
-                  {filteredItems.length > 0 
+                  {filteredItems.length > 0
                     ? `${filteredItems.length} item(s) selected for distribution`
                     : 'Select customer and criteria to begin'}
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+
+            <div className="flex items-center gap-4">
+              {/* Year Selector */}
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <label className="text-xs font-medium text-gray-600">Year:</label>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={currentTargetYear}
+                  onChange={(e) => setCurrentTargetYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -270,7 +305,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded border max-h-20 overflow-y-auto">
                     {customerCombinations.map((combo, idx) => (
                       <div key={combo.id} className="text-xs">
-                        {idx + 1}. {combo.combination} (Budget: {combo.budget2026})
+                        {idx + 1}. {combo.combination} (Budget {currentTargetYear}: {combo.budget2026})
                       </div>
                     ))}
                   </div>
@@ -357,7 +392,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div key={item.id} className="text-sm text-green-700 bg-white p-2 rounded border">
                     <div className="font-medium">{item.customer}</div>
                     <div className="text-xs">{item.category} - {item.brand} - {item.item}</div>
-                    <div className="text-xs text-gray-600">Current Budget 2026: {item.budget2026}</div>
+                    <div className="text-xs text-gray-600">Current Budget {currentTargetYear}: {getYearValue(item, currentTargetYear, 'budget')}</div>
                   </div>
                 ))}
               </div>
@@ -399,7 +434,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <Percent className="w-4 h-4 text-green-600" />
                   <div>
                     <div className="font-medium">Percentage Distribution</div>
-                    <div className="text-sm text-gray-600">Enter percentage of BUD 2026</div>
+                    <div className="text-sm text-gray-600">Enter percentage of BUD {currentTargetYear}</div>
                   </div>
                 </div>
               </label>
@@ -447,7 +482,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
           {distributionType === 'percentage' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Percentage of BUD 2026
+                Percentage of BUD {currentTargetYear}
               </label>
               <div className="relative">
                 <input
@@ -484,7 +519,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   <div>• {itemQuantity} items distributed across 12 months (Jan→Dec priority)</div>
                 )}
                 {distributionType === 'percentage' && percentageValue > 0 && (
-                  <div>• {percentageValue}% of each item's BUD 2026 distributed equally</div>
+                  <div>• {percentageValue}% of each item's BUD {currentTargetYear} distributed equally</div>
                 )}
               </div>
             </div>

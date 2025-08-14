@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { DownloadIcon, Edit3, ChevronLeft } from 'lucide-react';
+import { DownloadIcon, Edit3, ChevronLeft, Calendar } from 'lucide-react';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import DataPersistenceManager from '../utils/dataPersistence';
 import { getShortMonthNames } from '../utils/timeUtils';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface RollingForecastReportProps {
   onBack: () => void;
@@ -27,12 +33,19 @@ interface ReportData {
   OCT: number;
   NOV: number;
   DEC: number;
-  BUDGET2025: number;
-  FORECAST2025: number;
+  BUDGET_YEAR: number;
+  FORECAST_YEAR: number;
 }
 
 const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack }) => {
   const { user } = useAuth();
+
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
+
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -107,7 +120,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           }, {} as Record<string, number>);
 
           // Calculate totals
-          const forecast2025 = Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
+          const forecastTotal = Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
 
           return {
             id: row.id,
@@ -127,8 +140,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
             OCT: monthlyForecast.OCT || 0,
             NOV: monthlyForecast.NOV || 0,
             DEC: monthlyForecast.DEC || 0,
-            BUDGET2025: row.bud25,
-            FORECAST2025: forecast2025
+            BUDGET_YEAR: getYearValue(row, selectedBaseYear, 'budget'),
+            FORECAST_YEAR: forecastTotal
           };
         });
 
@@ -149,7 +162,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
       'CUSTOMER', 'ITEM', 'BRAND', 'CATEGORY',
       'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
       'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-      'BUDGET2025', 'FORECAST2025'
+      `BUDGET${selectedBaseYear}`, `FORECAST${selectedTargetYear}`
     ];
 
     const csvContent = [
@@ -171,8 +184,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
         row.OCT,
         row.NOV,
         row.DEC,
-        row.BUDGET2025,
-        row.FORECAST2025
+        row.BUDGET_YEAR,
+        row.FORECAST_YEAR
       ].join(','))
     ].join('\n');
 
@@ -202,9 +215,9 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
       prevData.map(row => {
         if (row.id === rowId) {
           const updatedRow = { ...row, [field]: value };
-          // Recalculate FORECAST2025 if monthly data changed
+          // Recalculate forecast total if monthly data changed
           if (['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].includes(field)) {
-            updatedRow.FORECAST2025 = [
+            updatedRow.FORECAST_YEAR = [
               updatedRow.JAN, updatedRow.FEB, updatedRow.MAR, updatedRow.APR,
               updatedRow.MAY, updatedRow.JUN, updatedRow.JUL, updatedRow.AUG,
               updatedRow.SEP, updatedRow.OCT, updatedRow.NOV, updatedRow.DEC
@@ -240,10 +253,35 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           <div className="h-6 w-px bg-gray-300"></div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Budget / Rolling Forecast Report</h1>
-            <p className="text-sm text-gray-600">Rolling Forecast as of 2025-2026</p>
+            <p className="text-sm text-gray-600">Rolling Forecast as of {selectedBaseYear}-{selectedTargetYear}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Year Selectors */}
+          <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+            <Calendar className="w-4 h-4 text-gray-600" />
+            <label className="text-xs font-medium text-gray-600">Years:</label>
+            <select
+              className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedBaseYear}
+              onChange={(e) => setSelectedBaseYear(e.target.value)}
+            >
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <span className="text-xs text-gray-500">to</span>
+            <select
+              className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedTargetYear}
+              onChange={(e) => setSelectedTargetYear(e.target.value)}
+            >
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
           <button
             onClick={handleExport}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -301,10 +339,10 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                   </div>
                 </th>
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                  BUDGET2025
+                  BUDGET{selectedBaseYear}
                 </th>
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  FORECAST2025
+                  FORECAST{selectedTargetYear}
                 </th>
               </tr>
             </thead>
@@ -353,10 +391,10 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                     ))}
                     
                     <td className="px-3 py-3 text-center text-sm font-medium text-gray-900 border-r border-gray-200">
-                      {row.BUDGET2025}
+                      {row.BUDGET_YEAR}
                     </td>
                     <td className="px-3 py-3 text-center text-sm font-medium text-green-600">
-                      {row.FORECAST2025}
+                      {row.FORECAST_YEAR}
                     </td>
                   </tr>
                 ))
@@ -372,27 +410,27 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           <h3 className="text-lg font-medium text-gray-900 mb-4">Report Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm text-blue-700 mb-1">Total Budget 2025</div>
+              <div className="text-sm text-blue-700 mb-1">Total Budget {selectedBaseYear}</div>
               <div className="text-2xl font-bold text-blue-900">
-                {reportData.reduce((sum, row) => sum + row.BUDGET2025, 0).toLocaleString()}
+                {reportData.reduce((sum, row) => sum + row.BUDGET_YEAR, 0).toLocaleString()}
               </div>
               <div className="text-xs text-blue-600">Units</div>
             </div>
-            
+
             <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm text-green-700 mb-1">Total Forecast 2025</div>
+              <div className="text-sm text-green-700 mb-1">Total Forecast {selectedTargetYear}</div>
               <div className="text-2xl font-bold text-green-900">
-                {reportData.reduce((sum, row) => sum + row.FORECAST2025, 0).toLocaleString()}
+                {reportData.reduce((sum, row) => sum + row.FORECAST_YEAR, 0).toLocaleString()}
               </div>
               <div className="text-xs text-green-600">Units</div>
             </div>
-            
+
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-sm text-purple-700 mb-1">Variance</div>
               <div className="text-2xl font-bold text-purple-900">
                 {(() => {
-                  const totalBudget = reportData.reduce((sum, row) => sum + row.BUDGET2025, 0);
-                  const totalForecast = reportData.reduce((sum, row) => sum + row.FORECAST2025, 0);
+                  const totalBudget = reportData.reduce((sum, row) => sum + row.BUDGET_YEAR, 0);
+                  const totalForecast = reportData.reduce((sum, row) => sum + row.FORECAST_YEAR, 0);
                   const variance = totalForecast - totalBudget;
                   const percentage = totalBudget > 0 ? ((variance / totalBudget) * 100).toFixed(1) : '0.0';
                   return `${variance >= 0 ? '+' : ''}${percentage}%`;
@@ -447,8 +485,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                         {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
                           <th key={month} className="px-2 py-2 text-center border-r border-gray-200">{month}</th>
                         ))}
-                        <th className="px-2 py-2 text-center border-r border-gray-200">BUDGET2025</th>
-                        <th className="px-2 py-2 text-center">FORECAST2025</th>
+                        <th className="px-2 py-2 text-center border-r border-gray-200">BUDGET{selectedBaseYear}</th>
+                        <th className="px-2 py-2 text-center">FORECAST{selectedTargetYear}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -468,10 +506,10 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                             </td>
                           ))}
                           <td className="px-2 py-2 text-center border-r border-gray-200 font-medium">
-                            {row.BUDGET2025}
+                            {row.BUDGET_YEAR}
                           </td>
                           <td className="px-2 py-2 text-center font-medium text-green-600">
-                            {row.FORECAST2025}
+                            {row.FORECAST_YEAR}
                           </td>
                         </tr>
                       ))}

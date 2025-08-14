@@ -61,7 +61,7 @@ const ExcelLikeCustomerTable: React.FC<ExcelLikeCustomerTableProps> = ({
       jan: 125000, feb: 135000, mar: 145000, apr: 155000, may: 165000, jun: 175000,
       jul: 185000, aug: 195000, sep: 205000, oct: 215000, nov: 225000, dec: 235000,
       q1Total: 405000, q2Total: 495000, q3Total: 585000, q4Total: 675000,
-      yearTotal: 2160000, growth: 12.5, confidence: 'High', lastUpdated: '2024-01-15', status: 'Active'
+      yearTotal: 2160000, growth: 12.5, confidence: 'High', lastUpdated: `${new Date().getFullYear()}-01-15`, status: 'Active'
     },
     {
       id: '2',
@@ -72,7 +72,7 @@ const ExcelLikeCustomerTable: React.FC<ExcelLikeCustomerTableProps> = ({
       jan: 85000, feb: 90000, mar: 95000, apr: 100000, may: 105000, jun: 110000,
       jul: 115000, aug: 120000, sep: 125000, oct: 130000, nov: 135000, dec: 140000,
       q1Total: 270000, q2Total: 315000, q3Total: 360000, q4Total: 405000,
-      yearTotal: 1350000, growth: 8.3, confidence: 'Medium', lastUpdated: '2024-01-12', status: 'Draft'
+      yearTotal: 1350000, growth: 8.3, confidence: 'Medium', lastUpdated: `${new Date().getFullYear()}-01-12`, status: 'Draft'
     },
     {
       id: '3',
@@ -83,7 +83,7 @@ const ExcelLikeCustomerTable: React.FC<ExcelLikeCustomerTableProps> = ({
       jan: 45000, feb: 50000, mar: 55000, apr: 60000, may: 65000, jun: 70000,
       jul: 75000, aug: 80000, sep: 85000, oct: 90000, nov: 95000, dec: 100000,
       q1Total: 150000, q2Total: 195000, q3Total: 240000, q4Total: 285000,
-      yearTotal: 870000, growth: 15.2, confidence: 'High', lastUpdated: '2024-01-10', status: 'Approved'
+      yearTotal: 870000, growth: 15.2, confidence: 'High', lastUpdated: `${new Date().getFullYear()}-01-10`, status: 'Approved'
     },
     {
       id: '4',
@@ -94,7 +94,7 @@ const ExcelLikeCustomerTable: React.FC<ExcelLikeCustomerTableProps> = ({
       jan: 95000, feb: 100000, mar: 105000, apr: 110000, may: 115000, jun: 120000,
       jul: 125000, aug: 130000, sep: 135000, oct: 140000, nov: 145000, dec: 150000,
       q1Total: 300000, q2Total: 345000, q3Total: 390000, q4Total: 435000,
-      yearTotal: 1470000, growth: 6.8, confidence: 'Medium', lastUpdated: '2024-01-08', status: 'Active'
+      yearTotal: 1470000, growth: 6.8, confidence: 'Medium', lastUpdated: `${new Date().getFullYear()}-01-08`, status: 'Active'
     },
     {
       id: '5',
@@ -105,7 +105,7 @@ const ExcelLikeCustomerTable: React.FC<ExcelLikeCustomerTableProps> = ({
       jan: 75000, feb: 80000, mar: 85000, apr: 90000, may: 95000, jun: 100000,
       jul: 105000, aug: 110000, sep: 115000, oct: 120000, nov: 125000, dec: 130000,
       q1Total: 240000, q2Total: 285000, q3Total: 330000, q4Total: 375000,
-      yearTotal: 1230000, growth: 9.1, confidence: 'Low', lastUpdated: '2024-01-05', status: 'Draft'
+      yearTotal: 1230000, growth: 9.1, confidence: 'Low', lastUpdated: `${new Date().getFullYear()}-01-05`, status: 'Draft'
     }
   ];
 

@@ -39,12 +39,13 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ type, searchTerm, period }) =
           { id: 5, region: 'Middle East & Africa', budget: 180000, actual: 175000, variance: -5000, status: 'Pending', manager: 'Ahmed Hassan', products: 56 },
         ];
       case 'monthly':
+        const currentYear = new Date().getFullYear();
         return [
-          { id: 1, month: 'January 2025', budget: 200000, actual: 195000, variance: -5000, status: 'Completed', forecast: 205000 },
-          { id: 2, month: 'February 2025', budget: 220000, actual: 225000, variance: 5000, status: 'Completed', forecast: 230000 },
-          { id: 3, month: 'March 2025', budget: 240000, actual: 235000, variance: -5000, status: 'Completed', forecast: 245000 },
-          { id: 4, month: 'April 2025', budget: 260000, actual: 0, variance: 0, status: 'Pending', forecast: 265000 },
-          { id: 5, month: 'May 2025', budget: 280000, actual: 0, variance: 0, status: 'Pending', forecast: 285000 },
+          { id: 1, month: `January ${currentYear}`, budget: 200000, actual: 195000, variance: -5000, status: 'Completed', forecast: 205000 },
+          { id: 2, month: `February ${currentYear}`, budget: 220000, actual: 225000, variance: 5000, status: 'Completed', forecast: 230000 },
+          { id: 3, month: `March ${currentYear}`, budget: 240000, actual: 235000, variance: -5000, status: 'Completed', forecast: 245000 },
+          { id: 4, month: `April ${currentYear}`, budget: 260000, actual: 0, variance: 0, status: 'Pending', forecast: 265000 },
+          { id: 5, month: `May ${currentYear}`, budget: 280000, actual: 0, variance: 0, status: 'Pending', forecast: 285000 },
         ];
       default:
         return [];

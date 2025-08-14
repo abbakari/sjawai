@@ -25,11 +25,11 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ type, searchTerm, period,
         ];
       case 'products':
         return [
-          { id: 1, product: 'iPhone 15 Pro', sku: 'IPH15P-256', current: 85000, forecast: 95000, variance: 10000, accuracy: 95.1, model: 'ARIMA', lastUpdated: '2025-01-15' },
-          { id: 2, product: 'Samsung Galaxy S24', sku: 'SGS24-128', current: 65000, forecast: 72000, variance: 7000, accuracy: 93.4, model: 'Linear', lastUpdated: '2025-01-15' },
-          { id: 3, product: 'MacBook Air M3', sku: 'MBA-M3-512', current: 95000, forecast: 88000, variance: -7000, accuracy: 91.2, model: 'Neural', lastUpdated: '2025-01-14' },
-          { id: 4, product: 'Dell XPS 13', sku: 'DXP13-1TB', current: 45000, forecast: 52000, variance: 7000, accuracy: 89.8, model: 'Exponential', lastUpdated: '2025-01-14' },
-          { id: 5, product: 'Sony WH-1000XM5', sku: 'SWH1000X5', current: 25000, forecast: 23000, variance: -2000, accuracy: 94.7, model: 'ARIMA', lastUpdated: '2025-01-13' },
+          { id: 1, product: 'iPhone 15 Pro', sku: 'IPH15P-256', current: 85000, forecast: 95000, variance: 10000, accuracy: 95.1, model: 'ARIMA', lastUpdated: `${new Date().getFullYear()}-01-15` },
+          { id: 2, product: 'Samsung Galaxy S24', sku: 'SGS24-128', current: 65000, forecast: 72000, variance: 7000, accuracy: 93.4, model: 'Linear', lastUpdated: `${new Date().getFullYear()}-01-15` },
+          { id: 3, product: 'MacBook Air M3', sku: 'MBA-M3-512', current: 95000, forecast: 88000, variance: -7000, accuracy: 91.2, model: 'Neural', lastUpdated: `${new Date().getFullYear()}-01-14` },
+          { id: 4, product: 'Dell XPS 13', sku: 'DXP13-1TB', current: 45000, forecast: 52000, variance: 7000, accuracy: 89.8, model: 'Exponential', lastUpdated: `${new Date().getFullYear()}-01-14` },
+          { id: 5, product: 'Sony WH-1000XM5', sku: 'SWH1000X5', current: 25000, forecast: 23000, variance: -2000, accuracy: 94.7, model: 'ARIMA', lastUpdated: `${new Date().getFullYear()}-01-13` },
         ];
       case 'customers':
         return [

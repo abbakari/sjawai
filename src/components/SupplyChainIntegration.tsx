@@ -82,8 +82,8 @@ const SupplyChainIntegration: React.FC = () => {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="current_year">Current Year</option>
-            <option value="q4_2024">Q4 2024</option>
-            <option value="q1_2025">Q1 2025</option>
+            <option value={`q4_${new Date().getFullYear()-1}`}>Q4 {new Date().getFullYear()-1}</option>
+            <option value={`q1_${new Date().getFullYear()}`}>Q1 {new Date().getFullYear()}</option>
             <option value="all_time">All Time</option>
           </select>
         </div>

@@ -3,6 +3,9 @@ import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useBudget, YearlyBudgetData } from '../contexts/BudgetContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import { salesBudgetService, SalesBudgetItem as APISalesBudgetItem } from '../services/salesBudgetService';
+import { discountService } from '../services/discountService';
+import DiscountManagementModal from '../components/DiscountManagementModal';
 import {
   TrendingUp,
   Info as InfoIcon,
@@ -16,7 +19,8 @@ import {
   Send,
   Package,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  Percent
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
@@ -36,6 +40,15 @@ import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue as getYearValueUtil,
+  setYearValue,
+  createSampleYearlyData,
+  transformLegacyToYearly,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface MonthlyBudget {
   month: string;
@@ -55,15 +68,20 @@ interface SalesBudgetItem {
   category: string;
   brand: string;
   itemCombined: string;
-  budget2025: number;
-  actual2025: number;
-  budget2026: number;
+  yearlyBudgets: { [year: string]: number }; // Dynamic yearly budget data
+  yearlyActuals: { [year: string]: number }; // Dynamic yearly actual data
+  yearlyValues: { [year: string]: number };  // Dynamic yearly calculated values
   rate: number;
   stock: number;
   git: number;
-  budgetValue2026: number;
   discount: number;
   monthlyData: MonthlyBudget[];
+
+  // Legacy fields for backward compatibility
+  budget2025?: number;
+  actual2025?: number;
+  budget2026?: number;
+  budgetValue2026?: number;
 }
 
 const SalesBudget: React.FC = () => {
@@ -74,8 +92,11 @@ const SalesBudget: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
-  const [selectedYear2025, setSelectedYear2025] = useState('2025');
-  const [selectedYear2026, setSelectedYear2026] = useState('2026');
+  // Dynamic year handling using centralized utilities
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
   const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
@@ -95,6 +116,7 @@ const SalesBudget: React.FC = () => {
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
+  const [isDiscountManagementModalOpen, setIsDiscountManagementModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -124,7 +146,34 @@ const SalesBudget: React.FC = () => {
 
   const months = getAllYearMonths();
 
-  // Initial data
+  // Helper function to create sample yearly data
+  const createSampleYearlyData = (baseBudget: number, baseActual: number) => {
+    const yearlyBudgets: { [year: string]: number } = {};
+    const yearlyActuals: { [year: string]: number } = {};
+    const yearlyValues: { [year: string]: number } = {};
+
+    // Generate data for available years
+    availableYears.forEach(year => {
+      const yearNum = parseInt(year);
+      const currentYearNum = parseInt(getCurrentYear());
+
+      if (yearNum <= currentYearNum) {
+        // Historical and current year data
+        yearlyBudgets[year] = baseBudget * (1 + (yearNum - 2025) * 0.1); // 10% growth per year
+        yearlyActuals[year] = baseActual * (1 + (yearNum - 2025) * 0.08); // 8% actual growth
+        yearlyValues[year] = yearlyBudgets[year];
+      } else {
+        // Future year data (budgets only)
+        yearlyBudgets[year] = baseBudget * (1 + (yearNum - 2025) * 0.12); // 12% projected growth
+        yearlyActuals[year] = 0;
+        yearlyValues[year] = yearlyBudgets[year];
+      }
+    });
+
+    return { yearlyBudgets, yearlyActuals, yearlyValues };
+  };
+
+  // Initial data with dynamic year structure
   const initialData: SalesBudgetItem[] = [
     {
       id: 1,
@@ -134,13 +183,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "BF Goodrich",
       itemCombined: "BF GOODRICH TYRE 235/85R16 (Tyres - BF Goodrich)",
-      budget2025: 1200000,
-      actual2025: 850000,
-      budget2026: 0,
+      ...createSampleYearlyData(1200000, 850000),
       rate: 341,
       stock: 232,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -150,7 +196,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 100) + 50,
         git: Math.floor(Math.random() * 20),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 1200000,
+      actual2025: 850000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 2,
@@ -160,13 +211,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "BF Goodrich",
       itemCombined: "BF GOODRICH TYRE 265/65R17 (Tyres - BF Goodrich)",
-      budget2025: 980000,
-      actual2025: 720000,
-      budget2026: 0,
+      ...createSampleYearlyData(980000, 720000),
       rate: 412,
       stock: 7,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -176,7 +224,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 50) + 10,
         git: Math.floor(Math.random() * 15),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 980000,
+      actual2025: 720000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 3,
@@ -186,13 +239,10 @@ const SalesBudget: React.FC = () => {
       category: "Accessories",
       brand: "Generic",
       itemCombined: "VALVE 0214 TR 414J (Accessories - Generic)",
-      budget2025: 15000,
-      actual2025: 18000,
-      budget2026: 0,
+      ...createSampleYearlyData(15000, 18000),
       rate: 0.5,
       stock: 2207,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -202,7 +252,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 500) + 1000,
         git: 0,
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 15000,
+      actual2025: 18000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 4,
@@ -212,13 +267,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "Michelin",
       itemCombined: "MICHELIN TYRE 265/65R17 (Tyres - Michelin)",
-      budget2025: 875000,
-      actual2025: 920000,
-      budget2026: 0,
+      ...createSampleYearlyData(875000, 920000),
       rate: 300,
       stock: 127,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -228,16 +280,131 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 80) + 50,
         git: Math.floor(Math.random() * 25),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 875000,
+      actual2025: 920000,
+      budget2026: 0,
+      budgetValue2026: 0
     }
   ];
 
-  const [originalTableData, setOriginalTableData] = useState<SalesBudgetItem[]>(initialData);
-  const [tableData, setTableData] = useState<SalesBudgetItem[]>(initialData);
+  const [originalTableData, setOriginalTableData] = useState<SalesBudgetItem[]>([]);
+  const [tableData, setTableData] = useState<SalesBudgetItem[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  // Load data from backend
+  const loadBudgetData = async () => {
+    try {
+      setIsLoadingData(true);
+      setDataError(null);
+
+      const budgets = await salesBudgetService.getAllBudgets();
+      console.log('Loaded budgets from backend:', budgets);
+
+      // Transform backend data to handle dynamic years and apply automatic discounts
+      const transformedData: SalesBudgetItem[] = budgets.map(budget => {
+        // Create dynamic yearly data structure
+        const yearlyBudgets: { [year: string]: number } = {};
+        const yearlyActuals: { [year: string]: number } = {};
+        const yearlyValues: { [year: string]: number } = {};
+
+        // Populate from legacy fields if available
+        if (budget.budget_2025 !== undefined) yearlyBudgets['2025'] = budget.budget_2025;
+        if (budget.actual_2025 !== undefined) yearlyActuals['2025'] = budget.actual_2025;
+        if (budget.budget_2026 !== undefined) yearlyBudgets['2026'] = budget.budget_2026;
+
+        // Calculate target year budget value with discount
+        const targetYearBudget = yearlyBudgets[selectedTargetYear] || budget.budget_2026 || 0;
+        const baseBudgetValue = targetYearBudget * budget.rate;
+
+        // Apply automatic discount based on category and brand
+        const discountMultiplier = discountService.getCategoryDiscount(budget.category, budget.brand);
+        const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+        const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+        // Use existing discount if higher than calculated, otherwise use calculated
+        const finalDiscount = budget.discount > calculatedDiscount ? budget.discount : calculatedDiscount;
+        const finalBudgetValue = baseBudgetValue - finalDiscount;
+
+        yearlyValues[selectedTargetYear] = finalBudgetValue;
+
+        return {
+          id: budget.id,
+          selected: false,
+          customer: budget.customer,
+          item: budget.item,
+          category: budget.category,
+          brand: budget.brand,
+          itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
+          yearlyBudgets,
+          yearlyActuals,
+          yearlyValues,
+          rate: budget.rate,
+          stock: budget.stock,
+          git: budget.git,
+          discount: finalDiscount,
+          monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
+            month: month.short,
+            budgetValue: 0,
+            actualValue: 0,
+            rate: budget.rate,
+            stock: budget.stock,
+            git: budget.git,
+            discount: 0
+          })),
+          // Legacy compatibility
+          budget2025: budget.budget_2025,
+          actual2025: budget.actual_2025,
+          budget2026: budget.budget_2026,
+          budgetValue2026: finalBudgetValue
+        };
+      });
+
+      setOriginalTableData(transformedData);
+      setTableData(transformedData);
+
+      // Save to localStorage for BI integration
+      localStorage.setItem('salesBudgetData', JSON.stringify(transformedData));
+
+    } catch (error) {
+      console.error('Failed to load budget data:', error);
+      setDataError('Failed to load budget data from server');
+
+      // Fallback to initialData if available and apply automatic discounts
+      if (initialData.length > 0) {
+        const discountedInitialData = initialData.map(item => {
+          const baseBudgetValue = item.budgetValue2026 || (item.budget2026 * item.rate);
+          const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+          const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+          const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+          return {
+            ...item,
+            budgetValue2026: discountedBudgetValue,
+            discount: calculatedDiscount
+          };
+        });
+
+        setOriginalTableData(discountedInitialData);
+        setTableData(discountedInitialData);
+      }
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadBudgetData();
+  }, []);
 
   // Save budget data to localStorage for BI integration
   useEffect(() => {
-    localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
+    if (tableData.length > 0) {
+      localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
+    }
   }, [tableData]);
 
   // Load global stock data set by admin
@@ -452,72 +619,89 @@ const SalesBudget: React.FC = () => {
     }));
   };
 
-  const handleSaveMonthlyData = (rowId: number) => {
+  const handleSaveMonthlyData = async (rowId: number) => {
     const monthlyData = editingMonthlyData[rowId];
     if (monthlyData) {
-      const row = tableData.find(item => item.id === rowId);
-      // Use simplified mode calculation
-      const budgetValue2026 = monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
-      // Use the row's default rate for calculation if available
-      const defaultRate = row?.rate || 1;
-      const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
-      const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
-      const netBudgetValue = totalBudget2026 - totalDiscount;
+      try {
+        const row = tableData.find(item => item.id === rowId);
 
-      // Update monthly data with calculated values
-      const updatedMonthlyData = monthlyData.map(month => ({
-        ...month,
-        rate: month.rate || defaultRate,
-        stock: month.stock || row?.stock || 0,
-        git: month.git || row?.git || 0
-      }));
+        // Calculate base values
+        const budgetValue2026 = monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+        const defaultRate = row?.rate || 1;
+        const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
 
-      setTableData(prev => prev.map(item =>
-        item.id === rowId ? {
-          ...item,
-          monthlyData: updatedMonthlyData,
-          budget2026: budgetValue2026,
-          budgetValue2026: netBudgetValue,
-          discount: totalDiscount
-        } : item
-      ));
+        // Apply automatic discount based on category and brand
+        const discountMultiplier = discountService.getCategoryDiscount(row?.category || '', row?.brand || '');
+        const discountedBudgetValue = totalBudget2026 * discountMultiplier;
+        const calculatedDiscount = totalBudget2026 - discountedBudgetValue;
 
-      setEditingRowId(null);
-      setEditingMonthlyData(prev => {
-        const newData = { ...prev };
-        delete newData[rowId];
-        return newData;
-      });
+        // Use calculated discount or manual discount from monthly data
+        const manualDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
+        const finalDiscount = manualDiscount > 0 ? manualDiscount : calculatedDiscount;
+        const netBudgetValue = totalBudget2026 - finalDiscount;
 
-      // Save to persistence manager for cross-user visibility and preserve for other purposes
-      if (user) {
-        const savedData: SavedBudgetData = {
-          id: `sales_budget_${rowId}_${Date.now()}`,
-          customer: row?.customer || 'Unknown',
-          item: row?.item || 'Unknown',
-          category: row?.category || 'Unknown',
-          brand: row?.brand || 'Unknown',
-          type: 'sales_budget',
-          createdBy: user.name,
-          createdAt: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          budget2025: row?.budget2025 || 0,
-          actual2025: row?.actual2025 || 0,
-          budget2026: budgetValue2026,
-          rate: defaultRate,
-          stock: row?.stock || 0,
-          git: row?.git || 0,
-          budgetValue2026: netBudgetValue,
-          discount: totalDiscount,
-          monthlyData: updatedMonthlyData,
-          status: 'saved'
-        };
+        // Update monthly data with calculated values
+        const updatedMonthlyData = monthlyData.map(month => ({
+          ...month,
+          rate: month.rate || defaultRate,
+          stock: month.stock || row?.stock || 0,
+          git: month.git || row?.git || 0
+        }));
 
-        DataPersistenceManager.saveSalesBudgetData([savedData]);
-        console.log('Budget data saved for manager visibility and preserved for other purposes:', savedData);
+        // Save to backend
+        const updatedBudget = await salesBudgetService.saveMonthlyData(rowId, updatedMonthlyData);
+
+        // Update local state
+        setTableData(prev => prev.map(item =>
+          item.id === rowId ? {
+            ...item,
+            monthlyData: updatedMonthlyData,
+            budget2026: budgetValue2026,
+            budgetValue2026: netBudgetValue,
+            discount: finalDiscount
+          } : item
+        ));
+
+        setEditingRowId(null);
+        setEditingMonthlyData(prev => {
+          const newData = { ...prev };
+          delete newData[rowId];
+          return newData;
+        });
+
+        // Also save to local persistence for backwards compatibility
+        if (user) {
+          const savedData: SavedBudgetData = {
+            id: `sales_budget_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: row?.category || 'Unknown',
+            brand: row?.brand || 'Unknown',
+            type: 'sales_budget',
+            createdBy: user.name,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            budget2025: row?.budget2025 || 0,
+            actual2025: row?.actual2025 || 0,
+            budget2026: budgetValue2026,
+            rate: defaultRate,
+            stock: row?.stock || 0,
+            git: row?.git || 0,
+            budgetValue2026: netBudgetValue,
+            discount: finalDiscount,
+            monthlyData: updatedMonthlyData,
+            status: 'saved'
+          };
+
+          DataPersistenceManager.saveSalesBudgetData([savedData]);
+        }
+
+        showNotification(`✅ Monthly budget data saved to database. Net value: $${netBudgetValue.toLocaleString()} (after $${finalDiscount.toLocaleString()} automatic discount applied).`, 'success');
+
+      } catch (error) {
+        console.error('Failed to save monthly data:', error);
+        showNotification('❌ Failed to save monthly data to database. Please try again.', 'error');
       }
-
-      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data preserved in table and visible to managers.`, 'success');
     }
   };
 
@@ -651,7 +835,7 @@ const SalesBudget: React.FC = () => {
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
   };
 
-  // Auto-distribute when user enters quantity in BUD 2026 column using seasonal distribution
+  // Auto-distribute when user enters quantity in target year budget column using seasonal distribution
   const handleBudget2026Change = (itemId: number, value: number) => {
     const distributeQuantitySeasonally = (quantity: number): MonthlyBudget[] => {
         // Use seasonal distribution for automatic allocation
@@ -672,13 +856,26 @@ const SalesBudget: React.FC = () => {
       prevData.map(item => {
         if (item.id === itemId) {
           const newMonthlyData = distributeQuantitySeasonally(value);
-          const newBudgetValue2026 = value * (item.rate || 1);
+          const baseBudgetValue = value * (item.rate || 1);
+
+          // Apply automatic discount based on category and brand
+          const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+          const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+          const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+          // Update dynamic year data structure
+          const updatedYearlyBudgets = { ...item.yearlyBudgets, [selectedTargetYear]: value };
+          const updatedYearlyValues = { ...item.yearlyValues, [selectedTargetYear]: discountedBudgetValue };
 
           return {
             ...item,
+            yearlyBudgets: updatedYearlyBudgets,
+            yearlyValues: updatedYearlyValues,
+            discount: calculatedDiscount,
+            monthlyData: newMonthlyData,
+            // Legacy compatibility
             budget2026: value,
-            budgetValue2026: newBudgetValue2026,
-            monthlyData: newMonthlyData
+            budgetValue2026: discountedBudgetValue
           };
         }
         return item;
@@ -722,16 +919,19 @@ const SalesBudget: React.FC = () => {
         item: item.item,
         category: item.category,
         brand: item.brand,
-        [`budget_${selectedYear2025}`]: item.budget2025,
-        [`actual_${selectedYear2025}`]: item.actual2025,
-        [`budget_${selectedYear2026}`]: item.budget2026,
+        [`budget_${selectedBaseYear}`]: getYearValue(item, selectedBaseYear, 'budget'),
+        [`actual_${selectedBaseYear}`]: getYearValue(item, selectedBaseYear, 'actual'),
+        [`budget_${selectedTargetYear}`]: getYearValue(item, selectedTargetYear, 'budget'),
+        [`value_${selectedTargetYear}`]: getYearValue(item, selectedTargetYear, 'value'),
         rate: item.rate,
         stock: item.stock,
         git: item.git,
-        budgetValue2026: item.budgetValue2026,
         discount: item.discount,
         ...(config.includeMetadata && {
-          monthlyData: item.monthlyData
+          monthlyData: item.monthlyData,
+          yearlyBudgets: item.yearlyBudgets,
+          yearlyActuals: item.yearlyActuals,
+          yearlyValues: item.yearlyValues
         })
       })),
       summary: {
@@ -797,40 +997,69 @@ const SalesBudget: React.FC = () => {
 
 
 
-  const handleAddNewItem = (itemData: NewItemData) => {
+  const handleAddNewItem = async (itemData: NewItemData) => {
     if (newAdditionType === 'customer') {
       showNotification(`Customer "${itemData.customerName}" added successfully`, 'success');
     } else {
-      // Add new item to original data
-      const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
-      const newRow: SalesBudgetItem = {
-        id: newId,
-        selected: false,
-        customer: selectedCustomer || "New Customer",
-        item: itemData.itemName || "New Item",
-        category: "New Category",
-        brand: "New Brand",
-        itemCombined: `${itemData.itemName} (New Category - New Brand)`,
-        budget2025: 0,
-        actual2025: 0,
-        budget2026: 0,
-        rate: itemData.unitPrice || 0,
-        stock: itemData.stockLevel || 0,
-        git: itemData.gitLevel || 0,
-        budgetValue2026: 0,
-        discount: 0,
-        monthlyData: months.map(month => ({
-          month: month.short,
-          budgetValue: 0,
-          actualValue: 0,
+      try {
+        // Create new item in backend
+        const newBudgetData = {
+          customer: selectedCustomer || "New Customer",
+          item: itemData.itemName || "New Item",
+          category: "New Category",
+          brand: "New Brand",
+          budget_2025: 0,
+          actual_2025: 0,
+          budget_2026: 0,
           rate: itemData.unitPrice || 0,
           stock: itemData.stockLevel || 0,
           git: itemData.gitLevel || 0,
-          discount: 0
-        }))
-      };
-      setOriginalTableData(prev => [...prev, newRow]);
-      showNotification(`Item "${itemData.itemName}" added successfully`, 'success');
+          discount: 0,
+          monthly_data: months.map(month => ({
+            month: month.short,
+            budgetValue: 0,
+            actualValue: 0,
+            rate: itemData.unitPrice || 0,
+            stock: itemData.stockLevel || 0,
+            git: itemData.gitLevel || 0,
+            discount: 0
+          }))
+        };
+
+        const createdBudget = await salesBudgetService.createBudget(newBudgetData);
+
+        // Transform to component format and apply automatic discount
+        const baseBudgetValue = createdBudget.budgetValue2026 || 0;
+        const discountMultiplier = discountService.getCategoryDiscount(createdBudget.category, createdBudget.brand);
+        const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+        const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+        const newRow: SalesBudgetItem = {
+          id: createdBudget.id,
+          selected: false,
+          customer: createdBudget.customer,
+          item: createdBudget.item,
+          category: createdBudget.category,
+          brand: createdBudget.brand,
+          itemCombined: `${createdBudget.item} (${createdBudget.category} - ${createdBudget.brand})`,
+          budget2025: createdBudget.budget_2025,
+          actual2025: createdBudget.actual_2025,
+          budget2026: createdBudget.budget_2026,
+          rate: createdBudget.rate,
+          stock: createdBudget.stock,
+          git: createdBudget.git,
+          budgetValue2026: discountedBudgetValue,
+          discount: calculatedDiscount,
+          monthlyData: createdBudget.monthly_data
+        };
+
+        setOriginalTableData(prev => [...prev, newRow]);
+        showNotification(`✅ Item "${itemData.itemName}" added successfully to database`, 'success');
+
+      } catch (error) {
+        console.error('Failed to add new item:', error);
+        showNotification('❌ Failed to add item to database. Please try again.', 'error');
+      }
     }
   };
 
@@ -920,7 +1149,7 @@ const SalesBudget: React.FC = () => {
           item: row.item,
           category: row.category,
           brand: row.brand,
-          year: selectedYear2026,
+          year: selectedTargetYear,
           totalBudget: row.budgetValue2026,
           monthlyData: row.monthlyData,
           createdBy: user?.name || 'Unknown',
@@ -995,34 +1224,116 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  // Calculate totals based on filtered data and year selection
-  const totalBudget2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
-    : tableData.reduce((sum, item) => sum + item.budgetValue2026, 0);
-  const totalActual2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.actual2025, 0)
-    : 0; // No actual data for future years
-  const totalBudget2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budgetValue2026, 0)
-    : tableData.reduce((sum, item) => sum + item.budget2025, 0);
+  // Helper function to calculate discounts for budget items
+  const calculateItemDiscount = (item: SalesBudgetItem) => {
+    const discountResult = discountService.calculateDiscount(
+      item.budgetValue2026 || (item.budget2026 * item.rate),
+      item.category,
+      item.brand
+    );
+    return discountResult;
+  };
 
-  // Calculate units from monthly data for 2026, otherwise use standard calculation
-  const totalUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0)
-    : tableData.reduce((sum, item) => sum + item.budget2026, 0);
-  const totalUnits2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budget2026, 0) // budget2026 stores total units from monthly data
-    : tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
-  const totalActualUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
-    : 0;
+  // Helper function to apply automatic discount based on category and brand
+  const applyAutomaticDiscount = (item: SalesBudgetItem) => {
+    const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+    const baseValue = item.budget2026 * item.rate;
+    const discountedValue = baseValue * discountMultiplier;
+    const discountAmount = baseValue - discountedValue;
 
-  const budgetGrowth = totalBudget2025 > 0 ? ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100 : 0;
+    return {
+      ...item,
+      budgetValue2026: discountedValue,
+      discount: discountAmount
+    };
+  };
+
+  // Helper function to get value for any year from dynamic data structure
+  const getYearValue = (item: SalesBudgetItem, year: string, type: 'budget' | 'actual' | 'value'): number => {
+    switch (type) {
+      case 'budget':
+        return item.yearlyBudgets?.[year] || (year === '2025' ? item.budget2025 || 0 : year === '2026' ? item.budget2026 || 0 : 0);
+      case 'actual':
+        return item.yearlyActuals?.[year] || (year === '2025' ? item.actual2025 || 0 : 0);
+      case 'value':
+        return item.yearlyValues?.[year] || (year === '2026' ? item.budgetValue2026 || 0 : item.yearlyBudgets?.[year] || 0);
+      default:
+        return 0;
+    }
+  };
+
+  // Calculate totals based on filtered data and dynamic year selection
+  const totalBaseBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
+  const totalBaseActual = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
+  const totalTargetBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
+
+  // Calculate units from budget values
+  const totalBaseUnits = tableData.reduce((sum, item) => {
+    const budgetValue = getYearValue(item, selectedBaseYear, 'budget');
+    return sum + Math.floor(budgetValue / (item.rate || 1));
+  }, 0);
+
+  const totalTargetUnits = tableData.reduce((sum, item) => {
+    const budgetValue = getYearValue(item, selectedTargetYear, 'budget');
+    return sum + Math.floor(budgetValue / (item.rate || 1));
+  }, 0);
+
+  const totalBaseActualUnits = tableData.reduce((sum, item) => {
+    const actualValue = getYearValue(item, selectedBaseYear, 'actual');
+    return sum + Math.floor(actualValue / (item.rate || 1));
+  }, 0);
+
+  const budgetGrowth = totalBaseBudget > 0 ? ((totalTargetBudget - totalBaseBudget) / totalBaseBudget) * 100 : 0;
+
+  // Legacy compatibility
+  const totalBudget2025 = totalBaseBudget;
+  const totalActual2025 = totalBaseActual;
+  const totalBudget2026 = totalTargetBudget;
+  const totalUnits2025 = totalBaseUnits;
+  const totalUnits2026 = totalTargetUnits;
+  const totalActualUnits2025 = totalBaseActualUnits;
+
+  // Show loading state
+  if (isLoadingData) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-100 font-sans flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading budget data from database...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100 font-sans">
-        {/* Error Display */}
+        {/* Data Loading Error Display */}
+        {dataError && (
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-4 m-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-orange-800">Data Loading Warning</h3>
+                <div className="mt-2 text-sm text-orange-700">{dataError}</div>
+                <div className="mt-2">
+                  <button
+                    onClick={loadBudgetData}
+                    className="bg-orange-100 hover:bg-orange-200 text-orange-800 text-xs px-3 py-1 rounded"
+                  >
+                    Retry Loading
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Budget Context Error Display */}
         {budgetError && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 m-4">
             <div className="flex">
@@ -1115,13 +1426,23 @@ const SalesBudget: React.FC = () => {
                     <span>Admin Stock</span>
                   </button>
                 )}
+                {(user?.role === 'admin' || user?.role === 'manager') && (
+                  <button
+                    onClick={() => setIsDiscountManagementModalOpen(true)}
+                    className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
+                    title="Manage category and brand discount rules"
+                  >
+                    <Percent className="w-5 h-5" />
+                    <span>Discounts</span>
+                  </button>
+                )}
                 <button
                   onClick={handleDownloadBudget}
                   className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors transform hover:scale-105 active:scale-95"
                   title="Download budget data for current year"
                 >
                   <DownloadIcon className="w-5 h-5" />
-                  <span>Download Budget ({selectedYear2026})</span>
+                  <span>Download Budget ({selectedTargetYear})</span>
                 </button>
               </div>
             </div>
@@ -1231,7 +1552,7 @@ const SalesBudget: React.FC = () => {
                 selectedCustomer ? 'border-blue-400 bg-blue-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  👤 CUSTOMER:
+                  ��� CUSTOMER:
                   {selectedCustomer && <span className="text-blue-600">✓</span>}
                 </label>
                 <select
@@ -1327,31 +1648,33 @@ const SalesBudget: React.FC = () => {
                   📅 YEARS:
                 </label>
                 <div className="flex gap-1">
-                  <select
-                    className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    value={selectedYear2025}
-                    onChange={(e) => {
-                      console.log('Year 2025 changed:', e.target.value);
-                      setSelectedYear2025(e.target.value);
-                      showNotification(`Changed base year to ${e.target.value}`, 'success');
-                    }}
-                  >
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
-                  </select>
-                  <select
-                    className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    value={selectedYear2026}
-                    onChange={(e) => {
-                      console.log('Year 2026 changed:', e.target.value);
-                      setSelectedYear2026(e.target.value);
-                      showNotification(`Changed target year to ${e.target.value}`, 'success');
-                    }}
-                  >
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                  </select>
-                </div>
+                <select
+                  className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  value={selectedBaseYear}
+                  onChange={(e) => {
+                    console.log('Base year changed:', e.target.value);
+                    setSelectedBaseYear(e.target.value);
+                    showNotification(`Changed base year to ${e.target.value}`, 'success');
+                  }}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <select
+                  className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  value={selectedTargetYear}
+                  onChange={(e) => {
+                    console.log('Target year changed:', e.target.value);
+                    setSelectedTargetYear(e.target.value);
+                    showNotification(`Changed target year to ${e.target.value}`, 'success');
+                  }}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
               </div>
 
               {/* Action Buttons */}
@@ -1491,7 +1814,7 @@ const SalesBudget: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">{/* Animated when data changes */}
               <div className="bg-white p-2 rounded shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Budget {selectedYear2025}</p>
+                  <p className="text-xs text-gray-600 font-medium">Budget {selectedBaseYear}</p>
                   <p className="text-lg font-bold text-blue-900 transition-colors duration-300">${totalBudget2025.toLocaleString()}</p>
                   <p className="text-xs text-blue-600 font-medium">
                     {totalUnits2025.toLocaleString()} Units
@@ -1500,7 +1823,7 @@ const SalesBudget: React.FC = () => {
               </div>
               <div className="bg-white p-2 rounded shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Actual {selectedYear2025}</p>
+                  <p className="text-xs text-gray-600 font-medium">Actual {selectedBaseYear}</p>
                   <p className="text-lg font-bold text-green-900 transition-colors duration-300">${totalActual2025.toLocaleString()}</p>
                   <p className="text-xs text-green-600 font-medium">
                     {totalActualUnits2025.toLocaleString()} Units
@@ -1513,7 +1836,7 @@ const SalesBudget: React.FC = () => {
                   : 'bg-white border-gray-200'
               }`}>
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Budget {selectedYear2026}</p>
+                  <p className="text-xs text-gray-600 font-medium">Budget {selectedTargetYear}</p>
                   <p className={`text-lg font-bold transition-all duration-500 ${
                     totalBudget2026 > 0 ? 'text-purple-900 scale-105' : 'text-gray-500'
                   }`}>${totalBudget2026.toLocaleString()}</p>
@@ -1549,10 +1872,10 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '���️'}
+                    {budgetGrowth === 0 && '����️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
-                  <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
+                  <p className="text-xs text-gray-600">From {selectedBaseYear} to {selectedTargetYear}</p>
                   {budgetGrowth !== -100 && totalBudget2026 > 0 && (
                     <div className="mt-1">
                       <span className={`inline-block px-1.5 py-0.5 text-xs rounded-full font-medium ${
@@ -1622,13 +1945,13 @@ const SalesBudget: React.FC = () => {
                           </>
                         )}
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
-                          BUD {selectedYear2025}
+                          BUD {selectedBaseYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
-                          ACT {selectedYear2025}
+                          ACT {selectedBaseYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-blue-50" style={{width: '100px'}}>
-                          BUD {selectedYear2026}
+                          BUD {selectedTargetYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '80px'}}>
                           RATE
@@ -1639,11 +1962,11 @@ const SalesBudget: React.FC = () => {
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '70px'}}>
                           <div className="flex flex-col items-center">
                             <span>GIT</span>
-                            <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
+                            <span className="text-xs text-blue-500 normal-case">�� Admin</span>
                           </div>
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '120px'}}>
-                          BUD {selectedYear2026} Value
+                          BUD {selectedTargetYear} Value
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
                           DISCOUNT
@@ -1755,21 +2078,21 @@ const SalesBudget: React.FC = () => {
                               </>
                             )}
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${selectedYear2025 === '2025' ? (row.budget2025/1000).toFixed(0) : (row.budget2026/1000).toFixed(0)}k
+                              ${(getYearValue(row, selectedBaseYear, 'budget')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${selectedYear2025 === '2025' ? (row.actual2025/1000).toFixed(0) : '0'}k
+                              ${(getYearValue(row, selectedBaseYear, 'actual')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
                               {user?.role === 'manager' ? (
                                 <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                  {row.budget2026}
+                                  {getYearValue(row, selectedTargetYear, 'budget')}
                                 </div>
                               ) : (
                                 <input
                                   type="number"
                                   className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                  value={row.budget2026}
+                                  value={getYearValue(row, selectedTargetYear, 'budget')}
                                   onChange={(e) => {
                                     const value = parseInt(e.target.value) || 0;
                                     handleBudget2026Change(row.id, value);
@@ -1845,7 +2168,7 @@ const SalesBudget: React.FC = () => {
                               </GitDetailsTooltip>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${(row.budgetValue2026/1000).toFixed(0)}k
+                              ${(getYearValue(row, selectedTargetYear, 'value')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col gap-1">
@@ -1922,7 +2245,7 @@ const SalesBudget: React.FC = () => {
                                   <div className="mb-4">
                                     <h4 className="text-lg font-semibold flex items-center gap-2">
                                       <Calendar className="w-5 h-5" />
-                                      Monthly Budget Data for {selectedYear2026}
+                                      Monthly Budget Data for {selectedTargetYear}
                                     </h4>
                                     <p className="text-sm text-gray-600 mt-1">Enter budget values for each month using the simplified 2-row layout</p>
                                   </div>
@@ -2127,7 +2450,7 @@ const SalesBudget: React.FC = () => {
           onClose={() => setIsYearlyBudgetModalOpen(false)}
           onSave={handleYearlyBudgetSave}
           selectedCustomer={selectedCustomer}
-          year={selectedYear2026}
+          year={selectedTargetYear}
         />
 
         {user?.role === 'manager' || user?.role === 'admin' ? (
@@ -2199,6 +2522,12 @@ const SalesBudget: React.FC = () => {
         <SeasonalDistributionInfo
           isOpen={isSeasonalGrowthModalOpen}
           onClose={() => setIsSeasonalGrowthModalOpen(false)}
+        />
+
+        {/* Discount Management Modal */}
+        <DiscountManagementModal
+          isOpen={isDiscountManagementModalOpen}
+          onClose={() => setIsDiscountManagementModalOpen(false)}
         />
       </div>
     </Layout>

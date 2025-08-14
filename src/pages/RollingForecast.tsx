@@ -5,6 +5,7 @@ import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import { rollingForecastService, RollingForecastItem as APIRollingForecastItem } from '../services/rollingForecastService';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
@@ -27,11 +28,26 @@ import {
   formatDateTimeForDisplay,
   getTimeAgo
 } from '../utils/timeUtils';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue as getYearValueUtil,
+  setYearValue,
+  createSampleYearlyData,
+  transformLegacyToYearly
+} from '../utils/dynamicYearUtils';
 
 const RollingForecast: React.FC = () => {
   const { user } = useAuth();
   const { yearlyBudgets, getBudgetsByCustomer, error: budgetError } = useBudget();
   const { submitForApproval } = useWorkflow();
+
+  // Dynamic year handling using centralized utilities
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
+
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
@@ -64,6 +80,11 @@ const RollingForecast: React.FC = () => {
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
   const [isSeasonalGrowthModalOpen, setIsSeasonalGrowthModalOpen] = useState(false);
+
+  // Use centralized helper function for year value access
+  const getYearValue = (item: any, year: string, type: 'budget' | 'actual'): number => {
+    return getYearValueUtil(item, year, type);
+  };
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -132,103 +153,58 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  const [tableData, setTableData] = useState([
-    {
-      id: '1',
-      customer: 'Action Aid International (Tz)',
-      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 120,
-      ytd25: 45,
-      forecast: 0,
-      stock: 86,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '2',
-      customer: 'Action Aid International (Tz)',
-      item: 'BF GOODRICH TYRE 265/65R17 120/117S TL ATT/A KO2 LRERWLGO',
-      bud25: 80,
-      ytd25: 25,
-      forecast: 0,
-      stock: 7,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(80, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '3',
-      customer: 'Action Aid International (Tz)',
-      item: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-      bud25: 150,
-      ytd25: 60,
-      forecast: 0,
-      stock: 22,
-      git: 100,
-      eta: '2025-08-24',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(150, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '4',
-      customer: 'ADVENT CONSTRUCTION LTD.',
-      item: 'WHEEL BALANCE ALLOYD RIMS',
-      bud25: 200,
-      ytd25: 85,
-      forecast: 0,
-      stock: 0,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(200, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '5',
-      customer: 'ADVENT CONSTRUCTION LTD.',
-      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 90,
-      ytd25: 30,
-      forecast: 0,
-      stock: 15,
-      git: 50,
-      eta: '2025-09-15',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(90, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  // Load data from backend
+  const loadForecastData = async () => {
+    try {
+      setIsLoadingData(true);
+      setDataError(null);
+
+      const forecasts = await rollingForecastService.getAllForecasts();
+      console.log('Loaded forecasts from backend:', forecasts);
+
+      setTableData(forecasts);
+
+    } catch (error) {
+      console.error('Failed to load forecast data:', error);
+      setDataError('Failed to load forecast data from server');
+
+      // Fallback to hardcoded data
+      const fallbackData = [
+        {
+          id: '1',
+          customer: 'Action Aid International (Tz)',
+          item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
+          bud25: 120,
+          ytd25: 45,
+          forecast: 0,
+          stock: 86,
+          git: 0,
+          eta: '',
+          budgetDistribution: (() => {
+            const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
+            const distribution: {[key: string]: number} = {};
+            seasonalDist.forEach(item => {
+              distribution[item.month] = item.value;
+            });
+            return distribution;
+          })()
+        }
+      ];
+
+      setTableData(fallbackData);
+    } finally {
+      setIsLoadingData(false);
     }
-  ]);
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadForecastData();
+  }, []);
 
   // Load saved forecast data for current user
   useEffect(() => {
@@ -559,7 +535,7 @@ const RollingForecast: React.FC = () => {
     setExpandedRows(newExpanded);
   };
 
-  const handleMonthlyForecastChange = (rowId: string, month: string, value: number) => {
+  const handleMonthlyForecastChange = async (rowId: string, month: string, value: number) => {
     // Update monthly forecast data first
     const newMonthlyData = {
       ...monthlyForecastData[rowId],
@@ -584,7 +560,15 @@ const RollingForecast: React.FC = () => {
       })
     );
 
-    // Auto-save to persistence manager when forecast data changes (for managers to see)
+    // Save to backend service
+    try {
+      await rollingForecastService.saveMonthlyForecastData(rowId, newMonthlyData);
+      console.log('✅ Monthly forecast data saved to database');
+    } catch (error) {
+      console.error('❌ Failed to save monthly forecast data:', error);
+    }
+
+    // Also save to persistence manager for backwards compatibility
     if (user) {
       const row = tableData.find(r => r.id === rowId);
       if (row) {
@@ -616,7 +600,6 @@ const RollingForecast: React.FC = () => {
         };
 
         DataPersistenceManager.saveRollingForecastData([savedData]);
-        console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
       }
     }
   };
@@ -734,17 +717,19 @@ const RollingForecast: React.FC = () => {
     let totalStock = 0;
     let totalGit = 0;
 
-    // Calculate from table data
+    // Calculate from table data using dynamic years
     tableData.forEach(row => {
-      // Budget 2025 (existing budget units)
-      totalBudget2025 += row.bud25 * 100; // Convert units to currency
-      totalUnitsBudget += row.bud25;
+      // Budget for base year (existing budget units)
+      const budgetUnits = getYearValue(row, selectedBaseYear, 'budget');
+      totalBudget2025 += budgetUnits * 100; // Convert units to currency
+      totalUnitsBudget += budgetUnits;
 
-      // Sales 2025 (YTD actuals units)
-      totalSales2025 += row.ytd25 * 100; // Convert units to currency
-      totalUnitsSales += row.ytd25;
+      // Sales for base year (YTD actuals units)
+      const salesUnits = getYearValue(row, selectedBaseYear, 'actual');
+      totalSales2025 += salesUnits * 100; // Convert units to currency
+      totalUnitsSales += salesUnits;
 
-      // Forecast 2025 (user input forecasts units) - calculate from monthly data
+      // Forecast for target year (user input forecasts units) - calculate from monthly data
       const monthlyData = getMonthlyData(row.id);
       const forecastUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
       totalForecast2025 += forecastUnits * 100; // Convert units to currency
@@ -835,6 +820,20 @@ const RollingForecast: React.FC = () => {
     );
   }
 
+  // Show loading state
+  if (isLoadingData) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading forecast data from database...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   // Show report view if requested
   if (showReportView) {
     return (
@@ -854,7 +853,30 @@ const RollingForecast: React.FC = () => {
           <span className="text-blue-600 font-medium">Rolling Forecast</span>
         </div>
 
-        {/* Error Display */}
+        {/* Data Loading Error Display */}
+        {dataError && (
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-orange-800">Data Loading Warning</h3>
+                <div className="mt-2 text-sm text-orange-700">{dataError}</div>
+                <div className="mt-2">
+                  <button
+                    onClick={loadForecastData}
+                    className="bg-orange-100 hover:bg-orange-200 text-orange-800 text-xs px-3 py-1 rounded"
+                  >
+                    Retry Loading
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Budget Context Error Display */}
         {budgetError && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -871,7 +893,39 @@ const RollingForecast: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for {selectedBaseYear}-{selectedTargetYear}</h1>
+
+            {/* Year Selectors */}
+            <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border">
+              <label className="text-xs font-medium text-gray-600">Years:</label>
+              <select
+                className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedBaseYear}
+                onChange={(e) => {
+                  setSelectedBaseYear(e.target.value);
+                  console.log('Base year changed to:', e.target.value);
+                }}
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-500">to</span>
+              <select
+                className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedTargetYear}
+                onChange={(e) => {
+                  setSelectedTargetYear(e.target.value);
+                  console.log('Target year changed to:', e.target.value);
+                }}
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex shadow-sm rounded-md overflow-hidden">
               <button
@@ -1174,13 +1228,13 @@ const RollingForecast: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
+              <div className="text-sm text-gray-600 mb-1">Budget {selectedBaseYear}</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.budget.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsBudget.toLocaleString()} Units</div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Sales 2025</div>
+              <div className="text-sm text-gray-600 mb-1">Sales {selectedBaseYear}</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.sales.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsSales.toLocaleString()} Units</div>
             </div>
@@ -1190,7 +1244,7 @@ const RollingForecast: React.FC = () => {
                 ? 'bg-gradient-to-br from-green-50 to-green-100 border border-green-200'
                 : 'bg-gray-50'
             }`}>
-              <div className="text-sm text-gray-600 mb-1">Forecast 2025</div>
+              <div className="text-sm text-gray-600 mb-1">Forecast {selectedTargetYear}</div>
               <div className={`text-2xl font-bold ${
                 summaryStats.unitsForecast > 0 ? 'text-green-900' : 'text-gray-900'
               }`}>${summaryStats.forecast.toLocaleString()}</div>
@@ -1200,7 +1254,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    ���� Active
+                    ������ Active
                   </span>
                 </div>
               )}
@@ -1405,7 +1459,7 @@ const RollingForecast: React.FC = () => {
                     onClick={() => handleSort('bud25')}
                   >
                     <div className="flex items-center justify-center gap-1">
-                      BUD 25'
+                      BUD {selectedBaseYear.slice(-2)}'
                       {getSortIcon('bud25')}
                     </div>
                   </th>
@@ -1414,7 +1468,7 @@ const RollingForecast: React.FC = () => {
                     onClick={() => handleSort('ytd25')}
                   >
                     <div className="flex items-center justify-center gap-1">
-                      YTD 25'
+                      YTD {selectedBaseYear.slice(-2)}'
                       {getSortIcon('ytd25')}
                     </div>
                   </th>
@@ -1592,10 +1646,10 @@ const RollingForecast: React.FC = () => {
                         </>
                       )}
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.bud25}
+                        {getYearValue(row, selectedBaseYear, 'budget')}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.ytd25}
+                        {getYearValue(row, selectedBaseYear, 'actual')}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {row.forecast}

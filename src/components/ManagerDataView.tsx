@@ -3,6 +3,12 @@ import { X, Eye, Filter, Download, Users, Calendar, TrendingUp, Package } from '
 import { useAuth } from '../contexts/AuthContext';
 import DataPersistenceManager, { SavedBudgetData, SavedForecastData } from '../utils/dataPersistence';
 import CustomerForecastModal from './CustomerForecastModal';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface ManagerDataViewProps {
   isOpen: boolean;
@@ -11,6 +17,13 @@ interface ManagerDataViewProps {
 
 const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
+
   const [budgetData, setBudgetData] = useState<SavedBudgetData[]>([]);
   const [forecastData, setForecastData] = useState<SavedForecastData[]>([]);
   const [activeTab, setActiveTab] = useState<'budget' | 'forecast' | 'summary'>('summary');
@@ -104,27 +117,27 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
 
     if (type === 'sales_budget') {
       const budgetItems = customerData as SavedBudgetData[];
-      totalBudgetValue = budgetItems.reduce((sum, item) => sum + item.budget2025, 0);
-      totalActualValue = budgetItems.reduce((sum, item) => sum + item.actual2025, 0);
-      totalForecastValue = budgetItems.reduce((sum, item) => sum + item.budgetValue2026, 0);
-      totalBudgetUnits = budgetItems.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
-      totalActualUnits = budgetItems.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0);
-      totalForecastUnits = budgetItems.reduce((sum, item) => sum + item.budget2026, 0);
+      totalBudgetValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
+      totalActualValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
+      totalForecastValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
+      totalBudgetUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedBaseYear, 'budget') / (item.rate || 1)), 0);
+      totalActualUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedBaseYear, 'actual') / (item.rate || 1)), 0);
+      totalForecastUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedTargetYear, 'budget') / (item.rate || 1)), 0);
     } else {
       const forecastItems = customerData as SavedForecastData[];
       totalForecastValue = forecastItems.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
       totalForecastUnits = forecastItems.reduce((sum, item) => sum + item.forecastTotal, 0);
       if (forecastItems[0]?.budgetData) {
-        totalBudgetValue = forecastItems.reduce((sum, item) => sum + (item.budgetData?.bud25 || 0) * 100, 0);
-        totalActualValue = forecastItems.reduce((sum, item) => sum + (item.budgetData?.ytd25 || 0) * 100, 0);
-        totalBudgetUnits = forecastItems.reduce((sum, item) => sum + (item.budgetData?.bud25 || 0), 0);
-        totalActualUnits = forecastItems.reduce((sum, item) => sum + (item.budgetData?.ytd25 || 0), 0);
+        totalBudgetValue = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'budget') * 100, 0);
+        totalActualValue = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'actual') * 100, 0);
+        totalBudgetUnits = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'budget'), 0);
+        totalActualUnits = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'actual'), 0);
       }
     }
 
-    // Generate mock monthly data
+    // Generate mock monthly data using selected base year
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
-      const month = new Date(2025, i).toLocaleDateString('en', { month: 'short' });
+      const month = new Date(parseInt(selectedBaseYear), i).toLocaleDateString('en', { month: 'short' });
       return {
         month,
         budgetUnits: Math.floor(totalBudgetUnits / 12),
@@ -139,15 +152,15 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
       };
     });
 
-    // Generate items data
+    // Generate items data using dynamic years
     const items = customerData.map(item => ({
       item: item.item,
       category: item.category,
       brand: item.brand,
-      budgetUnits: type === 'sales_budget' ? Math.floor((item as SavedBudgetData).budget2025 / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).budgetData?.bud25 || 0,
-      actualUnits: type === 'sales_budget' ? Math.floor((item as SavedBudgetData).actual2025 / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).budgetData?.ytd25 || 0,
-      forecastUnits: type === 'sales_budget' ? (item as SavedBudgetData).budget2026 : (item as SavedForecastData).forecastTotal,
-      budgetValue: type === 'sales_budget' ? (item as SavedBudgetData).budget2025 : ((item as SavedForecastData).budgetData?.bud25 || 0) * 100,
+      budgetUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedBaseYear, 'budget') / ((item as SavedBudgetData).rate || 1)) : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'budget'),
+      actualUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedBaseYear, 'actual') / ((item as SavedBudgetData).rate || 1)) : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'actual'),
+      forecastUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedTargetYear, 'budget') / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).forecastTotal,
+      budgetValue: type === 'sales_budget' ? getYearValue(item as SavedBudgetData, selectedBaseYear, 'budget') : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'budget') * 100,
       actualValue: type === 'sales_budget' ? (item as SavedBudgetData).actual2025 : ((item as SavedForecastData).budgetData?.ytd25 || 0) * 100,
       forecastValue: type === 'sales_budget' ? (item as SavedBudgetData).budgetValue2026 : (item as SavedForecastData).forecastTotal * 100,
       rate: type === 'sales_budget' ? (item as SavedBudgetData).rate : 100
@@ -274,13 +287,40 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                 Forecast Data ({forecastData.length})
               </button>
             </div>
-            <button
-              onClick={exportData}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Year Selectors */}
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <label className="text-xs font-medium text-gray-600">Years:</label>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedBaseYear}
+                  onChange={(e) => setSelectedBaseYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-gray-500">to</span>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedTargetYear}
+                  onChange={(e) => setSelectedTargetYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={exportData}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -431,7 +471,7 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget 2026</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget {selectedTargetYear}</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Value</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -452,8 +492,8 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                       <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.item}>
                         {item.item}
                       </td>
-                      <td className="px-4 py-3 text-sm text-center">{item.budget2026.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm text-center">{formatCurrency(item.budgetValue2026)}</td>
+                      <td className="px-4 py-3 text-sm text-center">{Math.floor(getYearValue(item, selectedTargetYear, 'budget') / (item.rate || 1)).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm text-center">{formatCurrency(getYearValue(item, selectedTargetYear, 'value'))}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{item.createdBy}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${

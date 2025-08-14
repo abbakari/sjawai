@@ -115,7 +115,7 @@ const AdminCommunicationCenter: React.FC<AdminCommunicationCenterProps> = ({ isO
             toUserName: 'Admin',
             toUserRole: 'admin',
             subject: 'Budget Approval Request',
-            message: 'Please review and approve the submitted budgets for Q1 2026. Total value: $2.5M across 15 customers.',
+            message: `Please review and approve the submitted budgets for Q1 ${new Date().getFullYear() + 1}. Total value: $2.5M across 15 customers.`,
             timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
             isRead: false,
             priority: 'medium',

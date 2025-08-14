@@ -118,7 +118,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         fromUser: 'Sarah Manager',
         fromRole: 'manager',
         title: 'Budget Approval Request',
-        description: 'Manager requesting approval for budget allocation of $250,000 for Q1 2026.',
+        description: `Manager requesting approval for budget allocation of $250,000 for Q1 ${new Date().getFullYear() + 1}.`,
         priority: 'medium',
         status: 'in_progress',
         createdAt: new Date(Date.now() - 7200000).toISOString(),
@@ -143,7 +143,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         ],
         metadata: {
           budgetAmount: 250000,
-          period: 'Q1 2026',
+          period: `Q1 ${new Date().getFullYear() + 1}`,
           categories: ['TYRE SERVICE']
         }
       },
@@ -161,7 +161,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         responses: [
           {
             id: 'resp_004',
-            message: 'Original ETA was 2025-02-15. New ETA is 2025-03-01. Customers Action Aid and ADVENT affected.',
+            message: `Original ETA was ${new Date().getFullYear()}-02-15. New ETA is ${new Date().getFullYear()}-03-01. Customers Action Aid and ADVENT affected.`,
             fromUser: 'Supply Chain Team',
             fromRole: 'supply_chain',
             timestamp: new Date(Date.now() - 10800000).toISOString(),
@@ -169,10 +169,10 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
           }
         ],
         metadata: {
-          shipmentId: 'SH_2025_001',
+          shipmentId: `SH_${new Date().getFullYear()}_001`,
           affectedCustomers: ['Action Aid International (Tz)', 'ADVENT CONSTRUCTION LTD.'],
-          originalETA: '2025-02-15',
-          newETA: '2025-03-01'
+          originalETA: `${new Date().getFullYear()}-02-15`,
+          newETA: `${new Date().getFullYear()}-03-01`
         }
       },
       {

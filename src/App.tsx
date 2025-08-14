@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import { StockProvider } from './contexts/StockContext';
@@ -17,6 +18,7 @@ import ApprovalCenter from './pages/ApprovalCenter';
 import AdminPanel from './pages/AdminPanel';
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
+import ApiTest from './pages/ApiTest';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
@@ -55,13 +57,23 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-lg text-gray-700">Loading STMBudget...</div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+
       {/* Protected Routes */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
       
       <Route 
         path="/dashboard" 
@@ -175,25 +187,37 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Development Routes */}
+      <Route
+        path="/api-test"
+        element={
+          <ProtectedRoute>
+            <ApiTest />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <BudgetProvider>
-        <WorkflowProvider>
-          <StockProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </StockProvider>
-        </WorkflowProvider>
-      </BudgetProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BudgetProvider>
+          <WorkflowProvider>
+            <StockProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </StockProvider>
+          </WorkflowProvider>
+        </BudgetProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 

@@ -22,6 +22,7 @@ import { useAuth, hasPermission, canAccessDashboard, getUserRoleName } from '../
 import { UserRole } from '../types/auth';
 import Navbar from './Navbar';
 import PasswordModal from './PasswordModal';
+import ApiStatus from './ApiStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -209,7 +210,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         
         {/* Horizontal Navigation */}
         <HorizontalNavigation />
-        
+
+        {/* API Status for Salesman */}
+        <div className="py-2 px-4 bg-white border-b border-gray-200">
+          <ApiStatus />
+        </div>
+
         {/* Main content */}
         <main className="py-6">
           <div className="page-container">
@@ -267,6 +273,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               );
             })}
           </nav>
+
+          {/* API Status Indicator */}
+          <div className="px-4 py-2 border-t border-gray-200">
+            <ApiStatus />
+          </div>
         </div>
       </div>
 
@@ -296,6 +307,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               );
             })}
           </nav>
+
+          {/* API Status Indicator */}
+          <div className="px-4 py-2 border-t border-gray-200">
+            <ApiStatus />
+          </div>
         </div>
       </div>
 

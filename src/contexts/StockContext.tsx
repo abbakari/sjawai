@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase, isSupabaseConfigured, handleSupabaseError, TABLES } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 export type StockRequestType = 'stock_alert' | 'new_request' | 'stock_projection' | 'stock_overview' | 'reorder_request';
@@ -153,7 +152,7 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Load all stock data from Supabase
+  // Load all stock data from local storage
   const loadStockData = async () => {
     if (!user) {
       setStockRequests([]);
@@ -163,154 +162,28 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
       return;
     }
 
-    if (!isSupabaseConfigured()) {
-      // Fallback mode - provide empty data but no error
+    try {
+      const savedRequests = localStorage.getItem('stock_requests');
+      const savedAlerts = localStorage.getItem('stock_alerts');
+      const savedProjections = localStorage.getItem('stock_projections');
+      const savedOverviews = localStorage.getItem('stock_overviews');
+
+      setStockRequests(savedRequests ? JSON.parse(savedRequests) : []);
+      setStockAlerts(savedAlerts ? JSON.parse(savedAlerts) : []);
+      setStockProjections(savedProjections ? JSON.parse(savedProjections) : []);
+      setStockOverviews(savedOverviews ? JSON.parse(savedOverviews) : []);
+
+      setError(null);
+    } catch (err: any) {
+      console.error('Error loading stock data from localStorage:', err);
       setStockRequests([]);
       setStockAlerts([]);
       setStockProjections([]);
       setStockOverviews([]);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Load stock requests
-      const { data: requestsData, error: requestsError } = await supabase
-        .from(TABLES.STOCK_REQUESTS)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (requestsError) throw requestsError;
-
-      // Load stock alerts
-      const { data: alertsData, error: alertsError } = await supabase
-        .from(TABLES.STOCK_ALERTS)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (alertsError) throw alertsError;
-
-      // Load stock projections
-      const { data: projectionsData, error: projectionsError } = await supabase
-        .from(TABLES.STOCK_PROJECTIONS)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (projectionsError) throw projectionsError;
-
-      // Load stock overviews with items
-      const { data: overviewsData, error: overviewsError } = await supabase
-        .from(TABLES.STOCK_OVERVIEWS)
-        .select(`
-          *,
-          stock_overview_items (*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (overviewsError) throw overviewsError;
-
-      // Convert and set data
-      setStockRequests(requestsData?.map(convertDatabaseToStockRequest) || []);
-      setStockAlerts(alertsData?.map(convertDatabaseToStockAlert) || []);
-      setStockProjections(projectionsData?.map(convertDatabaseToStockProjection) || []);
-      setStockOverviews(overviewsData?.map(convertDatabaseToStockOverview) || []);
-
-    } catch (err: any) {
-      let errorMessage = 'Failed to load stock data: ';
-      if (err?.message) {
-        errorMessage += err.message;
-      } else if (typeof err === 'string') {
-        errorMessage += err;
-      } else if (err?.code) {
-        errorMessage += `Database error (${err.code}): ${err.details || err.hint || 'Unknown database error'}`;
-      } else {
-        errorMessage += 'Unknown error occurred';
-      }
-      setError(errorMessage);
-      console.error('Error loading stock data:', err);
-      console.error('Error details:', JSON.stringify(err, null, 2));
-    } finally {
-      setIsLoading(false);
+      setError('Failed to load stock data from local storage');
     }
   };
 
-  // Conversion functions for database rows
-  const convertDatabaseToStockRequest = (row: any): StockRequest => ({
-    id: row.id,
-    type: row.type,
-    title: row.title,
-    itemName: row.item_name,
-    category: row.category,
-    brand: row.brand,
-    requestedQuantity: row.requested_quantity,
-    currentStock: row.current_stock,
-    reason: row.reason || '',
-    customerName: row.customer_name,
-    urgency: row.urgency,
-    status: row.status,
-    createdBy: row.created_by,
-    createdByRole: row.created_by_role,
-    createdAt: row.created_at,
-    sentToManagerAt: row.sent_to_manager_at,
-    reviewedAt: row.reviewed_at,
-    reviewedBy: row.reviewed_by,
-    managerComments: row.manager_comments,
-    expectedDelivery: row.expected_delivery,
-    estimatedCost: row.estimated_cost ? parseFloat(row.estimated_cost) : undefined,
-    supplierInfo: row.supplier_info
-  });
-
-  const convertDatabaseToStockAlert = (row: any): StockAlert => ({
-    id: row.id,
-    itemName: row.item_name,
-    currentStock: row.current_stock,
-    minimumLevel: row.minimum_level,
-    alertType: row.alert_type,
-    category: row.category,
-    brand: row.brand,
-    location: row.location,
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-    status: row.status,
-    managerNotes: row.manager_notes,
-    priority: row.priority
-  });
-
-  const convertDatabaseToStockProjection = (row: any): StockProjection => ({
-    id: row.id,
-    itemName: row.item_name,
-    category: row.category,
-    brand: row.brand,
-    currentStock: row.current_stock,
-    projectedDemand: row.projected_demand,
-    projectionPeriod: row.projection_period,
-    seasonalFactor: parseFloat(row.seasonal_factor) || 1.0,
-    notes: row.notes || '',
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-    status: row.status,
-    managerFeedback: row.manager_feedback
-  });
-
-  const convertDatabaseToStockOverview = (row: any): StockOverview => ({
-    id: row.id,
-    title: row.title,
-    description: row.description || '',
-    items: row.stock_overview_items?.map((item: any) => ({
-      itemName: item.item_name,
-      category: item.category,
-      currentStock: item.current_stock,
-      status: item.status,
-      notes: item.notes || ''
-    })) || [],
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-    status: row.status,
-    managerReview: row.manager_review
-  });
 
   // Load data when user changes
   useEffect(() => {
@@ -328,8 +201,7 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
   const createStockRequest = async (request: Omit<StockRequest, 'id' | 'createdAt' | 'status'>): Promise<string> => {
     if (!user) throw new Error('User must be logged in');
 
-    if (!isSupabaseConfigured()) {
-      // Fallback for development
+    try {
       const id = `sr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const newRequest: StockRequest = {
         ...request,
@@ -337,103 +209,52 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
         status: 'draft'
       };
-      setStockRequests(prev => [...prev, newRequest]);
+
+      const updatedRequests = [...stockRequests, newRequest];
+      setStockRequests(updatedRequests);
+      localStorage.setItem('stock_requests', JSON.stringify(updatedRequests));
+
       return id;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.STOCK_REQUESTS)
-        .insert({
-          type: request.type,
-          title: request.title,
-          item_name: request.itemName,
-          category: request.category,
-          brand: request.brand,
-          requested_quantity: request.requestedQuantity,
-          current_stock: request.currentStock,
-          reason: request.reason,
-          customer_name: request.customerName,
-          urgency: request.urgency,
-          created_by: user.id,
-          created_by_role: request.createdByRole,
-          estimated_cost: request.estimatedCost,
-          supplier_info: request.supplierInfo
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await loadStockData();
-      return data.id;
-
     } catch (err: any) {
-      handleSupabaseError(err, 'create stock request');
+      console.error('Error creating stock request:', err);
       throw err;
     }
   };
 
   const sendRequestToManager = async (requestId: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      setStockRequests(prev => prev.map(request =>
+    try {
+      const updatedRequests = stockRequests.map(request =>
         request.id === requestId
           ? { ...request, status: 'sent_to_manager', sentToManagerAt: new Date().toISOString() }
           : request
-      ));
-      return;
-    }
+      );
 
-    try {
-      const { error } = await supabase
-        .from(TABLES.STOCK_REQUESTS)
-        .update({
-          status: 'sent_to_manager',
-          sent_to_manager_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-      await loadStockData();
-
+      setStockRequests(updatedRequests);
+      localStorage.setItem('stock_requests', JSON.stringify(updatedRequests));
     } catch (err: any) {
-      handleSupabaseError(err, 'send request to manager');
+      console.error('Error sending request to manager:', err);
       throw err;
     }
   };
 
   const updateRequestStatus = async (requestId: string, status: RequestStatus, managerComments?: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      setStockRequests(prev => prev.map(request =>
+    try {
+      const updatedRequests = stockRequests.map(request =>
         request.id === requestId
           ? {
               ...request,
               status,
               managerComments,
               reviewedAt: new Date().toISOString(),
-              reviewedBy: 'Manager'
+              reviewedBy: user?.id || 'Manager'
             }
           : request
-      ));
-      return;
-    }
+      );
 
-    try {
-      const { error } = await supabase
-        .from(TABLES.STOCK_REQUESTS)
-        .update({
-          status,
-          manager_comments: managerComments,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-      await loadStockData();
-
+      setStockRequests(updatedRequests);
+      localStorage.setItem('stock_requests', JSON.stringify(updatedRequests));
     } catch (err: any) {
-      handleSupabaseError(err, 'update request status');
+      console.error('Error updating request status:', err);
       throw err;
     }
   };
@@ -444,7 +265,7 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
   const createStockAlert = async (alert: Omit<StockAlert, 'id' | 'createdAt' | 'status'>): Promise<string> => {
     if (!user) throw new Error('User must be logged in');
 
-    if (!isSupabaseConfigured()) {
+    try {
       const id = `sa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const newAlert: StockAlert = {
         ...alert,
@@ -452,33 +273,14 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
         status: 'draft'
       };
-      setStockAlerts(prev => [...prev, newAlert]);
+
+      const updatedAlerts = [...stockAlerts, newAlert];
+      setStockAlerts(updatedAlerts);
+      localStorage.setItem('stock_alerts', JSON.stringify(updatedAlerts));
+
       return id;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.STOCK_ALERTS)
-        .insert({
-          item_name: alert.itemName,
-          current_stock: alert.currentStock,
-          minimum_level: alert.minimumLevel,
-          alert_type: alert.alertType,
-          category: alert.category,
-          brand: alert.brand,
-          location: alert.location,
-          created_by: user.id,
-          priority: alert.priority
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      await loadStockData();
-      return data.id;
-
     } catch (err: any) {
-      handleSupabaseError(err, 'create stock alert');
+      console.error('Error creating stock alert:', err);
       throw err;
     }
   };
@@ -487,46 +289,129 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
   // For brevity, I'll provide simplified implementations
 
   const sendAlertToManager = async (alertId: string): Promise<void> => {
-    // Similar implementation to sendRequestToManager but for alerts table
-    if (!isSupabaseConfigured()) {
-      setStockAlerts(prev => prev.map(alert =>
+    try {
+      const updatedAlerts = stockAlerts.map(alert =>
         alert.id === alertId ? { ...alert, status: 'sent_to_manager' } : alert
-      ));
-      return;
+      );
+
+      setStockAlerts(updatedAlerts);
+      localStorage.setItem('stock_alerts', JSON.stringify(updatedAlerts));
+    } catch (err: any) {
+      console.error('Error sending alert to manager:', err);
+      throw err;
     }
-    // Supabase implementation here...
   };
 
   const updateAlertStatus = async (alertId: string, status: RequestStatus, managerNotes?: string): Promise<void> => {
-    // Similar to updateRequestStatus but for alerts
+    try {
+      const updatedAlerts = stockAlerts.map(alert =>
+        alert.id === alertId ? { ...alert, status, managerNotes } : alert
+      );
+
+      setStockAlerts(updatedAlerts);
+      localStorage.setItem('stock_alerts', JSON.stringify(updatedAlerts));
+    } catch (err: any) {
+      console.error('Error updating alert status:', err);
+      throw err;
+    }
   };
 
   const createStockProjection = async (projection: Omit<StockProjection, 'id' | 'createdAt' | 'status'>): Promise<string> => {
-    // Similar to createStockRequest but for projections
-    const id = `sp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    return id;
+    try {
+      const id = `sp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newProjection: StockProjection = {
+        ...projection,
+        id,
+        createdAt: new Date().toISOString(),
+        status: 'draft'
+      };
+
+      const updatedProjections = [...stockProjections, newProjection];
+      setStockProjections(updatedProjections);
+      localStorage.setItem('stock_projections', JSON.stringify(updatedProjections));
+
+      return id;
+    } catch (err: any) {
+      console.error('Error creating stock projection:', err);
+      throw err;
+    }
   };
 
   const sendProjectionToManager = async (projectionId: string): Promise<void> => {
-    // Similar implementation for projections
+    try {
+      const updatedProjections = stockProjections.map(projection =>
+        projection.id === projectionId ? { ...projection, status: 'sent_to_manager' } : projection
+      );
+
+      setStockProjections(updatedProjections);
+      localStorage.setItem('stock_projections', JSON.stringify(updatedProjections));
+    } catch (err: any) {
+      console.error('Error sending projection to manager:', err);
+      throw err;
+    }
   };
 
   const updateProjectionStatus = async (projectionId: string, status: RequestStatus, managerFeedback?: string): Promise<void> => {
-    // Similar implementation for projections
+    try {
+      const updatedProjections = stockProjections.map(projection =>
+        projection.id === projectionId ? { ...projection, status, managerFeedback } : projection
+      );
+
+      setStockProjections(updatedProjections);
+      localStorage.setItem('stock_projections', JSON.stringify(updatedProjections));
+    } catch (err: any) {
+      console.error('Error updating projection status:', err);
+      throw err;
+    }
   };
 
   const createStockOverview = async (overview: Omit<StockOverview, 'id' | 'createdAt' | 'status'>): Promise<string> => {
-    // Similar implementation but more complex due to related items
-    const id = `so_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    return id;
+    try {
+      const id = `so_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newOverview: StockOverview = {
+        ...overview,
+        id,
+        createdAt: new Date().toISOString(),
+        status: 'draft'
+      };
+
+      const updatedOverviews = [...stockOverviews, newOverview];
+      setStockOverviews(updatedOverviews);
+      localStorage.setItem('stock_overviews', JSON.stringify(updatedOverviews));
+
+      return id;
+    } catch (err: any) {
+      console.error('Error creating stock overview:', err);
+      throw err;
+    }
   };
 
   const sendOverviewToManager = async (overviewId: string): Promise<void> => {
-    // Similar implementation for overviews
+    try {
+      const updatedOverviews = stockOverviews.map(overview =>
+        overview.id === overviewId ? { ...overview, status: 'sent_to_manager' } : overview
+      );
+
+      setStockOverviews(updatedOverviews);
+      localStorage.setItem('stock_overviews', JSON.stringify(updatedOverviews));
+    } catch (err: any) {
+      console.error('Error sending overview to manager:', err);
+      throw err;
+    }
   };
 
   const updateOverviewStatus = async (overviewId: string, status: RequestStatus, managerReview?: string): Promise<void> => {
-    // Similar implementation for overviews
+    try {
+      const updatedOverviews = stockOverviews.map(overview =>
+        overview.id === overviewId ? { ...overview, status, managerReview } : overview
+      );
+
+      setStockOverviews(updatedOverviews);
+      localStorage.setItem('stock_overviews', JSON.stringify(updatedOverviews));
+    } catch (err: any) {
+      console.error('Error updating overview status:', err);
+      throw err;
+    }
   };
 
   const getRequestsBySalesman = (salesmanName: string) => {
