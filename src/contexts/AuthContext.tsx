@@ -76,6 +76,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
+        // Check API health first
+        const healthCheck = await apiService.healthCheck();
+        if (healthCheck.data) {
+          console.log('Backend API is healthy:', healthCheck.data);
+        }
+
         // Use local storage for authentication
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
