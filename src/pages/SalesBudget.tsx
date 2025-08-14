@@ -836,7 +836,7 @@ const SalesBudget: React.FC = () => {
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
   };
 
-  // Auto-distribute when user enters quantity in BUD 2026 column using seasonal distribution
+  // Auto-distribute when user enters quantity in target year budget column using seasonal distribution
   const handleBudget2026Change = (itemId: number, value: number) => {
     const distributeQuantitySeasonally = (quantity: number): MonthlyBudget[] => {
         // Use seasonal distribution for automatic allocation
