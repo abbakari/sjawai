@@ -121,8 +121,16 @@ const Login: React.FC = () => {
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <div className="flex">
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Login Error</h3>
-                    <div className="mt-2 text-sm text-red-700">{error}</div>
+                    <h3 className="text-sm font-medium text-red-800">Authentication Error</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      {error}
+                      {error.includes('HTTP error') && (
+                        <div className="mt-1">
+                          <p>• Make sure the Django backend is running</p>
+                          <p>• Check if you have created a superuser account</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
