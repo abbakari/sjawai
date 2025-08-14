@@ -4,8 +4,9 @@ export interface RollingForecastItem {
   id: string;
   customer: string;
   item: string;
-  bud25: number;
-  ytd25: number;
+  // Dynamic year data structure
+  yearlyBudgets: { [year: string]: number };  // Budget data for any year
+  yearlyActuals: { [year: string]: number };  // YTD/actual data for any year
   forecast: number;
   stock: number;
   git: number;
@@ -15,6 +16,10 @@ export interface RollingForecastItem {
   created_by?: number;
   created_at?: string;
   updated_at?: string;
+
+  // Legacy compatibility fields
+  bud25?: number;
+  ytd25?: number;
 }
 
 export class RollingForecastService {
