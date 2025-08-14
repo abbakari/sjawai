@@ -41,7 +41,7 @@ class STMBudgetAPIHandler(http.server.BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path
         query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         
-        if path == '/api/health/':
+        if path == '/api/health/' or path == '/health/':
             self.send_json_response({
                 'status': 'healthy',
                 'message': 'STM Budget API is running',
