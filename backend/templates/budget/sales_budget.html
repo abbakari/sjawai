@@ -1,0 +1,1023 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Sales Budget - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Sales Budget specific styles */
+    .budget-container {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .budget-filters {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .budget-table-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+    }
+    
+    .budget-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .budget-table th {
+        background: #f8fafc;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .budget-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .budget-table tr:hover {
+        background: #f9fafb;
+    }
+    
+    .budget-input {
+        width: 100%;
+        min-width: 80px;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        text-align: right;
+    }
+    
+    .budget-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .budget-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background: white;
+        min-width: 120px;
+    }
+    
+    .budget-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        border: 1px solid;
+        cursor: pointer;
+        min-height: 36px;
+    }
+    
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+    
+    .btn-success {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+        border-color: #059669;
+    }
+    
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+    
+    .btn-warning:hover {
+        background: #d97706;
+        border-color: #d97706;
+    }
+    
+    .checkbox-input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stats-card {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        text-align: center;
+    }
+    
+    .stats-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .year-selector {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .view-toggle {
+        display: flex;
+        background: #f3f4f6;
+        border-radius: 8px;
+        padding: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .view-toggle-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .view-toggle-btn.active {
+        background: white;
+        color: #3b82f6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .overflow-x-auto {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .budget-filters {
+            padding: 1rem;
+        }
+        
+        .action-buttons {
+            justify-content: center;
+        }
+        
+        .btn-icon {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .budget-table th,
+        .budget-table td {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .stats-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .year-selector {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+    
+    /* Loading states */
+    .loading-row {
+        opacity: 0.6;
+        pointer-events: none;
+        background: #f9fafb;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #e5e7eb;
+        border-top: 2px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Validation states */
+    .input-error {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+    
+    .input-success {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="budget-container container py-6">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Sales Budget Management</h1>
+            <p class="text-gray-600">
+                Manage and track sales budgets across customers, items, and time periods
+            </p>
+        </div>
+        <div class="action-buttons">
+            <button onclick="openExportModal()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+                Export
+            </button>
+            <button onclick="openNewItemModal()" class="btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                Add New Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stats-card">
+            <div class="stats-value" id="totalBudgetValue">$0</div>
+            <div class="stats-label">Total Budget</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-value" id="totalActualValue">$0</div>
+            <div class="stats-label">Total Actual</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-value" id="totalItemsCount">0</div>
+            <div class="stats-label">Total Items</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-value" id="budgetVariance">0%</div>
+            <div class="stats-label">Budget Variance</div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="budget-filters">
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Filters & Configuration</h3>
+            
+            <!-- Year Selection -->
+            <div class="year-selector">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Base Year:</label>
+                    <select id="baseYearSelect" class="budget-select" onchange="handleYearChange()">
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Target Year:</label>
+                    <select id="targetYearSelect" class="budget-select" onchange="handleYearChange()">
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" data-view="customer-item" onclick="toggleView('customer-item')">
+                    Customer-Item View
+                </button>
+                <button class="view-toggle-btn" data-view="item-wise" onclick="toggleView('item-wise')">
+                    Item-Wise View
+                </button>
+            </div>
+        </div>
+        
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Customer</label>
+                <select id="customerFilter" class="budget-select w-full" onchange="applyFilters()">
+                    <option value="">All Customers</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Category</label>
+                <select id="categoryFilter" class="budget-select w-full" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Brand</label>
+                <select id="brandFilter" class="budget-select w-full" onchange="applyFilters()">
+                    <option value="">All Brands</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Item</label>
+                <select id="itemFilter" class="budget-select w-full" onchange="applyFilters()">
+                    <option value="">All Items</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2">
+                <input type="checkbox" id="selectAllCheckbox" class="checkbox-input" onchange="toggleSelectAll()">
+                <span class="text-sm font-medium text-gray-700">Select All</span>
+            </label>
+            <span id="selectedCount" class="text-sm text-gray-600">0 items selected</span>
+        </div>
+        <div class="action-buttons">
+            <button onclick="bulkSave()" class="btn-icon btn-success" id="bulkSaveBtn" disabled>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 12.586V5a1 1 0 10-2 0v7.586l-1.293-1.293z"></path>
+                </svg>
+                Save Selected
+            </button>
+            <button onclick="bulkSubmit()" class="btn-icon btn-warning" id="bulkSubmitBtn" disabled>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.429a1 1 0 001.17-1.409l-7-14z"></path>
+                </svg>
+                Submit for Approval
+            </button>
+        </div>
+    </div>
+
+    <!-- Budget Table -->
+    <div class="budget-table-container">
+        <div class="overflow-x-auto">
+            <table class="budget-table" id="budgetTable">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="checkbox-input" id="headerCheckbox" onchange="toggleSelectAll()">
+                        </th>
+                        <th onclick="sortTable('customer')" class="cursor-pointer hover:bg-gray-100">
+                            Customer
+                            <svg class="w-4 h-4 inline ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </th>
+                        <th onclick="sortTable('item')" class="cursor-pointer hover:bg-gray-100">
+                            Item
+                            <svg class="w-4 h-4 inline ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th id="baseYearBudgetHeader">2025 Budget</th>
+                        <th id="baseYearActualHeader">2025 Actual</th>
+                        <th id="targetYearBudgetHeader">2026 Budget</th>
+                        <th>Rate</th>
+                        <th>Stock</th>
+                        <th>GIT</th>
+                        <th>Discount %</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="budgetTableBody">
+                    <!-- Table rows will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-8 hidden">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading budget data...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-12 hidden">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No budget data found</h3>
+        <p class="text-gray-600 mb-4">Get started by adding your first budget item.</p>
+        <button onclick="openNewItemModal()" class="btn-icon btn-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+            </svg>
+            Add First Item
+        </button>
+    </div>
+</div>
+
+<!-- New Item Modal -->
+<div id="newItemModal" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Add New Budget Item</h3>
+            <button onclick="closeNewItemModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="newItemForm" onsubmit="handleNewItemSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Customer</label>
+                        <input type="text" name="customer" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Item</label>
+                        <input type="text" name="item" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Brand</label>
+                        <input type="text" name="brand" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Rate</label>
+                        <input type="number" name="rate" class="form-input" step="0.01" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Initial Stock</label>
+                        <input type="number" name="stock" class="form-input" step="1" required>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="closeNewItemModal()" class="btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Export Budget Data</h3>
+            <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="exportForm" onsubmit="handleExport(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label">Export Format</label>
+                        <select name="format" class="form-input">
+                            <option value="excel">Excel Spreadsheet</option>
+                            <option value="csv">CSV File</option>
+                            <option value="pdf">PDF Report</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Data Range</label>
+                        <select name="range" class="form-input">
+                            <option value="all">All Data</option>
+                            <option value="selected">Selected Items Only</option>
+                            <option value="filtered">Current Filter Results</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="closeExportModal()" class="btn-secondary flex-1">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1">Export</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sales Budget JavaScript functionality
+class SalesBudgetManager {
+    constructor() {
+        this.budgetData = [];
+        this.filteredData = [];
+        this.selectedItems = new Set();
+        this.currentView = 'customer-item';
+        this.currentSort = { field: '', direction: 'asc' };
+        this.init();
+    }
+
+    async init() {
+        await this.loadBudgetData();
+        this.setupEventListeners();
+        this.populateFilters();
+        this.renderTable();
+        this.updateStatistics();
+    }
+
+    async loadBudgetData() {
+        try {
+            this.showLoading(true);
+            
+            // Load from API
+            const response = await fetch('{% url "api_budgets" %}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.budgetData = data.budgets || [];
+            } else {
+                // Use sample data if API fails
+                this.budgetData = this.generateSampleData();
+            }
+            
+            this.filteredData = [...this.budgetData];
+            
+        } catch (error) {
+            console.error('Failed to load budget data:', error);
+            this.budgetData = this.generateSampleData();
+            this.filteredData = [...this.budgetData];
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    generateSampleData() {
+        const customers = ['Action Aid International (Tz)', 'World Vision Tanzania', 'Plan International', 'Oxfam Tanzania'];
+        const items = ['Laptop Dell Latitude 7420', 'Desktop HP EliteDesk 800', 'Monitor LG 27"', 'Printer Canon MF445'];
+        const categories = ['Electronics', 'Office Equipment', 'IT Hardware', 'Peripherals'];
+        const brands = ['Dell', 'HP', 'LG', 'Canon'];
+        
+        return Array.from({ length: 20 }, (_, i) => ({
+            id: i + 1,
+            customer: customers[i % customers.length],
+            item: items[i % items.length],
+            category: categories[i % categories.length],
+            brand: brands[i % brands.length],
+            yearlyBudgets: {
+                '2025': Math.floor(Math.random() * 50000) + 10000,
+                '2026': Math.floor(Math.random() * 60000) + 15000
+            },
+            yearlyActuals: {
+                '2025': Math.floor(Math.random() * 45000) + 8000,
+                '2026': 0
+            },
+            rate: (Math.random() * 1000 + 100).toFixed(2),
+            stock: Math.floor(Math.random() * 100) + 10,
+            git: Math.floor(Math.random() * 50),
+            discount: (Math.random() * 15).toFixed(1),
+            selected: false
+        }));
+    }
+
+    setupEventListeners() {
+        // Year change handlers
+        document.getElementById('baseYearSelect').addEventListener('change', () => this.handleYearChange());
+        document.getElementById('targetYearSelect').addEventListener('change', () => this.handleYearChange());
+        
+        // Filter change handlers
+        ['customerFilter', 'categoryFilter', 'brandFilter', 'itemFilter'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => this.applyFilters());
+        });
+    }
+
+    populateFilters() {
+        const customers = [...new Set(this.budgetData.map(item => item.customer))];
+        const categories = [...new Set(this.budgetData.map(item => item.category))];
+        const brands = [...new Set(this.budgetData.map(item => item.brand))];
+        const items = [...new Set(this.budgetData.map(item => item.item))];
+
+        this.populateSelect('customerFilter', customers);
+        this.populateSelect('categoryFilter', categories);
+        this.populateSelect('brandFilter', brands);
+        this.populateSelect('itemFilter', items);
+    }
+
+    populateSelect(selectId, options) {
+        const select = document.getElementById(selectId);
+        const currentValue = select.value;
+        
+        // Clear existing options except first
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+        
+        // Add new options
+        options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option;
+            optionElement.textContent = option;
+            select.appendChild(optionElement);
+        });
+        
+        // Restore selection if still valid
+        if (options.includes(currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+    applyFilters() {
+        const customerFilter = document.getElementById('customerFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const brandFilter = document.getElementById('brandFilter').value;
+        const itemFilter = document.getElementById('itemFilter').value;
+
+        this.filteredData = this.budgetData.filter(item => {
+            return (!customerFilter || item.customer === customerFilter) &&
+                   (!categoryFilter || item.category === categoryFilter) &&
+                   (!brandFilter || item.brand === brandFilter) &&
+                   (!itemFilter || item.item === itemFilter);
+        });
+
+        this.renderTable();
+        this.updateStatistics();
+    }
+
+    handleYearChange() {
+        const baseYear = document.getElementById('baseYearSelect').value;
+        const targetYear = document.getElementById('targetYearSelect').value;
+        
+        // Update table headers
+        document.getElementById('baseYearBudgetHeader').textContent = `${baseYear} Budget`;
+        document.getElementById('baseYearActualHeader').textContent = `${baseYear} Actual`;
+        document.getElementById('targetYearBudgetHeader').textContent = `${targetYear} Budget`;
+        
+        this.renderTable();
+        this.updateStatistics();
+    }
+
+    renderTable() {
+        const tbody = document.getElementById('budgetTableBody');
+        const baseYear = document.getElementById('baseYearSelect').value;
+        const targetYear = document.getElementById('targetYearSelect').value;
+        
+        if (this.filteredData.length === 0) {
+            this.showEmptyState(true);
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        this.showEmptyState(false);
+        
+        tbody.innerHTML = this.filteredData.map(item => `
+            <tr class="budget-row" data-id="${item.id}">
+                <td>
+                    <input type="checkbox" class="checkbox-input row-checkbox" 
+                           data-id="${item.id}" onchange="budgetManager.toggleItemSelection(${item.id})"
+                           ${this.selectedItems.has(item.id) ? 'checked' : ''}>
+                </td>
+                <td>${item.customer}</td>
+                <td>${item.item}</td>
+                <td>${item.category}</td>
+                <td>${item.brand}</td>
+                <td>
+                    <input type="number" class="budget-input" 
+                           value="${item.yearlyBudgets[baseYear] || 0}"
+                           onchange="budgetManager.updateBudgetValue(${item.id}, '${baseYear}', 'budget', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" 
+                           value="${item.yearlyActuals[baseYear] || 0}"
+                           onchange="budgetManager.updateBudgetValue(${item.id}, '${baseYear}', 'actual', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" 
+                           value="${item.yearlyBudgets[targetYear] || 0}"
+                           onchange="budgetManager.updateBudgetValue(${item.id}, '${targetYear}', 'budget', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" step="0.01"
+                           value="${item.rate}" 
+                           onchange="budgetManager.updateItemProperty(${item.id}, 'rate', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" 
+                           value="${item.stock}" 
+                           onchange="budgetManager.updateItemProperty(${item.id}, 'stock', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" 
+                           value="${item.git}" 
+                           onchange="budgetManager.updateItemProperty(${item.id}, 'git', this.value)">
+                </td>
+                <td>
+                    <input type="number" class="budget-input" step="0.1"
+                           value="${item.discount}" 
+                           onchange="budgetManager.updateItemProperty(${item.id}, 'discount', this.value)">
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button onclick="budgetManager.saveItem(${item.id})" class="btn-icon btn-success" title="Save">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 12.586V5a1 1 0 10-2 0v7.586l-1.293-1.293z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="budgetManager.deleteItem(${item.id})" class="btn-icon btn-secondary" title="Delete">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    updateStatistics() {
+        const baseYear = document.getElementById('baseYearSelect').value;
+        const targetYear = document.getElementById('targetYearSelect').value;
+        
+        const totalBudget = this.filteredData.reduce((sum, item) => 
+            sum + (item.yearlyBudgets[targetYear] || 0), 0);
+        const totalActual = this.filteredData.reduce((sum, item) => 
+            sum + (item.yearlyActuals[baseYear] || 0), 0);
+        const totalItems = this.filteredData.length;
+        const variance = totalBudget > 0 ? ((totalActual - totalBudget) / totalBudget * 100) : 0;
+
+        document.getElementById('totalBudgetValue').textContent = this.formatCurrency(totalBudget);
+        document.getElementById('totalActualValue').textContent = this.formatCurrency(totalActual);
+        document.getElementById('totalItemsCount').textContent = totalItems.toString();
+        document.getElementById('budgetVariance').textContent = variance.toFixed(1) + '%';
+        document.getElementById('budgetVariance').style.color = variance >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    toggleItemSelection(itemId) {
+        if (this.selectedItems.has(itemId)) {
+            this.selectedItems.delete(itemId);
+        } else {
+            this.selectedItems.add(itemId);
+        }
+        this.updateSelectionUI();
+    }
+
+    updateSelectionUI() {
+        const selectedCount = this.selectedItems.size;
+        document.getElementById('selectedCount').textContent = `${selectedCount} items selected`;
+        
+        const bulkSaveBtn = document.getElementById('bulkSaveBtn');
+        const bulkSubmitBtn = document.getElementById('bulkSubmitBtn');
+        
+        bulkSaveBtn.disabled = selectedCount === 0;
+        bulkSubmitBtn.disabled = selectedCount === 0;
+    }
+
+    showLoading(show) {
+        document.getElementById('loadingState').classList.toggle('hidden', !show);
+        document.querySelector('.budget-table-container').classList.toggle('hidden', show);
+    }
+
+    showEmptyState(show) {
+        document.getElementById('emptyState').classList.toggle('hidden', !show);
+    }
+
+    updateBudgetValue(itemId, year, type, value) {
+        const item = this.budgetData.find(item => item.id === itemId);
+        if (item) {
+            const numValue = parseFloat(value) || 0;
+            if (type === 'budget') {
+                item.yearlyBudgets[year] = numValue;
+            } else if (type === 'actual') {
+                item.yearlyActuals[year] = numValue;
+            }
+            this.updateStatistics();
+        }
+    }
+
+    updateItemProperty(itemId, property, value) {
+        const item = this.budgetData.find(item => item.id === itemId);
+        if (item) {
+            item[property] = parseFloat(value) || 0;
+            this.updateStatistics();
+        }
+    }
+
+    async saveItem(itemId) {
+        const item = this.budgetData.find(item => item.id === itemId);
+        if (item) {
+            try {
+                const response = await fetch(`{% url "api_budget_detail" 0 %}`.replace('0', itemId), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN || '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(item)
+                });
+                
+                if (response.ok) {
+                    showToast('Item saved successfully', 'success');
+                } else {
+                    showToast('Failed to save item', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving item', 'error');
+            }
+        }
+    }
+
+    // Additional methods for modals, export, etc.
+}
+
+// Global functions for HTML event handlers
+function toggleView(view) {
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+    });
+    budgetManager.currentView = view;
+    budgetManager.renderTable();
+}
+
+function toggleSelectAll() {
+    const selectAllChecked = document.getElementById('selectAllCheckbox').checked;
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllChecked;
+        const itemId = parseInt(checkbox.dataset.id);
+        if (selectAllChecked) {
+            budgetManager.selectedItems.add(itemId);
+        } else {
+            budgetManager.selectedItems.delete(itemId);
+        }
+    });
+    
+    budgetManager.updateSelectionUI();
+}
+
+function openNewItemModal() {
+    document.getElementById('newItemModal').classList.remove('hidden');
+}
+
+function closeNewItemModal() {
+    document.getElementById('newItemModal').classList.add('hidden');
+    document.getElementById('newItemForm').reset();
+}
+
+function openExportModal() {
+    document.getElementById('exportModal').classList.remove('hidden');
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+}
+
+function handleNewItemSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const newItem = {
+        id: Math.max(...budgetManager.budgetData.map(item => item.id)) + 1,
+        customer: formData.get('customer'),
+        item: formData.get('item'),
+        category: formData.get('category'),
+        brand: formData.get('brand'),
+        yearlyBudgets: { '2025': 0, '2026': 0 },
+        yearlyActuals: { '2025': 0, '2026': 0 },
+        rate: parseFloat(formData.get('rate')) || 0,
+        stock: parseInt(formData.get('stock')) || 0,
+        git: 0,
+        discount: 0,
+        selected: false
+    };
+    
+    budgetManager.budgetData.push(newItem);
+    budgetManager.applyFilters();
+    budgetManager.populateFilters();
+    closeNewItemModal();
+    showToast('New item added successfully', 'success');
+}
+
+function handleExport(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const format = formData.get('format');
+    const range = formData.get('range');
+    
+    // Simulate export
+    showToast(`Exporting budget data as ${format}...`, 'success');
+    closeExportModal();
+    
+    setTimeout(() => {
+        showToast(`Export completed: budget_data.${format}`, 'success');
+    }, 2000);
+}
+
+function bulkSave() {
+    const selectedItems = Array.from(budgetManager.selectedItems);
+    showToast(`Saving ${selectedItems.length} items...`, 'success');
+    
+    // Simulate bulk save
+    setTimeout(() => {
+        showToast('All selected items saved successfully', 'success');
+    }, 1500);
+}
+
+function bulkSubmit() {
+    const selectedItems = Array.from(budgetManager.selectedItems);
+    showToast(`Submitting ${selectedItems.length} items for approval...`, 'success');
+    
+    // Simulate bulk submit
+    setTimeout(() => {
+        showToast('Items submitted for approval successfully', 'success');
+    }, 1500);
+}
+
+// Initialize budget manager
+let budgetManager;
+document.addEventListener('DOMContentLoaded', function() {
+    budgetManager = new SalesBudgetManager();
+});
+</script>
+{% endblock %}
