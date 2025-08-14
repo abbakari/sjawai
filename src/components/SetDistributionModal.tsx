@@ -51,8 +51,14 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
   selectedCategory,
   selectedBrand,
   selectedItem,
+  selectedTargetYear,
   onApplyDistribution
 }) => {
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [currentTargetYear, setCurrentTargetYear] = useState(selectedTargetYear || defaultYears.targetYear);
+
   const [distributionType, setDistributionType] = useState<'equal' | 'percentage' | 'seasonal'>('equal');
   const [filterCustomer, setFilterCustomer] = useState(selectedCustomer || '');
   const [filterCategory, setFilterCategory] = useState(selectedCategory || '');
