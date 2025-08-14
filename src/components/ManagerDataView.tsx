@@ -128,10 +128,10 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
       totalForecastValue = forecastItems.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
       totalForecastUnits = forecastItems.reduce((sum, item) => sum + item.forecastTotal, 0);
       if (forecastItems[0]?.budgetData) {
-        totalBudgetValue = forecastItems.reduce((sum, item) => sum + (item.budgetData?.bud25 || 0) * 100, 0);
-        totalActualValue = forecastItems.reduce((sum, item) => sum + (item.budgetData?.ytd25 || 0) * 100, 0);
-        totalBudgetUnits = forecastItems.reduce((sum, item) => sum + (item.budgetData?.bud25 || 0), 0);
-        totalActualUnits = forecastItems.reduce((sum, item) => sum + (item.budgetData?.ytd25 || 0), 0);
+        totalBudgetValue = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'budget') * 100, 0);
+        totalActualValue = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'actual') * 100, 0);
+        totalBudgetUnits = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'budget'), 0);
+        totalActualUnits = forecastItems.reduce((sum, item) => sum + getYearValue(item.budgetData, selectedBaseYear, 'actual'), 0);
       }
     }
 
