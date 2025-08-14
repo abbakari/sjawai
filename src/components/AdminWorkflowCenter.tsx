@@ -118,7 +118,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         fromUser: 'Sarah Manager',
         fromRole: 'manager',
         title: 'Budget Approval Request',
-        description: 'Manager requesting approval for budget allocation of $250,000 for Q1 2026.',
+        description: `Manager requesting approval for budget allocation of $250,000 for Q1 ${new Date().getFullYear() + 1}.`,
         priority: 'medium',
         status: 'in_progress',
         createdAt: new Date(Date.now() - 7200000).toISOString(),
