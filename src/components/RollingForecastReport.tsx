@@ -120,7 +120,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           }, {} as Record<string, number>);
 
           // Calculate totals
-          const forecast2025 = Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
+          const forecastTotal = Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
 
           return {
             id: row.id,
@@ -140,8 +140,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
             OCT: monthlyForecast.OCT || 0,
             NOV: monthlyForecast.NOV || 0,
             DEC: monthlyForecast.DEC || 0,
-            BUDGET2025: row.bud25,
-            FORECAST2025: forecast2025
+            BUDGET_YEAR: getYearValue(row, selectedBaseYear, 'budget'),
+            FORECAST_YEAR: forecastTotal
           };
         });
 
