@@ -760,12 +760,18 @@ const SalesBudget: React.FC = () => {
       prevData.map(item => {
         if (item.id === itemId) {
           const newMonthlyData = distributeQuantitySeasonally(value);
-          const newBudgetValue2026 = value * (item.rate || 1);
+          const baseBudgetValue = value * (item.rate || 1);
+
+          // Apply automatic discount based on category and brand
+          const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+          const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+          const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
 
           return {
             ...item,
             budget2026: value,
-            budgetValue2026: newBudgetValue2026,
+            budgetValue2026: discountedBudgetValue,
+            discount: calculatedDiscount,
             monthlyData: newMonthlyData
           };
         }
