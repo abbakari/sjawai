@@ -84,22 +84,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stm_budget.wsgi.application'
 
-# Database
-if config('DATABASE_URL', default=None):
-    DATABASES = {
-        'default': dj_database_url.parse(config('DATABASE_URL'))
+# Database - Use SQLite for development
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='stm_budget_db'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default='password'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
-    }
+}
 
 # Cache
 CACHES = {
