@@ -1827,7 +1827,7 @@ const SalesBudget: React.FC = () => {
                   : 'bg-white border-gray-200'
               }`}>
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs text-gray-600 font-medium">Budget {selectedYear2026}</p>
+                  <p className="text-xs text-gray-600 font-medium">Budget {selectedTargetYear}</p>
                   <p className={`text-lg font-bold transition-all duration-500 ${
                     totalBudget2026 > 0 ? 'text-purple-900 scale-105' : 'text-gray-500'
                   }`}>${totalBudget2026.toLocaleString()}</p>
