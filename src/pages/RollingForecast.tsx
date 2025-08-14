@@ -1466,7 +1466,7 @@ const RollingForecast: React.FC = () => {
                     onClick={() => handleSort('bud25')}
                   >
                     <div className="flex items-center justify-center gap-1">
-                      BUD 25'
+                      BUD {selectedBaseYear.slice(-2)}'
                       {getSortIcon('bud25')}
                     </div>
                   </th>
@@ -1475,7 +1475,7 @@ const RollingForecast: React.FC = () => {
                     onClick={() => handleSort('ytd25')}
                   >
                     <div className="flex items-center justify-center gap-1">
-                      YTD 25'
+                      YTD {selectedBaseYear.slice(-2)}'
                       {getSortIcon('ytd25')}
                     </div>
                   </th>
