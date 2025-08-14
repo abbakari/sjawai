@@ -75,7 +75,8 @@ export class RollingForecastService {
         budgetDistribution: this.generateDefaultBudgetDistribution(80),
         forecast_data: {},
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        _isFallbackData: true
       },
       {
         id: '3',
@@ -92,7 +93,8 @@ export class RollingForecastService {
         budgetDistribution: this.generateDefaultBudgetDistribution(150),
         forecast_data: {},
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        _isFallbackData: true
       },
       {
         id: '4',
@@ -109,7 +111,8 @@ export class RollingForecastService {
         budgetDistribution: this.generateDefaultBudgetDistribution(200),
         forecast_data: {},
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        _isFallbackData: true
       }
     ];
   }
