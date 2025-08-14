@@ -76,10 +76,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
-        // Check API health first
-        const healthCheck = await apiService.healthCheck();
-        if (healthCheck.data) {
-          console.log('Backend API is healthy:', healthCheck.data);
+        // Optional health check with timeout
+        try {
+          const healthCheck = await Promise.race([
+            apiService.healthCheck(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+          ]);
+          if (healthCheck.data) {
+            console.log('Backend API is healthy:', healthCheck.data);
+          }
+        } catch (healthError) {
+          console.warn('Health check failed or timed out:', healthError);
         }
 
         // Use local storage for authentication
@@ -93,7 +100,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             localStorage.removeItem('user');
           }
         }
-        setIsLoading(false);
       } catch (err) {
         console.error('Error in getSession:', err);
         setError('Failed to get session');
