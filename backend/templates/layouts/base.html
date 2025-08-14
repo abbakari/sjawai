@@ -48,8 +48,12 @@
     </style>
     
     <!-- Load main CSS asynchronously -->
-    <link rel="stylesheet" href="/static/css/app.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="/static/css/app.css"></noscript>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="{% static 'css/app.css' %}">
+        <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+    </noscript>
     
     <!-- Manifest for PWA capabilities -->
     <link rel="manifest" href="/static/manifest.json">
