@@ -1639,31 +1639,33 @@ const SalesBudget: React.FC = () => {
                   📅 YEARS:
                 </label>
                 <div className="flex gap-1">
-                  <select
-                    className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    value={selectedYear2025}
-                    onChange={(e) => {
-                      console.log('Year 2025 changed:', e.target.value);
-                      setSelectedYear2025(e.target.value);
-                      showNotification(`Changed base year to ${e.target.value}`, 'success');
-                    }}
-                  >
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
-                  </select>
-                  <select
-                    className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    value={selectedYear2026}
-                    onChange={(e) => {
-                      console.log('Year 2026 changed:', e.target.value);
-                      setSelectedYear2026(e.target.value);
-                      showNotification(`Changed target year to ${e.target.value}`, 'success');
-                    }}
-                  >
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                  </select>
-                </div>
+                <select
+                  className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  value={selectedBaseYear}
+                  onChange={(e) => {
+                    console.log('Base year changed:', e.target.value);
+                    setSelectedBaseYear(e.target.value);
+                    showNotification(`Changed base year to ${e.target.value}`, 'success');
+                  }}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <select
+                  className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  value={selectedTargetYear}
+                  onChange={(e) => {
+                    console.log('Target year changed:', e.target.value);
+                    setSelectedTargetYear(e.target.value);
+                    showNotification(`Changed target year to ${e.target.value}`, 'success');
+                  }}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
               </div>
 
               {/* Action Buttons */}
