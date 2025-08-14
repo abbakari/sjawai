@@ -141,6 +141,20 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    try {
+      await apiService.deleteUser(userId);
+      setUsers(users.filter(user => user.id !== userId));
+    } catch (err: any) {
+      console.error('Failed to delete user:', err);
+      setError('Failed to delete user');
+    }
+  };
+
   const handleDeleteUser = (userId: string) => {
     setUsers(users.filter(user => user.id !== userId));
   };
