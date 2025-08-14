@@ -122,46 +122,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Try API login first
-      const response = await apiService.login(email, password);
+      // Always use mock authentication for demo purposes
+      console.log('Using mock authentication for demo');
 
-      if (response.error) {
-        // Fallback to mock authentication
-        console.log('API login failed, using mock authentication');
-
-        const mockUser = MOCK_USERS[email];
-        if (!mockUser) {
-          throw new Error('Invalid email or password');
-        }
-        if (password !== 'password') {
-          throw new Error('Invalid email or password');
-        }
-
-        const updatedUser = {
-          ...mockUser,
-          lastLogin: new Date().toISOString()
-        };
-
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      } else if (response.data) {
-        // API login successful
-        const userData = response.data as any;
-        const apiUser: User = {
-          id: userData.user.id.toString(),
-          name: `${userData.user.first_name} ${userData.user.last_name}`,
-          email: userData.user.email,
-          role: userData.user.role as UserRole,
-          department: userData.user.role === 'admin' ? 'IT' : 'Sales',
-          permissions: ROLE_PERMISSIONS[userData.user.role as UserRole] || [],
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString()
-        };
-
-        setUser(apiUser);
-        localStorage.setItem('user', JSON.stringify(apiUser));
+      const mockUser = MOCK_USERS[email];
+      if (!mockUser) {
+        throw new Error('Invalid email or password');
       }
+      if (password !== 'password') {
+        throw new Error('Invalid email or password');
+      }
+
+      const updatedUser = {
+        ...mockUser,
+        lastLogin: new Date().toISOString()
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      console.log('Mock login successful for:', email);
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed';
       setError(errorMessage);
