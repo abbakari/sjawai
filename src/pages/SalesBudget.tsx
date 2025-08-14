@@ -864,12 +864,19 @@ const SalesBudget: React.FC = () => {
           const discountedBudgetValue = baseBudgetValue * discountMultiplier;
           const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
 
+          // Update dynamic year data structure
+          const updatedYearlyBudgets = { ...item.yearlyBudgets, [selectedTargetYear]: value };
+          const updatedYearlyValues = { ...item.yearlyValues, [selectedTargetYear]: discountedBudgetValue };
+
           return {
             ...item,
-            budget2026: value,
-            budgetValue2026: discountedBudgetValue,
+            yearlyBudgets: updatedYearlyBudgets,
+            yearlyValues: updatedYearlyValues,
             discount: calculatedDiscount,
-            monthlyData: newMonthlyData
+            monthlyData: newMonthlyData,
+            // Legacy compatibility
+            budget2026: value,
+            budgetValue2026: discountedBudgetValue
           };
         }
         return item;
@@ -1863,7 +1870,7 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '���️'}
+                    {budgetGrowth === 0 && '����️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-600">From {selectedBaseYear} to {selectedTargetYear}</p>
