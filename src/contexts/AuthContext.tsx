@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, AuthContextType, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
-import { supabase, isSupabaseConfigured, handleSupabaseError } from '../lib/supabase';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 // Mock user data for development (fallback when Supabase not configured)
 const MOCK_USERS: Record<string, User> = {
@@ -69,72 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
 
-  // Convert Supabase user to our User type
-  const convertSupabaseUser = async (supabaseUser: SupabaseUser): Promise<User | null> => {
-    try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      if (error) {
-        console.warn('User not found in users table, using email-based role detection');
-        // Fallback: determine role based on email for demo users
-        const email = supabaseUser.email;
-        let role: UserRole = 'salesman'; // default
-        let name = supabaseUser.user_metadata?.name || email?.split('@')[0] || 'Unknown User';
-        let department = 'Unknown';
-
-        if (email?.includes('admin')) {
-          role = 'admin';
-          name = 'System Administrator';
-          department = 'IT';
-        } else if (email?.includes('manager')) {
-          role = 'manager';
-          name = 'Jane Manager';
-          department = 'Sales';
-        } else if (email?.includes('supply')) {
-          role = 'supply_chain';
-          name = 'Bob Supply Chain';
-          department = 'Supply Chain';
-        } else if (email?.includes('salesman')) {
-          role = 'salesman';
-          name = 'John Salesman';
-          department = 'Sales';
-        }
-
-        return {
-          id: supabaseUser.id,
-          name,
-          email: email || '',
-          role,
-          department,
-          permissions: ROLE_PERMISSIONS[role],
-          isActive: true,
-          createdAt: supabaseUser.created_at,
-          lastLogin: new Date().toISOString()
-        };
-      }
-
-      return {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role as UserRole,
-        department: userData.department,
-        permissions: ROLE_PERMISSIONS[userData.role as UserRole],
-        isActive: userData.is_active,
-        createdAt: userData.created_at,
-        lastLogin: userData.last_login || new Date().toISOString()
-      };
-    } catch (err) {
-      console.error('Error converting Supabase user:', err);
-      return null;
-    }
-  };
 
   // Check for existing session on mount
   useEffect(() => {
@@ -142,34 +75,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
-        if (!isSupabaseConfigured()) {
-          // Fallback to local storage for development
-          const savedUser = localStorage.getItem('user');
-          if (savedUser) {
-            try {
-              const parsedUser = JSON.parse(savedUser);
-              setUser(parsedUser);
-            } catch (error) {
-              console.error('Error parsing saved user:', error);
-              localStorage.removeItem('user');
-            }
-          }
-          setIsLoading(false);
-          return;
-        }
-
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          setError(error?.message || error || 'Authentication error');
-        } else if (session && mounted) {
-          setSession(session);
-          const convertedUser = await convertSupabaseUser(session.user);
-          if (convertedUser) {
-            setUser(convertedUser);
+        // Use local storage for authentication
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+          } catch (error) {
+            console.error('Error parsing saved user:', error);
+            localStorage.removeItem('user');
           }
         }
+        setIsLoading(false);
       } catch (err) {
         console.error('Error in getSession:', err);
         setError('Failed to get session');
@@ -182,27 +99,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     getSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        setSession(session);
-        
-        if (session?.user) {
-          const convertedUser = await convertSupabaseUser(session.user);
-          setUser(convertedUser);
-        } else {
-          setUser(null);
-        }
-        
-        setIsLoading(false);
-      }
-    );
-
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
@@ -211,87 +109,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      if (!isSupabaseConfigured()) {
-        // Fallback to mock authentication for development
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Mock authentication using local storage
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const mockUser = MOCK_USERS[email];
+      const mockUser = MOCK_USERS[email];
 
-        if (!mockUser) {
-          throw new Error('Invalid email or password');
-        }
-
-        if (password !== 'password') {
-          throw new Error('Invalid email or password');
-        }
-
-        const updatedUser = {
-          ...mockUser,
-          lastLogin: new Date().toISOString()
-        };
-
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        return;
+      if (!mockUser) {
+        throw new Error('Invalid email or password');
       }
 
-      // Handle demo users with simplified auth (no Supabase Auth required)
-      if (email.includes('@example.com') && password === 'password') {
-        // Get user from database directly
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', email)
-          .single();
-
-        if (error || !userData) {
-          throw new Error('Demo user not found in database');
-        }
-
-        const user: User = {
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role as UserRole,
-          department: userData.department,
-          permissions: ROLE_PERMISSIONS[userData.role as UserRole],
-          isActive: userData.is_active,
-          createdAt: userData.created_at,
-          lastLogin: new Date().toISOString()
-        };
-
-        // Update last login in database
-        await supabase
-          .from('users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', userData.id);
-
-        setUser(user);
-        return;
+      if (password !== 'password') {
+        throw new Error('Invalid email or password');
       }
 
-      // Use Supabase authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const updatedUser = {
+        ...mockUser,
+        lastLogin: new Date().toISOString()
+      };
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        const convertedUser = await convertSupabaseUser(data.user);
-        if (convertedUser) {
-          setUser(convertedUser);
-          
-          // Update last login in database
-          await supabase
-            .from('users')
-            .update({ last_login: new Date().toISOString() })
-            .eq('id', data.user.id);
-        }
-      }
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed';
       setError(errorMessage);
@@ -303,18 +140,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      if (isSupabaseConfigured()) {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error('Error signing out:', error);
-        }
-      } else {
-        // Fallback for development
-        localStorage.removeItem('user');
-      }
-      
+      localStorage.removeItem('user');
       setUser(null);
-      setSession(null);
     } catch (err) {
       console.error('Error during logout:', err);
     }
