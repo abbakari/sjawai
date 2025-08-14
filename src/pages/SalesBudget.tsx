@@ -529,12 +529,20 @@ const SalesBudget: React.FC = () => {
       try {
         const row = tableData.find(item => item.id === rowId);
 
-        // Use simplified mode calculation
+        // Calculate base values
         const budgetValue2026 = monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
         const defaultRate = row?.rate || 1;
         const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
-        const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
-        const netBudgetValue = totalBudget2026 - totalDiscount;
+
+        // Apply automatic discount based on category and brand
+        const discountMultiplier = discountService.getCategoryDiscount(row?.category || '', row?.brand || '');
+        const discountedBudgetValue = totalBudget2026 * discountMultiplier;
+        const calculatedDiscount = totalBudget2026 - discountedBudgetValue;
+
+        // Use calculated discount or manual discount from monthly data
+        const manualDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
+        const finalDiscount = manualDiscount > 0 ? manualDiscount : calculatedDiscount;
+        const netBudgetValue = totalBudget2026 - finalDiscount;
 
         // Update monthly data with calculated values
         const updatedMonthlyData = monthlyData.map(month => ({
