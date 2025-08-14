@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:with-backend": "concurrently \"cd backend && python manage.py runserver 127.0.0.1:8000\" \"vite\"",
+    "dev:frontend": "vite",
+    "dev:backend": "cd backend && python manage.py runserver 127.0.0.1:8000",
+    "migrate": "cd backend && python manage.py migrate",
+    "createsuperuser": "cd backend && python manage.py createsuperuser",
+    "collectstatic": "cd backend && python manage.py collectstatic --noinput",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

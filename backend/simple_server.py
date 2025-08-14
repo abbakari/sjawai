@@ -41,7 +41,7 @@ class STMBudgetAPIHandler(http.server.BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path
         query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         
-        if path == '/api/health/':
+        if path == '/api/health/' or path == '/health/':
             self.send_json_response({
                 'status': 'healthy',
                 'message': 'STM Budget API is running',
@@ -163,18 +163,95 @@ class STMBudgetAPIHandler(http.server.BaseHTTPRequestHandler):
             data = {}
         
         if path == '/api/auth/login/':
-            # Mock login
-            self.send_json_response({
-                'user': {
+            # Mock login - accept both email and username
+            email = data.get('email', data.get('username', 'demo@stmbudget.com'))
+            password = data.get('password', '')
+
+            # Mock user database
+            users = {
+                'admin@example.com': {
                     'id': 1,
-                    'username': data.get('username', 'demo_user'),
-                    'email': 'demo@stmbudget.com',
-                    'role': 'salesman',
-                    'first_name': 'Demo',
-                    'last_name': 'User'
+                    'name': 'System Administrator',
+                    'email': 'admin@example.com',
+                    'role': 'admin',
+                    'department': 'IT',
+                    'is_active': True,
+                    'created_at': '2024-01-01',
+                    'permissions': [
+                        {'id': '1', 'name': 'View All Dashboards', 'resource': 'dashboard', 'action': 'read'},
+                        {'id': '2', 'name': 'Manage Users', 'resource': 'users', 'action': 'manage'},
+                        {'id': '3', 'name': 'View All Reports', 'resource': 'reports', 'action': 'read'},
+                        {'id': '4', 'name': 'System Settings', 'resource': 'settings', 'action': 'manage'},
+                        {'id': '5', 'name': 'Approve All', 'resource': 'approvals', 'action': 'manage'}
+                    ],
+                    'accessible_dashboards': ['Dashboard', 'SalesBudget', 'RollingForecast', 'UserManagement', 'DataSources', 'InventoryManagement', 'DistributionManagement', 'BiDashboard']
                 },
-                'message': 'Login successful'
-            })
+                'salesman@example.com': {
+                    'id': 2,
+                    'name': 'John Salesman',
+                    'email': 'salesman@example.com',
+                    'role': 'salesman',
+                    'department': 'Sales',
+                    'is_active': True,
+                    'created_at': '2024-01-01',
+                    'permissions': [
+                        {'id': '6', 'name': 'Create Sales Budget', 'resource': 'sales_budget', 'action': 'create'},
+                        {'id': '7', 'name': 'Submit for Approval', 'resource': 'approvals', 'action': 'submit'},
+                        {'id': '8', 'name': 'Create Forecasts', 'resource': 'forecasts', 'action': 'create'},
+                        {'id': '9', 'name': 'View Own Data', 'resource': 'own_data', 'action': 'read'},
+                        {'id': '10', 'name': 'Customer Management', 'resource': 'customers', 'action': 'manage'}
+                    ],
+                    'accessible_dashboards': ['Dashboard', 'SalesBudget', 'RollingForecast']
+                },
+                'manager@example.com': {
+                    'id': 3,
+                    'name': 'Jane Manager',
+                    'email': 'manager@example.com',
+                    'role': 'manager',
+                    'department': 'Sales',
+                    'is_active': True,
+                    'created_at': '2024-01-01',
+                    'permissions': [
+                        {'id': '11', 'name': 'Approve Sales Budgets', 'resource': 'sales_budget', 'action': 'approve'},
+                        {'id': '12', 'name': 'Approve Forecasts', 'resource': 'forecasts', 'action': 'approve'},
+                        {'id': '13', 'name': 'Provide Feedback', 'resource': 'feedback', 'action': 'create'},
+                        {'id': '14', 'name': 'View Team Data', 'resource': 'team_data', 'action': 'read'},
+                        {'id': '15', 'name': 'Send to Supply Chain', 'resource': 'supply_chain', 'action': 'forward'}
+                    ],
+                    'accessible_dashboards': ['Dashboard', 'SalesBudget', 'RollingForecast', 'ApprovalCenter']
+                },
+                'supply@example.com': {
+                    'id': 4,
+                    'name': 'Bob Supply Chain',
+                    'email': 'supply@example.com',
+                    'role': 'supply_chain',
+                    'department': 'Supply Chain',
+                    'is_active': True,
+                    'created_at': '2024-01-01',
+                    'permissions': [
+                        {'id': '16', 'name': 'View Approved Budgets', 'resource': 'approved_budgets', 'action': 'read'},
+                        {'id': '17', 'name': 'View Approved Forecasts', 'resource': 'approved_forecasts', 'action': 'read'},
+                        {'id': '18', 'name': 'Inventory Management', 'resource': 'inventory', 'action': 'manage'},
+                        {'id': '19', 'name': 'Supply Planning', 'resource': 'supply_planning', 'action': 'manage'},
+                        {'id': '20', 'name': 'Customer Satisfaction', 'resource': 'customer_satisfaction', 'action': 'read'}
+                    ],
+                    'accessible_dashboards': ['Dashboard', 'InventoryManagement', 'DistributionManagement', 'SupplyChainDashboard']
+                }
+            }
+
+            # Validate credentials (for demo, any password works)
+            if email in users and password == 'password':
+                user = users[email]
+                self.send_json_response({
+                    'user': user,
+                    'access': 'mock_access_token',
+                    'refresh': 'mock_refresh_token',
+                    'message': 'Login successful'
+                })
+            else:
+                self.send_json_response({
+                    'email': ['Invalid email or password.']
+                }, 400)
         
         elif path == '/api/budgets/':
             # Mock budget creation

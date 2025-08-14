@@ -22,7 +22,8 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # Health check
+    # Health check (with and without api prefix)
+    path('health/', health_check, name='health_check_root'),
     path('api/health/', health_check, name='health_check'),
 
     # API Authentication
