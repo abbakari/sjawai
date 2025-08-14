@@ -471,7 +471,7 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget 2026</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget {selectedTargetYear}</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Value</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
