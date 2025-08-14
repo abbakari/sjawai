@@ -5,6 +5,7 @@ import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import { rollingForecastService, RollingForecastItem as APIRollingForecastItem } from '../services/rollingForecastService';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
@@ -1200,7 +1201,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    ���� Active
+                    ������ Active
                   </span>
                 </div>
               )}
