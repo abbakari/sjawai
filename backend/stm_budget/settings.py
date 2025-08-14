@@ -16,8 +16,6 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lamb
 
 # Application definition
 DJANGO_APPS = [
-    'admin_interface',
-    'colorfield',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,13 +26,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'rest_framework_simplejwt',
     'corsheaders',
-    'django_filters',
-    'guardian',
-    'django_extensions',
-    'crispy_forms',
-    'crispy_bootstrap5',
 ]
 
 LOCAL_APPS = [
