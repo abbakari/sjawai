@@ -111,30 +111,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Always use mock authentication for demo purposes
-      console.log('Using mock authentication for demo');
+      // Try API login first
+      console.log('Attempting API login for:', email);
+      const response = await apiService.login(email, password);
 
-      const mockUser = MOCK_USERS[email];
-      if (!mockUser) {
-        throw new Error('Invalid email or password');
+      if (response.error) {
+        console.log('API login failed, using mock authentication fallback');
+
+        // Fallback to mock authentication
+        const mockUser = MOCK_USERS[email];
+        if (!mockUser) {
+          throw new Error('Invalid email or password');
+        }
+        if (password !== 'password') {
+          throw new Error('Invalid email or password');
+        }
+
+        const updatedUser = {
+          ...mockUser,
+          lastLogin: new Date().toISOString()
+        };
+
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('Mock login successful for:', email);
+      } else if (response.data) {
+        // API login successful
+        console.log('API login successful for:', email);
+        const userData = response.data as any;
+        const apiUser: User = {
+          id: userData.user?.id?.toString() || userData.id?.toString() || '1',
+          name: userData.user?.name || `${userData.user?.first_name || ''} ${userData.user?.last_name || ''}`.trim() || userData.name || email,
+          email: userData.user?.email || userData.email || email,
+          role: (userData.user?.role || userData.role || 'salesman') as UserRole,
+          department: userData.user?.department || userData.department || 'Sales',
+          permissions: ROLE_PERMISSIONS[(userData.user?.role || userData.role || 'salesman') as UserRole] || [],
+          isActive: userData.user?.is_active !== false,
+          createdAt: userData.user?.created_at || new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        };
+
+        setUser(apiUser);
+        localStorage.setItem('user', JSON.stringify(apiUser));
       }
-      if (password !== 'password') {
-        throw new Error('Invalid email or password');
-      }
-
-      const updatedUser = {
-        ...mockUser,
-        lastLogin: new Date().toISOString()
-      };
-
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-
-      console.log('Mock login successful for:', email);
     } catch (err: any) {
-      const errorMessage = err.message || 'Login failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      console.error('Login error:', err);
+      // Fallback to mock if API completely fails
+      try {
+        const mockUser = MOCK_USERS[email];
+        if (mockUser && password === 'password') {
+          const updatedUser = {
+            ...mockUser,
+            lastLogin: new Date().toISOString()
+          };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log('Used mock fallback for:', email);
+        } else {
+          throw new Error('Invalid email or password');
+        }
+      } catch (fallbackErr) {
+        const errorMessage = err.message || 'Login failed';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
