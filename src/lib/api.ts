@@ -16,14 +16,18 @@ class ApiService {
   }
 
   private async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('access_token');
+
     const defaultOptions: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
