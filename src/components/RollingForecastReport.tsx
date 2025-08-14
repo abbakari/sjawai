@@ -39,6 +39,13 @@ interface ReportData {
 
 const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack }) => {
   const { user } = useAuth();
+
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
+
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
