@@ -76,9 +76,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
-        // Skip API health check and use local storage only
-        console.log('Loading session from localStorage...');
+        // Optional health check with timeout
+        try {
+          const healthCheck = await Promise.race([
+            apiService.healthCheck(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
+          ]);
+          if (healthCheck.data) {
+            console.log('Backend API is healthy:', healthCheck.data);
+          }
+        } catch (healthError) {
+          console.warn('Health check failed or timed out, using localStorage only:', healthError);
+        }
 
+        // Use local storage for authentication
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
           try {
