@@ -2077,13 +2077,13 @@ const SalesBudget: React.FC = () => {
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
                               {user?.role === 'manager' ? (
                                 <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                  {row.budget2026}
+                                  {getYearValue(row, selectedTargetYear, 'budget')}
                                 </div>
                               ) : (
                                 <input
                                   type="number"
                                   className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                  value={row.budget2026}
+                                  value={getYearValue(row, selectedTargetYear, 'budget')}
                                   onChange={(e) => {
                                     const value = parseInt(e.target.value) || 0;
                                     handleBudget2026Change(row.id, value);
