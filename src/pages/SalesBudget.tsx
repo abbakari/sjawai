@@ -59,15 +59,20 @@ interface SalesBudgetItem {
   category: string;
   brand: string;
   itemCombined: string;
-  budget2025: number;
-  actual2025: number;
-  budget2026: number;
+  yearlyBudgets: { [year: string]: number }; // Dynamic yearly budget data
+  yearlyActuals: { [year: string]: number }; // Dynamic yearly actual data
+  yearlyValues: { [year: string]: number };  // Dynamic yearly calculated values
   rate: number;
   stock: number;
   git: number;
-  budgetValue2026: number;
   discount: number;
   monthlyData: MonthlyBudget[];
+
+  // Legacy fields for backward compatibility
+  budget2025?: number;
+  actual2025?: number;
+  budget2026?: number;
+  budgetValue2026?: number;
 }
 
 const SalesBudget: React.FC = () => {
@@ -78,8 +83,21 @@ const SalesBudget: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
-  const [selectedYear2025, setSelectedYear2025] = useState('2025');
-  const [selectedYear2026, setSelectedYear2026] = useState('2026');
+  // Dynamic year handling
+  const currentYear = new Date().getFullYear();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(currentYear.toString());
+  const [selectedTargetYear, setSelectedTargetYear] = useState((currentYear + 1).toString());
+
+  // Generate available years (from 2021 to current year + 5)
+  const generateAvailableYears = () => {
+    const years = [];
+    for (let year = 2021; year <= currentYear + 5; year++) {
+      years.push(year.toString());
+    }
+    return years;
+  };
+
+  const availableYears = generateAvailableYears();
   const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
