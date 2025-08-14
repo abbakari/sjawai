@@ -592,7 +592,7 @@ const SalesBudget: React.FC = () => {
             stock: row?.stock || 0,
             git: row?.git || 0,
             budgetValue2026: netBudgetValue,
-            discount: totalDiscount,
+            discount: finalDiscount,
             monthlyData: updatedMonthlyData,
             status: 'saved'
           };
@@ -1743,7 +1743,7 @@ const SalesBudget: React.FC = () => {
                           ? 'bg-green-200 text-green-800'
                           : 'bg-orange-200 text-orange-800'
                       }`}>
-                        {budgetGrowth > 0 ? '🚀 Growing!' : '⚠️ Declining'}
+                        {budgetGrowth > 0 ? '���� Growing!' : '⚠️ Declining'}
                       </span>
                     </div>
                   )}
