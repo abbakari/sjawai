@@ -1653,10 +1653,10 @@ const RollingForecast: React.FC = () => {
                         </>
                       )}
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.bud25}
+                        {getYearValue(row, selectedBaseYear, 'budget')}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.ytd25}
+                        {getYearValue(row, selectedBaseYear, 'actual')}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {row.forecast}
