@@ -147,7 +147,34 @@ const SalesBudget: React.FC = () => {
 
   const months = getAllYearMonths();
 
-  // Initial data
+  // Helper function to create sample yearly data
+  const createSampleYearlyData = (baseBudget: number, baseActual: number) => {
+    const yearlyBudgets: { [year: string]: number } = {};
+    const yearlyActuals: { [year: string]: number } = {};
+    const yearlyValues: { [year: string]: number } = {};
+
+    // Generate data for available years
+    availableYears.forEach(year => {
+      const yearNum = parseInt(year);
+      const currentYearNum = currentYear;
+
+      if (yearNum <= currentYearNum) {
+        // Historical and current year data
+        yearlyBudgets[year] = baseBudget * (1 + (yearNum - 2025) * 0.1); // 10% growth per year
+        yearlyActuals[year] = baseActual * (1 + (yearNum - 2025) * 0.08); // 8% actual growth
+        yearlyValues[year] = yearlyBudgets[year];
+      } else {
+        // Future year data (budgets only)
+        yearlyBudgets[year] = baseBudget * (1 + (yearNum - 2025) * 0.12); // 12% projected growth
+        yearlyActuals[year] = 0;
+        yearlyValues[year] = yearlyBudgets[year];
+      }
+    });
+
+    return { yearlyBudgets, yearlyActuals, yearlyValues };
+  };
+
+  // Initial data with dynamic year structure
   const initialData: SalesBudgetItem[] = [
     {
       id: 1,
@@ -157,13 +184,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "BF Goodrich",
       itemCombined: "BF GOODRICH TYRE 235/85R16 (Tyres - BF Goodrich)",
-      budget2025: 1200000,
-      actual2025: 850000,
-      budget2026: 0,
+      ...createSampleYearlyData(1200000, 850000),
       rate: 341,
       stock: 232,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -173,7 +197,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 100) + 50,
         git: Math.floor(Math.random() * 20),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 1200000,
+      actual2025: 850000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 2,
