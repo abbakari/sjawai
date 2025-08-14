@@ -21,12 +21,15 @@ def health_check(request):
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
-    
+
+    # Health check
+    path('api/health/', health_check, name='health_check'),
+
     # API Authentication
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    
+
     # API Routes
     path('api/auth/', include('apps.authentication.urls')),
     path('api/users/', include('apps.users.urls')),
