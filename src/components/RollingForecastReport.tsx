@@ -33,8 +33,8 @@ interface ReportData {
   OCT: number;
   NOV: number;
   DEC: number;
-  BUDGET2025: number;
-  FORECAST2025: number;
+  BUDGET_YEAR: number;
+  FORECAST_YEAR: number;
 }
 
 const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack }) => {
