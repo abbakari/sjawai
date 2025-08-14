@@ -52,7 +52,12 @@ const ApiTest: React.FC = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">API Connection Test</h1>
-      
+
+      {/* Backend Status */}
+      <div className="mb-6">
+        <BackendStatus />
+      </div>
+
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Connection Status</h2>
         <p className="text-lg mb-4">{status}</p>
