@@ -56,31 +56,6 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Convert database row to YearlyBudgetData
-  const convertDatabaseToBudget = (budgetRow: any, monthlyRows: any[]): YearlyBudgetData => {
-    const monthlyData = monthlyRows.map(row => ({
-      month: row.month,
-      budgetValue: parseFloat(row.budget_value) || 0,
-      actualValue: parseFloat(row.actual_value) || 0,
-      rate: parseFloat(row.rate) || 0,
-      stock: row.stock || 0,
-      git: row.git || 0,
-      discount: parseFloat(row.discount) || 0
-    }));
-
-    return {
-      id: budgetRow.id,
-      customer: budgetRow.customer,
-      item: budgetRow.item,
-      category: budgetRow.category,
-      brand: budgetRow.brand,
-      year: budgetRow.year,
-      totalBudget: parseFloat(budgetRow.total_budget) || 0,
-      monthlyData,
-      createdBy: budgetRow.created_by,
-      createdAt: budgetRow.created_at
-    };
-  };
 
   // Load budgets from local storage
   const loadBudgets = async () => {
