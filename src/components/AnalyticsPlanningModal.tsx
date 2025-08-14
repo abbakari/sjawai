@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, BarChart3, TrendingUp, PieChart, Calendar, Target, DollarSign, Users, Package } from 'lucide-react';
+import { getCurrentYear } from '../utils/dynamicYearUtils';
 
 interface AnalyticsPlanningModalProps {
   isOpen: boolean;
