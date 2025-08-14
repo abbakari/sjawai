@@ -25,8 +25,10 @@ interface SalesBudgetItem {
   item: string;
   category: string;
   brand: string;
-  budget2026: number;
+  yearlyBudgets?: { [year: string]: number };
   monthlyData: MonthlyBudget[];
+  // Legacy compatibility
+  budget2026?: number;
 }
 
 interface SetDistributionModalProps {
