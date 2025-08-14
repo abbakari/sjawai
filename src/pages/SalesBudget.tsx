@@ -302,10 +302,23 @@ const SalesBudget: React.FC = () => {
       console.error('Failed to load budget data:', error);
       setDataError('Failed to load budget data from server');
 
-      // Fallback to initialData if available
+      // Fallback to initialData if available and apply automatic discounts
       if (initialData.length > 0) {
-        setOriginalTableData(initialData);
-        setTableData(initialData);
+        const discountedInitialData = initialData.map(item => {
+          const baseBudgetValue = item.budgetValue2026 || (item.budget2026 * item.rate);
+          const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+          const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+          const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+          return {
+            ...item,
+            budgetValue2026: discountedBudgetValue,
+            discount: calculatedDiscount
+          };
+        });
+
+        setOriginalTableData(discountedInitialData);
+        setTableData(discountedInitialData);
       }
     } finally {
       setIsLoadingData(false);
