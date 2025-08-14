@@ -212,24 +212,31 @@ class STMBudgetAPIHandler(http.server.BaseHTTPRequestHandler):
 def run_server(port=8000):
     """Run the development API server"""
     handler = STMBudgetAPIHandler
-    
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        print(f"STM Budget API Server running on http://localhost:{port}")
-        print("Available endpoints:")
-        print("  GET  /api/health/")
-        print("  GET  /api/auth/me/")
-        print("  POST /api/auth/login/")
-        print("  GET  /api/budgets/")
-        print("  POST /api/budgets/")
-        print("  GET  /api/forecasts/")
-        print("  POST /api/forecasts/")
-        print("  GET  /api/users/")
-        print("\nPress Ctrl+C to stop the server")
-        
-        try:
+
+    print(f"🚀 Starting STM Budget API Server on port {port}...")
+
+    try:
+        with socketserver.TCPServer(("", port), handler) as httpd:
+            print(f"✅ STM Budget API Server running on http://localhost:{port}")
+            print("🌐 Available endpoints:")
+            print("  GET  /api/health/")
+            print("  GET  /api/auth/me/")
+            print("  POST /api/auth/login/")
+            print("  GET  /api/budgets/")
+            print("  POST /api/budgets/")
+            print("  GET  /api/forecasts/")
+            print("  POST /api/forecasts/")
+            print("  GET  /api/users/")
+            print("\n🔄 Server ready to accept connections!")
+            print("Press Ctrl+C to stop the server\n")
+
             httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nServer stopped")
+    except OSError as e:
+        print(f"❌ Error starting server: {e}")
+        if "Address already in use" in str(e):
+            print(f"Port {port} is already in use. Try a different port.")
+    except KeyboardInterrupt:
+        print("\n🛑 Server stopped")
 
 
 if __name__ == "__main__":
