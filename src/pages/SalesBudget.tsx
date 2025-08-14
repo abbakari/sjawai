@@ -251,33 +251,46 @@ const SalesBudget: React.FC = () => {
       const budgets = await salesBudgetService.getAllBudgets();
       console.log('Loaded budgets from backend:', budgets);
 
-      // Transform backend data to match component interface
-      const transformedData: SalesBudgetItem[] = budgets.map(budget => ({
-        id: budget.id,
-        selected: false,
-        customer: budget.customer,
-        item: budget.item,
-        category: budget.category,
-        brand: budget.brand,
-        itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
-        budget2025: budget.budget_2025,
-        actual2025: budget.actual_2025,
-        budget2026: budget.budget_2026,
-        rate: budget.rate,
-        stock: budget.stock,
-        git: budget.git,
-        budgetValue2026: budget.budgetValue2026 || (budget.budget_2026 * budget.rate),
-        discount: budget.discount,
-        monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
-          month: month.short,
-          budgetValue: 0,
-          actualValue: 0,
+      // Transform backend data to match component interface and apply automatic discounts
+      const transformedData: SalesBudgetItem[] = budgets.map(budget => {
+        const baseBudgetValue = budget.budgetValue2026 || (budget.budget_2026 * budget.rate);
+
+        // Apply automatic discount based on category and brand
+        const discountMultiplier = discountService.getCategoryDiscount(budget.category, budget.brand);
+        const discountedBudgetValue = baseBudgetValue * discountMultiplier;
+        const calculatedDiscount = baseBudgetValue - discountedBudgetValue;
+
+        // Use existing discount if higher than calculated, otherwise use calculated
+        const finalDiscount = budget.discount > calculatedDiscount ? budget.discount : calculatedDiscount;
+        const finalBudgetValue = baseBudgetValue - finalDiscount;
+
+        return {
+          id: budget.id,
+          selected: false,
+          customer: budget.customer,
+          item: budget.item,
+          category: budget.category,
+          brand: budget.brand,
+          itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
+          budget2025: budget.budget_2025,
+          actual2025: budget.actual_2025,
+          budget2026: budget.budget_2026,
           rate: budget.rate,
           stock: budget.stock,
           git: budget.git,
-          discount: 0
-        }))
-      }));
+          budgetValue2026: finalBudgetValue,
+          discount: finalDiscount,
+          monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
+            month: month.short,
+            budgetValue: 0,
+            actualValue: 0,
+            rate: budget.rate,
+            stock: budget.stock,
+            git: budget.git,
+            discount: 0
+          }))
+        };
+      });
 
       setOriginalTableData(transformedData);
       setTableData(transformedData);
