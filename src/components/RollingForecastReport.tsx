@@ -339,10 +339,10 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                   </div>
                 </th>
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                  BUDGET2025
+                  BUDGET{selectedBaseYear}
                 </th>
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  FORECAST2025
+                  FORECAST{selectedTargetYear}
                 </th>
               </tr>
             </thead>
