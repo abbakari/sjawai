@@ -253,7 +253,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           <div className="h-6 w-px bg-gray-300"></div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Budget / Rolling Forecast Report</h1>
-            <p className="text-sm text-gray-600">Rolling Forecast as of 2025-2026</p>
+            <p className="text-sm text-gray-600">Rolling Forecast as of {selectedBaseYear}-{selectedTargetYear}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
