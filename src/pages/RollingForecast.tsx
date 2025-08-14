@@ -726,17 +726,19 @@ const RollingForecast: React.FC = () => {
     let totalStock = 0;
     let totalGit = 0;
 
-    // Calculate from table data
+    // Calculate from table data using dynamic years
     tableData.forEach(row => {
-      // Budget 2025 (existing budget units)
-      totalBudget2025 += row.bud25 * 100; // Convert units to currency
-      totalUnitsBudget += row.bud25;
+      // Budget for base year (existing budget units)
+      const budgetUnits = getYearValue(row, selectedBaseYear, 'budget');
+      totalBudget2025 += budgetUnits * 100; // Convert units to currency
+      totalUnitsBudget += budgetUnits;
 
-      // Sales 2025 (YTD actuals units)
-      totalSales2025 += row.ytd25 * 100; // Convert units to currency
-      totalUnitsSales += row.ytd25;
+      // Sales for base year (YTD actuals units)
+      const salesUnits = getYearValue(row, selectedBaseYear, 'actual');
+      totalSales2025 += salesUnits * 100; // Convert units to currency
+      totalUnitsSales += salesUnits;
 
-      // Forecast 2025 (user input forecasts units) - calculate from monthly data
+      // Forecast for target year (user input forecasts units) - calculate from monthly data
       const monthlyData = getMonthlyData(row.id);
       const forecastUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
       totalForecast2025 += forecastUnits * 100; // Convert units to currency
