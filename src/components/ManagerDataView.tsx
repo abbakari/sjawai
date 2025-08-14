@@ -492,8 +492,8 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
                       <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.item}>
                         {item.item}
                       </td>
-                      <td className="px-4 py-3 text-sm text-center">{item.budget2026.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm text-center">{formatCurrency(item.budgetValue2026)}</td>
+                      <td className="px-4 py-3 text-sm text-center">{Math.floor(getYearValue(item, selectedTargetYear, 'budget') / (item.rate || 1)).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm text-center">{formatCurrency(getYearValue(item, selectedTargetYear, 'value'))}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{item.createdBy}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
