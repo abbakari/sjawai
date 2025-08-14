@@ -155,10 +155,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
-  };
-
   const handleToggleUserStatus = (userId: string) => {
     setUsers(users.map(user => 
       user.id === userId ? { ...user, isActive: !user.isActive } : user
