@@ -184,8 +184,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
         row.OCT,
         row.NOV,
         row.DEC,
-        row.BUDGET2025,
-        row.FORECAST2025
+        row.BUDGET_YEAR,
+        row.FORECAST_YEAR
       ].join(','))
     ].join('\n');
 
