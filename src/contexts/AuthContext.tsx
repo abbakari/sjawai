@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, AuthContextType, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
+import { apiService } from '../lib/api';
 
 // Mock user data for development
 const MOCK_USERS: Record<string, User> = {
