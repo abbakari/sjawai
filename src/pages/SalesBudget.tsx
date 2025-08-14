@@ -519,72 +519,81 @@ const SalesBudget: React.FC = () => {
     }));
   };
 
-  const handleSaveMonthlyData = (rowId: number) => {
+  const handleSaveMonthlyData = async (rowId: number) => {
     const monthlyData = editingMonthlyData[rowId];
     if (monthlyData) {
-      const row = tableData.find(item => item.id === rowId);
-      // Use simplified mode calculation
-      const budgetValue2026 = monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
-      // Use the row's default rate for calculation if available
-      const defaultRate = row?.rate || 1;
-      const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
-      const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
-      const netBudgetValue = totalBudget2026 - totalDiscount;
+      try {
+        const row = tableData.find(item => item.id === rowId);
 
-      // Update monthly data with calculated values
-      const updatedMonthlyData = monthlyData.map(month => ({
-        ...month,
-        rate: month.rate || defaultRate,
-        stock: month.stock || row?.stock || 0,
-        git: month.git || row?.git || 0
-      }));
+        // Use simplified mode calculation
+        const budgetValue2026 = monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+        const defaultRate = row?.rate || 1;
+        const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
+        const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
+        const netBudgetValue = totalBudget2026 - totalDiscount;
 
-      setTableData(prev => prev.map(item =>
-        item.id === rowId ? {
-          ...item,
-          monthlyData: updatedMonthlyData,
-          budget2026: budgetValue2026,
-          budgetValue2026: netBudgetValue,
-          discount: totalDiscount
-        } : item
-      ));
+        // Update monthly data with calculated values
+        const updatedMonthlyData = monthlyData.map(month => ({
+          ...month,
+          rate: month.rate || defaultRate,
+          stock: month.stock || row?.stock || 0,
+          git: month.git || row?.git || 0
+        }));
 
-      setEditingRowId(null);
-      setEditingMonthlyData(prev => {
-        const newData = { ...prev };
-        delete newData[rowId];
-        return newData;
-      });
+        // Save to backend
+        const updatedBudget = await salesBudgetService.saveMonthlyData(rowId, updatedMonthlyData);
 
-      // Save to persistence manager for cross-user visibility and preserve for other purposes
-      if (user) {
-        const savedData: SavedBudgetData = {
-          id: `sales_budget_${rowId}_${Date.now()}`,
-          customer: row?.customer || 'Unknown',
-          item: row?.item || 'Unknown',
-          category: row?.category || 'Unknown',
-          brand: row?.brand || 'Unknown',
-          type: 'sales_budget',
-          createdBy: user.name,
-          createdAt: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          budget2025: row?.budget2025 || 0,
-          actual2025: row?.actual2025 || 0,
-          budget2026: budgetValue2026,
-          rate: defaultRate,
-          stock: row?.stock || 0,
-          git: row?.git || 0,
-          budgetValue2026: netBudgetValue,
-          discount: totalDiscount,
-          monthlyData: updatedMonthlyData,
-          status: 'saved'
-        };
+        // Update local state
+        setTableData(prev => prev.map(item =>
+          item.id === rowId ? {
+            ...item,
+            monthlyData: updatedMonthlyData,
+            budget2026: budgetValue2026,
+            budgetValue2026: netBudgetValue,
+            discount: totalDiscount
+          } : item
+        ));
 
-        DataPersistenceManager.saveSalesBudgetData([savedData]);
-        console.log('Budget data saved for manager visibility and preserved for other purposes:', savedData);
+        setEditingRowId(null);
+        setEditingMonthlyData(prev => {
+          const newData = { ...prev };
+          delete newData[rowId];
+          return newData;
+        });
+
+        // Also save to local persistence for backwards compatibility
+        if (user) {
+          const savedData: SavedBudgetData = {
+            id: `sales_budget_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: row?.category || 'Unknown',
+            brand: row?.brand || 'Unknown',
+            type: 'sales_budget',
+            createdBy: user.name,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            budget2025: row?.budget2025 || 0,
+            actual2025: row?.actual2025 || 0,
+            budget2026: budgetValue2026,
+            rate: defaultRate,
+            stock: row?.stock || 0,
+            git: row?.git || 0,
+            budgetValue2026: netBudgetValue,
+            discount: totalDiscount,
+            monthlyData: updatedMonthlyData,
+            status: 'saved'
+          };
+
+          DataPersistenceManager.saveSalesBudgetData([savedData]);
+        }
+
+        showNotification(`✅ Monthly budget data saved to database. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount).`, 'success');
+
+      } catch (error) {
+        console.error('Failed to save monthly data:', error);
+        showNotification('❌ Failed to save monthly data to database. Please try again.', 'error');
       }
-
-      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data preserved in table and visible to managers.`, 'success');
     }
   };
 
