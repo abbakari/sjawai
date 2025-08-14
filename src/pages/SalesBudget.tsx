@@ -2159,7 +2159,7 @@ const SalesBudget: React.FC = () => {
                               </GitDetailsTooltip>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${(row.budgetValue2026/1000).toFixed(0)}k
+                              ${(getYearValue(row, selectedTargetYear, 'value')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col gap-1">
