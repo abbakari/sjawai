@@ -873,40 +873,64 @@ const SalesBudget: React.FC = () => {
 
 
 
-  const handleAddNewItem = (itemData: NewItemData) => {
+  const handleAddNewItem = async (itemData: NewItemData) => {
     if (newAdditionType === 'customer') {
       showNotification(`Customer "${itemData.customerName}" added successfully`, 'success');
     } else {
-      // Add new item to original data
-      const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
-      const newRow: SalesBudgetItem = {
-        id: newId,
-        selected: false,
-        customer: selectedCustomer || "New Customer",
-        item: itemData.itemName || "New Item",
-        category: "New Category",
-        brand: "New Brand",
-        itemCombined: `${itemData.itemName} (New Category - New Brand)`,
-        budget2025: 0,
-        actual2025: 0,
-        budget2026: 0,
-        rate: itemData.unitPrice || 0,
-        stock: itemData.stockLevel || 0,
-        git: itemData.gitLevel || 0,
-        budgetValue2026: 0,
-        discount: 0,
-        monthlyData: months.map(month => ({
-          month: month.short,
-          budgetValue: 0,
-          actualValue: 0,
+      try {
+        // Create new item in backend
+        const newBudgetData = {
+          customer: selectedCustomer || "New Customer",
+          item: itemData.itemName || "New Item",
+          category: "New Category",
+          brand: "New Brand",
+          budget_2025: 0,
+          actual_2025: 0,
+          budget_2026: 0,
           rate: itemData.unitPrice || 0,
           stock: itemData.stockLevel || 0,
           git: itemData.gitLevel || 0,
-          discount: 0
-        }))
-      };
-      setOriginalTableData(prev => [...prev, newRow]);
-      showNotification(`Item "${itemData.itemName}" added successfully`, 'success');
+          discount: 0,
+          monthly_data: months.map(month => ({
+            month: month.short,
+            budgetValue: 0,
+            actualValue: 0,
+            rate: itemData.unitPrice || 0,
+            stock: itemData.stockLevel || 0,
+            git: itemData.gitLevel || 0,
+            discount: 0
+          }))
+        };
+
+        const createdBudget = await salesBudgetService.createBudget(newBudgetData);
+
+        // Transform to component format
+        const newRow: SalesBudgetItem = {
+          id: createdBudget.id,
+          selected: false,
+          customer: createdBudget.customer,
+          item: createdBudget.item,
+          category: createdBudget.category,
+          brand: createdBudget.brand,
+          itemCombined: `${createdBudget.item} (${createdBudget.category} - ${createdBudget.brand})`,
+          budget2025: createdBudget.budget_2025,
+          actual2025: createdBudget.actual_2025,
+          budget2026: createdBudget.budget_2026,
+          rate: createdBudget.rate,
+          stock: createdBudget.stock,
+          git: createdBudget.git,
+          budgetValue2026: createdBudget.budgetValue2026 || 0,
+          discount: createdBudget.discount,
+          monthlyData: createdBudget.monthly_data
+        };
+
+        setOriginalTableData(prev => [...prev, newRow]);
+        showNotification(`✅ Item "${itemData.itemName}" added successfully to database`, 'success');
+
+      } catch (error) {
+        console.error('Failed to add new item:', error);
+        showNotification('❌ Failed to add item to database. Please try again.', 'error');
+      }
     }
   };
 
