@@ -40,6 +40,14 @@ import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue as getYearValueUtil,
+  setYearValue,
+  createSampleYearlyData,
+  transformLegacyToYearly
+} from '../utils/dynamicYearUtils';
 
 interface MonthlyBudget {
   month: string;
