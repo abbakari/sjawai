@@ -212,13 +212,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "BF Goodrich",
       itemCombined: "BF GOODRICH TYRE 265/65R17 (Tyres - BF Goodrich)",
-      budget2025: 980000,
-      actual2025: 720000,
-      budget2026: 0,
+      ...createSampleYearlyData(980000, 720000),
       rate: 412,
       stock: 7,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -228,7 +225,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 50) + 10,
         git: Math.floor(Math.random() * 15),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 980000,
+      actual2025: 720000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 3,
@@ -238,13 +240,10 @@ const SalesBudget: React.FC = () => {
       category: "Accessories",
       brand: "Generic",
       itemCombined: "VALVE 0214 TR 414J (Accessories - Generic)",
-      budget2025: 15000,
-      actual2025: 18000,
-      budget2026: 0,
+      ...createSampleYearlyData(15000, 18000),
       rate: 0.5,
       stock: 2207,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -254,7 +253,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 500) + 1000,
         git: 0,
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 15000,
+      actual2025: 18000,
+      budget2026: 0,
+      budgetValue2026: 0
     },
     {
       id: 4,
