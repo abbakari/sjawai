@@ -123,39 +123,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       console.log('Attempting API login for:', email);
-      const response = await apiService.login(email, password);
 
-      if (response.error) {
-        throw new Error(response.error);
-      } else if (response.data) {
-        // API login successful
-        console.log('API login successful for:', email);
-        const userData = response.data as any;
+      // First try API login, then fallback to mock users
+      try {
+        const response = await apiService.login(email, password);
 
-        // Store JWT tokens
-        if (userData.access) {
-          localStorage.setItem('access_token', userData.access);
+        if (response.error) {
+          throw new Error(response.error);
+        } else if (response.data) {
+          // API login successful
+          console.log('API login successful for:', email);
+          const userData = response.data as any;
+
+          // Store JWT tokens
+          if (userData.access) {
+            localStorage.setItem('access_token', userData.access);
+          }
+          if (userData.refresh) {
+            localStorage.setItem('refresh_token', userData.refresh);
+          }
+
+          const apiUser: User = {
+            id: userData.user?.id?.toString() || '1',
+            name: userData.user?.name || email,
+            email: userData.user?.email || email,
+            role: (userData.user?.role || 'salesman') as UserRole,
+            department: userData.user?.department || 'Sales',
+            permissions: userData.user?.permissions || ROLE_PERMISSIONS[(userData.user?.role || 'salesman') as UserRole] || [],
+            isActive: userData.user?.is_active !== false,
+            createdAt: userData.user?.created_at || new Date().toISOString(),
+            lastLogin: new Date().toISOString()
+          };
+
+          setUser(apiUser);
+          localStorage.setItem('user', JSON.stringify(apiUser));
+          return;
         }
-        if (userData.refresh) {
-          localStorage.setItem('refresh_token', userData.refresh);
-        }
+      } catch (apiError) {
+        console.warn('API login failed, falling back to mock users:', apiError);
+      }
 
-        const apiUser: User = {
-          id: userData.user?.id?.toString() || '1',
-          name: userData.user?.name || email,
-          email: userData.user?.email || email,
-          role: (userData.user?.role || 'salesman') as UserRole,
-          department: userData.user?.department || 'Sales',
-          permissions: userData.user?.permissions || ROLE_PERMISSIONS[(userData.user?.role || 'salesman') as UserRole] || [],
-          isActive: userData.user?.is_active !== false,
-          createdAt: userData.user?.created_at || new Date().toISOString(),
-          lastLogin: new Date().toISOString()
-        };
-
-        setUser(apiUser);
-        localStorage.setItem('user', JSON.stringify(apiUser));
+      // Fallback to mock authentication
+      if (email in MOCK_USERS && password === 'password') {
+        console.log('Mock login successful for:', email);
+        const mockUser = MOCK_USERS[email];
+        setUser(mockUser);
+        localStorage.setItem('user', JSON.stringify(mockUser));
       } else {
-        throw new Error('No response data received');
+        throw new Error('Invalid email or password. Use password "password" for demo users.');
       }
     } catch (err: any) {
       console.error('Login error:', err);
