@@ -1433,7 +1433,7 @@ const SalesBudget: React.FC = () => {
                   title="Download budget data for current year"
                 >
                   <DownloadIcon className="w-5 h-5" />
-                  <span>Download Budget ({selectedYear2026})</span>
+                  <span>Download Budget ({selectedTargetYear})</span>
                 </button>
               </div>
             </div>
