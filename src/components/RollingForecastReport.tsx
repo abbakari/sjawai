@@ -485,8 +485,8 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                         {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
                           <th key={month} className="px-2 py-2 text-center border-r border-gray-200">{month}</th>
                         ))}
-                        <th className="px-2 py-2 text-center border-r border-gray-200">BUDGET2025</th>
-                        <th className="px-2 py-2 text-center">FORECAST2025</th>
+                        <th className="px-2 py-2 text-center border-r border-gray-200">BUDGET{selectedBaseYear}</th>
+                        <th className="px-2 py-2 text-center">FORECAST{selectedTargetYear}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
