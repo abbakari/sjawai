@@ -16,7 +16,6 @@ export interface RollingForecastItem {
   created_by?: number;
   created_at?: string;
   updated_at?: string;
-  _isFallbackData?: boolean;  // Flag to indicate if this is fallback/demo data
 
   // Legacy compatibility fields
   bud25?: number;
