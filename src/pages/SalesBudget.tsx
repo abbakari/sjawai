@@ -233,8 +233,10 @@ const SalesBudget: React.FC = () => {
     }
   ];
 
-  const [originalTableData, setOriginalTableData] = useState<SalesBudgetItem[]>(initialData);
-  const [tableData, setTableData] = useState<SalesBudgetItem[]>(initialData);
+  const [originalTableData, setOriginalTableData] = useState<SalesBudgetItem[]>([]);
+  const [tableData, setTableData] = useState<SalesBudgetItem[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Save budget data to localStorage for BI integration
   useEffect(() => {
