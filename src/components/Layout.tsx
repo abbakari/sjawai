@@ -268,6 +268,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               );
             })}
           </nav>
+
+          {/* API Status Indicator */}
+          <div className="px-4 py-2 border-t border-gray-200">
+            <ApiStatus />
+          </div>
         </div>
       </div>
 
