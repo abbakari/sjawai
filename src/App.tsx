@@ -56,13 +56,23 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+
       {/* Protected Routes */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
       
       <Route 
         path="/dashboard" 
