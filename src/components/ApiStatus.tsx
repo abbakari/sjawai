@@ -10,17 +10,27 @@ const ApiStatus: React.FC = () => {
   const checkApiStatus = async () => {
     setStatus('loading');
     try {
-      const response = await apiService.healthCheck();
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 2000)
+      );
+
+      const response = await Promise.race([
+        apiService.healthCheck(),
+        timeoutPromise
+      ]);
+
       if (response.data) {
         setStatus('connected');
         setApiResponse(response.data);
       } else {
         setStatus('disconnected');
-        setApiResponse(response.error);
+        setApiResponse(response.error || 'No response');
       }
     } catch (error) {
       setStatus('disconnected');
-      setApiResponse(error);
+      setApiResponse('Backend unavailable (using demo mode)');
+      console.warn('API health check failed:', error);
     }
     setLastChecked(new Date());
   };
