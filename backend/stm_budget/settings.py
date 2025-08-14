@@ -165,6 +165,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
+    'apps.authentication.backends.EmailAuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
