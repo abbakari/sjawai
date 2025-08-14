@@ -161,7 +161,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
         responses: [
           {
             id: 'resp_004',
-            message: 'Original ETA was 2025-02-15. New ETA is 2025-03-01. Customers Action Aid and ADVENT affected.',
+            message: `Original ETA was ${new Date().getFullYear()}-02-15. New ETA is ${new Date().getFullYear()}-03-01. Customers Action Aid and ADVENT affected.`,
             fromUser: 'Supply Chain Team',
             fromRole: 'supply_chain',
             timestamp: new Date(Date.now() - 10800000).toISOString(),
