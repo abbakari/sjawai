@@ -30,12 +30,12 @@ const getBudgetTargetsForYear = (year: number): { [month: string]: number } => {
 };
 
 const getYearlyBudgetTarget = (year: number): number => {
-  const monthlyTargets = BUDGET_TARGETS_BY_YEAR[year];
-  return monthlyTargets ? Object.values(monthlyTargets).reduce((sum, budget) => sum + budget, 0) : 0;
+  const monthlyTargets = getBudgetTargetsForYear(year);
+  return Object.values(monthlyTargets).reduce((sum, budget) => sum + budget, 0);
 };
 
 const getMonthlyBudgetTarget = (month: string, year: number): number => {
-  return BUDGET_TARGETS_BY_YEAR[year]?.[month] || 0;
+  return getBudgetTargetsForYear(year)[month] || 0;
 };
 
 export const calculateMonthlyBudgetImpact = (
