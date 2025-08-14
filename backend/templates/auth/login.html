@@ -1,0 +1,530 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Sign In - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Login page specific styles */
+    .login-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.5;
+    }
+    
+    .login-card {
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        border-radius: 20px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .logo-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .logo-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-input-wrapper {
+        position: relative;
+    }
+    
+    .form-input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-400);
+        z-index: 2;
+    }
+    
+    .form-input-enhanced {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.9);
+        min-height: 56px;
+    }
+    
+    .form-input-enhanced:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        background: white;
+        transform: translateY(-1px);
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--gray-400);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: var(--transition);
+        z-index: 2;
+    }
+    
+    .password-toggle:hover {
+        color: var(--gray-600);
+        background: var(--gray-100);
+    }
+    
+    .login-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 56px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .login-btn:hover::before {
+        left: 100%;
+    }
+    
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .login-btn:active {
+        transform: translateY(0);
+    }
+    
+    .login-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .error-alert {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    .info-section {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .floating-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    
+    .floating-element {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .floating-element:nth-child(1) {
+        width: 80px;
+        height: 80px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+    
+    .floating-element:nth-child(2) {
+        width: 60px;
+        height: 60px;
+        top: 60%;
+        right: 15%;
+        animation-delay: 2s;
+    }
+    
+    .floating-element:nth-child(3) {
+        width: 40px;
+        height: 40px;
+        bottom: 30%;
+        left: 20%;
+        animation-delay: 4s;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .reset-link {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .reset-link:hover {
+        color: #667eea;
+        text-decoration: underline;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        .login-container {
+            padding: 1rem;
+        }
+        
+        .login-card {
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin: 1rem 0;
+        }
+        
+        .logo-title {
+            font-size: 2rem;
+        }
+        
+        .form-input-enhanced,
+        .login-btn {
+            min-height: 52px;
+            padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+        }
+        
+        .floating-elements {
+            display: none;
+        }
+    }
+    
+    /* Landscape mobile */
+    @media (max-height: 600px) and (orientation: landscape) {
+        .login-container {
+            padding: 0.5rem;
+        }
+        
+        .login-card {
+            padding: 1rem;
+            max-height: calc(100vh - 1rem);
+            overflow-y: auto;
+        }
+        
+        .logo-section {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container flex items-center justify-center">
+    <!-- Floating background elements -->
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+    
+    <div class="login-card slide-up">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <h1 class="logo-title">STMBudget</h1>
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Welcome Back</h2>
+            <p class="text-gray-600 text-sm">Sign in to access your dashboard</p>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="loginForm" method="post" action="{% url 'login' %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Error Display -->
+            {% if form.errors or error %}
+                <div class="error-alert">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h3 class="font-medium text-red-800">Authentication Error</h3>
+                            <div class="text-red-700 text-sm mt-1">
+                                {% if form.errors %}
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endif %}
+                                {% if error %}
+                                    <p>{{ error }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="form-input-wrapper">
+                    <svg class="form-input-icon w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        class="form-input-enhanced"
+                        placeholder="Enter your email address"
+                        value="{{ form.email.value|default:'' }}"
+                        autocomplete="email"
+                        autofocus
+                    >
+                </div>
+            </div>
+            
+            <!-- Password Field -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="form-input-wrapper">
+                    <svg class="form-input-icon w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        class="form-input-enhanced"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <svg id="eyeIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span id="loginBtnText">Sign In</span>
+                <svg id="loginSpinner" class="spinner w-5 h-5 ml-2 hidden" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+            
+            <!-- Reset Link -->
+            <div class="text-center">
+                <a href="#" class="reset-link" onclick="showResetHint()">Having trouble signing in?</a>
+            </div>
+        </form>
+        
+        <!-- Info Section -->
+        <div class="info-section">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-blue-800 text-sm">Getting Started</h3>
+                    <div class="text-blue-700 text-sm mt-1">
+                        <p>• Use your Django superuser credentials</p>
+                        <p>• Each role has specialized features and access</p>
+                        <p>• Contact admin for new user accounts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const loginSpinner = document.getElementById('loginSpinner');
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        loginBtn.disabled = true;
+        loginBtnText.textContent = 'Signing In...';
+        loginSpinner.classList.remove('hidden');
+        
+        // Timeout protection
+        setTimeout(() => {
+            if (loginBtn.disabled) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Sign In';
+                loginSpinner.classList.add('hidden');
+                showToast('Login timeout. Please try again.', 'error');
+            }
+        }, 10000);
+    });
+    
+    // Enhanced input interactions
+    const inputs = document.querySelectorAll('.form-input-enhanced');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+        
+        // Real-time validation feedback
+        input.addEventListener('input', function() {
+            if (this.validity.valid) {
+                this.style.borderColor = '#22c55e';
+            } else {
+                this.style.borderColor = '#ef4444';
+            }
+        });
+    });
+});
+
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = `
+            <path d="M17.94 17.94A10.07 10.07 0 01.66 10C1.94 5.93 5.64 3 10 3a10.3 10.3 0 015.05 1.31l-1.42 1.42A8 8 0 1017.94 17.94zM3 3l14 14"></path>
+        `;
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = `
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+        `;
+    }
+}
+
+function showResetHint() {
+    showToast('Contact your system administrator for password reset assistance.', 'info');
+}
+
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Progressive enhancement for touch devices
+if ('ontouchstart' in window) {
+    document.body.classList.add('touch-device');
+    
+    // Add haptic feedback for supported devices
+    const buttons = document.querySelectorAll('.btn, .login-btn');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        });
+    });
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        document.getElementById('loginForm').submit();
+    }
+});
+</script>
+{% endblock %}
