@@ -2,54 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, UserRole, AuthContextType, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
 import { apiService } from '../lib/api';
 
-// Mock user data for development
-const MOCK_USERS: Record<string, User> = {
-  'admin@example.com': {
-    id: '1',
-    name: 'System Administrator',
-    email: 'admin@example.com',
-    role: 'admin',
-    department: 'IT',
-    permissions: ROLE_PERMISSIONS.admin,
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString()
-  },
-  'salesman@example.com': {
-    id: '2',
-    name: 'John Salesman',
-    email: 'salesman@example.com',
-    role: 'salesman',
-    department: 'Sales',
-    permissions: ROLE_PERMISSIONS.salesman,
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString()
-  },
-  'manager@example.com': {
-    id: '3',
-    name: 'Jane Manager',
-    email: 'manager@example.com',
-    role: 'manager',
-    department: 'Sales',
-    permissions: ROLE_PERMISSIONS.manager,
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString()
-  },
-  'supply@example.com': {
-    id: '4',
-    name: 'Bob Supply Chain',
-    email: 'supply@example.com',
-    role: 'supply_chain',
-    department: 'Supply Chain',
-    permissions: ROLE_PERMISSIONS.supply_chain,
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString()
-  }
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
