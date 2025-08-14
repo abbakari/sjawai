@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBudget, YearlyBudgetData } from '../contexts/BudgetContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
 import { salesBudgetService, SalesBudgetItem as APISalesBudgetItem } from '../services/salesBudgetService';
+import { discountService } from '../services/discountService';
+import DiscountManagementModal from '../components/DiscountManagementModal';
 import {
   TrendingUp,
   Info as InfoIcon,
@@ -1391,7 +1393,7 @@ const SalesBudget: React.FC = () => {
                 selectedCategory ? 'border-green-400 bg-green-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📦 CATEGORY:
+                  �� CATEGORY:
                   {selectedCategory && <span className="text-green-600">✓</span>}
                 </label>
                 <select
