@@ -1,6 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { X, PieChart, Search, Calculator, Percent, Filter, ChevronDown, Calendar } from 'lucide-react';
 import { applySeasonalDistribution } from '../utils/seasonalDistribution';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface MonthlyBudget {
   month: string;
