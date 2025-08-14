@@ -33,10 +33,7 @@ export class RollingForecastService {
       throw new Error('No forecast data received');
     } catch (error) {
       console.error('Failed to fetch forecasts from API:', error);
-      console.log('Using fallback forecast data instead');
-
-      // Return fallback data instead of throwing error
-      return this.getFallbackForecastData();
+      throw error;
     }
   }
 
