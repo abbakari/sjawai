@@ -155,7 +155,7 @@ const SalesBudget: React.FC = () => {
     // Generate data for available years
     availableYears.forEach(year => {
       const yearNum = parseInt(year);
-      const currentYearNum = currentYear;
+      const currentYearNum = parseInt(getCurrentYear());
 
       if (yearNum <= currentYearNum) {
         // Historical and current year data
