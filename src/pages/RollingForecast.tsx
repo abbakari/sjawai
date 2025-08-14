@@ -515,7 +515,7 @@ const RollingForecast: React.FC = () => {
     setExpandedRows(newExpanded);
   };
 
-  const handleMonthlyForecastChange = (rowId: string, month: string, value: number) => {
+  const handleMonthlyForecastChange = async (rowId: string, month: string, value: number) => {
     // Update monthly forecast data first
     const newMonthlyData = {
       ...monthlyForecastData[rowId],
@@ -540,7 +540,15 @@ const RollingForecast: React.FC = () => {
       })
     );
 
-    // Auto-save to persistence manager when forecast data changes (for managers to see)
+    // Save to backend service
+    try {
+      await rollingForecastService.saveMonthlyForecastData(rowId, newMonthlyData);
+      console.log('✅ Monthly forecast data saved to database');
+    } catch (error) {
+      console.error('❌ Failed to save monthly forecast data:', error);
+    }
+
+    // Also save to persistence manager for backwards compatibility
     if (user) {
       const row = tableData.find(r => r.id === rowId);
       if (row) {
@@ -572,7 +580,6 @@ const RollingForecast: React.FC = () => {
         };
 
         DataPersistenceManager.saveRollingForecastData([savedData]);
-        console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
       }
     }
   };
