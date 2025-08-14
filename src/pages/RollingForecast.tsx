@@ -42,21 +42,11 @@ const RollingForecast: React.FC = () => {
   const { yearlyBudgets, getBudgetsByCustomer, error: budgetError } = useBudget();
   const { submitForApproval } = useWorkflow();
 
-  // Dynamic year handling - same system as SalesBudget
-  const currentYear = new Date().getFullYear();
-  const [selectedBaseYear, setSelectedBaseYear] = useState(currentYear.toString());
-  const [selectedTargetYear, setSelectedTargetYear] = useState((currentYear + 1).toString());
-
-  // Generate available years (from 2021 to current year + 5)
-  const generateAvailableYears = () => {
-    const years = [];
-    for (let year = 2021; year <= currentYear + 5; year++) {
-      years.push(year.toString());
-    }
-    return years;
-  };
-
+  // Dynamic year handling using centralized utilities
   const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
 
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
