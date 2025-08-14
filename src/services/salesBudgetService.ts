@@ -8,18 +8,24 @@ export interface SalesBudgetItem {
   category: string;
   brand: string;
   itemCombined?: string;
-  budget_2025: number;
-  actual_2025: number;
-  budget_2026: number;
+  // Dynamic year data structure
+  yearly_budgets?: { [year: string]: number };
+  yearly_actuals?: { [year: string]: number };
+  yearly_values?: { [year: string]: number };
   rate: number;
   stock: number;
   git: number;
-  budgetValue2026?: number;
   discount: number;
   monthly_data: MonthlyBudget[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
+
+  // Legacy compatibility fields
+  budget_2025?: number;
+  actual_2025?: number;
+  budget_2026?: number;
+  budgetValue2026?: number;
 }
 
 export interface MonthlyBudget {
