@@ -108,16 +108,35 @@ export class RollingForecastService {
   }
 
   private transformBackendToFrontend(backendItem: any): RollingForecastItem {
+    // Create dynamic year data structure
+    const yearlyBudgets: { [year: string]: number } = {};
+    const yearlyActuals: { [year: string]: number } = {};
+
+    // Populate from legacy fields if available
+    if (backendItem.bud25 !== undefined) yearlyBudgets['2025'] = backendItem.bud25;
+    if (backendItem.ytd25 !== undefined) yearlyActuals['2025'] = backendItem.ytd25;
+
+    // Populate from dynamic yearly data if available
+    if (backendItem.yearly_budgets) {
+      Object.assign(yearlyBudgets, backendItem.yearly_budgets);
+    }
+    if (backendItem.yearly_actuals) {
+      Object.assign(yearlyActuals, backendItem.yearly_actuals);
+    }
+
     return {
       id: backendItem.id.toString(),
       customer: backendItem.customer,
       item: backendItem.item,
-      bud25: backendItem.bud25 || 0,
-      ytd25: backendItem.ytd25 || 0,
+      yearlyBudgets,
+      yearlyActuals,
       forecast: backendItem.forecast || 0,
       stock: backendItem.stock || 0,
       git: backendItem.git || 0,
       eta: backendItem.eta || '',
+      // Legacy compatibility
+      bud25: backendItem.bud25 || 0,
+      ytd25: backendItem.ytd25 || 0,
       budgetDistribution: this.generateDefaultBudgetDistribution(backendItem.bud25 || 0),
       forecast_data: typeof backendItem.forecast_data === 'object' ? backendItem.forecast_data : {},
       created_by: backendItem.created_by,
