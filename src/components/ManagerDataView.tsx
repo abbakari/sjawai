@@ -135,9 +135,9 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
       }
     }
 
-    // Generate mock monthly data
+    // Generate mock monthly data using selected base year
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
-      const month = new Date(2025, i).toLocaleDateString('en', { month: 'short' });
+      const month = new Date(parseInt(selectedBaseYear), i).toLocaleDateString('en', { month: 'short' });
       return {
         month,
         budgetUnits: Math.floor(totalBudgetUnits / 12),
