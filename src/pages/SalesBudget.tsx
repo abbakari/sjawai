@@ -268,13 +268,10 @@ const SalesBudget: React.FC = () => {
       category: "Tyres",
       brand: "Michelin",
       itemCombined: "MICHELIN TYRE 265/65R17 (Tyres - Michelin)",
-      budget2025: 875000,
-      actual2025: 920000,
-      budget2026: 0,
+      ...createSampleYearlyData(875000, 920000),
       rate: 300,
       stock: 127,
       git: 0,
-      budgetValue2026: 0,
       discount: 0,
       monthlyData: months.map(month => ({
         month: month.short,
@@ -284,7 +281,12 @@ const SalesBudget: React.FC = () => {
         stock: Math.floor(Math.random() * 80) + 50,
         git: Math.floor(Math.random() * 25),
         discount: 0
-      }))
+      })),
+      // Legacy compatibility
+      budget2025: 875000,
+      actual2025: 920000,
+      budget2026: 0,
+      budgetValue2026: 0
     }
   ];
 
