@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../lib/api';
+import BackendStatus from '../components/BackendStatus';
 
 const ApiTest: React.FC = () => {
   const [status, setStatus] = useState<string>('Testing...');
