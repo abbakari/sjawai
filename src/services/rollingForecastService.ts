@@ -149,14 +149,29 @@ export class RollingForecastService {
     return {
       customer: frontendItem.customer || '',
       item: frontendItem.item || '',
-      bud25: frontendItem.bud25 || 0,
-      ytd25: frontendItem.ytd25 || 0,
+      yearly_budgets: frontendItem.yearlyBudgets || {},
+      yearly_actuals: frontendItem.yearlyActuals || {},
       forecast: frontendItem.forecast || 0,
       stock: frontendItem.stock || 0,
       git: frontendItem.git || 0,
       eta: frontendItem.eta || '',
-      forecast_data: frontendItem.forecast_data || {}
+      forecast_data: frontendItem.forecast_data || {},
+      // Legacy fields for backward compatibility
+      bud25: frontendItem.bud25 || frontendItem.yearlyBudgets?.['2025'] || 0,
+      ytd25: frontendItem.ytd25 || frontendItem.yearlyActuals?.['2025'] || 0
     };
+  }
+
+  // Helper function to get value for any year from dynamic data structure
+  getYearValue(item: RollingForecastItem, year: string, type: 'budget' | 'actual'): number {
+    switch (type) {
+      case 'budget':
+        return item.yearlyBudgets?.[year] || (year === '2025' ? item.bud25 || 0 : 0);
+      case 'actual':
+        return item.yearlyActuals?.[year] || (year === '2025' ? item.ytd25 || 0 : 0);
+      default:
+        return 0;
+    }
   }
 
   private generateDefaultBudgetDistribution(totalBudget: number): { [key: string]: number } {
