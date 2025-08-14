@@ -91,16 +91,6 @@ const SalesBudget: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
-  // Import dynamic year utilities
-  import {
-    generateAvailableYears,
-    getDefaultYearSelection,
-    getYearValue as getYearValueUtil,
-    setYearValue,
-    createSampleYearlyData,
-    transformLegacyToYearly
-  } from '../utils/dynamicYearUtils';
-
   // Dynamic year handling using centralized utilities
   const availableYears = generateAvailableYears();
   const defaultYears = getDefaultYearSelection();
@@ -1971,7 +1961,7 @@ const SalesBudget: React.FC = () => {
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '70px'}}>
                           <div className="flex flex-col items-center">
                             <span>GIT</span>
-                            <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
+                            <span className="text-xs text-blue-500 normal-case">�� Admin</span>
                           </div>
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '120px'}}>
