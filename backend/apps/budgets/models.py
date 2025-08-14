@@ -7,7 +7,7 @@ import json
 
 class YearlyBudget(models.Model):
     """Yearly Budget model matching frontend YearlyBudgetData interface"""
-    
+
     id = models.CharField(max_length=100, primary_key=True)  # Match frontend string IDs
     customer = models.CharField(max_length=255)
     item = models.CharField(max_length=500)
@@ -15,6 +15,20 @@ class YearlyBudget(models.Model):
     brand = models.CharField(max_length=100)
     year = models.CharField(max_length=4)
     total_budget = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    # Dynamic year data structure for frontend compatibility
+    yearly_budgets = models.JSONField(default=dict, help_text="Budget data for multiple years: {'2025': 1000, '2026': 1200}")
+    yearly_actuals = models.JSONField(default=dict, help_text="Actual data for multiple years: {'2025': 850, '2026': 0}")
+    yearly_values = models.JSONField(default=dict, help_text="Calculated values for multiple years")
+
+    # Legacy compatibility fields
+    budget_2025 = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    actual_2025 = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    budget_2026 = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    stock = models.IntegerField(default=0)
+    git = models.IntegerField(default=0, help_text="Goods In Transit")
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
     # User tracking
     created_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='created_budgets')
