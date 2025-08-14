@@ -152,15 +152,15 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
       };
     });
 
-    // Generate items data
+    // Generate items data using dynamic years
     const items = customerData.map(item => ({
       item: item.item,
       category: item.category,
       brand: item.brand,
-      budgetUnits: type === 'sales_budget' ? Math.floor((item as SavedBudgetData).budget2025 / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).budgetData?.bud25 || 0,
-      actualUnits: type === 'sales_budget' ? Math.floor((item as SavedBudgetData).actual2025 / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).budgetData?.ytd25 || 0,
-      forecastUnits: type === 'sales_budget' ? (item as SavedBudgetData).budget2026 : (item as SavedForecastData).forecastTotal,
-      budgetValue: type === 'sales_budget' ? (item as SavedBudgetData).budget2025 : ((item as SavedForecastData).budgetData?.bud25 || 0) * 100,
+      budgetUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedBaseYear, 'budget') / ((item as SavedBudgetData).rate || 1)) : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'budget'),
+      actualUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedBaseYear, 'actual') / ((item as SavedBudgetData).rate || 1)) : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'actual'),
+      forecastUnits: type === 'sales_budget' ? Math.floor(getYearValue(item as SavedBudgetData, selectedTargetYear, 'budget') / ((item as SavedBudgetData).rate || 1)) : (item as SavedForecastData).forecastTotal,
+      budgetValue: type === 'sales_budget' ? getYearValue(item as SavedBudgetData, selectedBaseYear, 'budget') : getYearValue((item as SavedForecastData).budgetData, selectedBaseYear, 'budget') * 100,
       actualValue: type === 'sales_budget' ? (item as SavedBudgetData).actual2025 : ((item as SavedForecastData).budgetData?.ytd25 || 0) * 100,
       forecastValue: type === 'sales_budget' ? (item as SavedBudgetData).budgetValue2026 : (item as SavedForecastData).forecastTotal * 100,
       rate: type === 'sales_budget' ? (item as SavedBudgetData).rate : 100
