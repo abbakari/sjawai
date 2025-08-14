@@ -288,26 +288,147 @@
     <!-- Page Header -->
     <div class="page-header">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Sales Budget Management</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                {% if user.role == 'admin' %}Global Budget Management
+                {% elif user.role == 'manager' %}Department Budget Management
+                {% elif user.role == 'supply_chain' %}Supply Chain Budget View
+                {% else %}Sales Budget Management{% endif %}
+            </h1>
             <p class="text-gray-600">
-                Manage and track sales budgets across customers, items, and time periods
+                {% if user.role == 'admin' %}Manage and oversee all organizational budgets and allocations
+                {% elif user.role == 'manager' %}Manage and track department budgets and team performance
+                {% elif user.role == 'supply_chain' %}View budget data for inventory and procurement planning
+                {% else %}Manage and track sales budgets across customers, items, and time periods{% endif %}
             </p>
         </div>
         <div class="action-buttons">
+            {% if user.role == 'admin' %}
+            <button onclick="openGlobalBudgetSettings()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
+                </svg>
+                Global Settings
+            </button>
+            <button onclick="openBudgetAnalytics()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                </svg>
+                Analytics
+            </button>
+            {% elif user.role == 'manager' %}
+            <button onclick="openTeamBudgetView()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+                Team View
+            </button>
+            <button onclick="openApprovalQueue()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Approvals
+            </button>
+            {% elif user.role == 'supply_chain' %}
+            <button onclick="openProcurementView()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Procurement
+            </button>
+            {% endif %}
+
+            <!-- Common buttons -->
             <button onclick="openExportModal()" class="btn-icon btn-secondary">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                 </svg>
                 Export
             </button>
+
+            {% if user.role != 'supply_chain' %}
             <button onclick="openNewItemModal()" class="btn-icon btn-primary">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
                 </svg>
                 Add New Item
             </button>
+            {% else %}
+            <button onclick="openInventorySync()" class="btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                </svg>
+                Sync Inventory
+            </button>
+            {% endif %}
         </div>
     </div>
+
+    <!-- Role-based Information Panel -->
+    {% if user.role == 'admin' %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-red-800 text-sm">Administrator Controls</h3>
+                <div class="text-red-700 text-sm mt-1">
+                    <p>• Full access to all organizational budgets</p>
+                    <p>• Global budget allocation and management</p>
+                    <p>• System-wide analytics and reporting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'manager' %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-blue-800 text-sm">Manager Dashboard</h3>
+                <div class="text-blue-700 text-sm mt-1">
+                    <p>• Manage department budget allocations</p>
+                    <p>• Review and approve team budget submissions</p>
+                    <p>• Monitor team performance metrics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'supply_chain' %}
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-purple-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-purple-800 text-sm">Supply Chain View</h3>
+                <div class="text-purple-700 text-sm mt-1">
+                    <p>• View budget data for procurement planning</p>
+                    <p>• Monitor inventory requirements and costs</p>
+                    <p>• Coordinate with sales for demand planning</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-green-800 text-sm">Sales Budget Management</h3>
+                <div class="text-green-700 text-sm mt-1">
+                    <p>• Create and manage personal sales budgets</p>
+                    <p>• Track performance against targets</p>
+                    <p>• Submit budgets for manager approval</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Statistics Cards -->
     <div class="stats-cards">
