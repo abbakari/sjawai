@@ -5,6 +5,8 @@ from . import views
 app_name = 'budgets'
 
 router = DefaultRouter()
+# Main budget endpoint matching frontend expectation
+router.register(r'', views.YearlyBudgetViewSet, basename='budget')
 router.register(r'yearly', views.YearlyBudgetViewSet, basename='yearly-budget')
 router.register(r'monthly', views.MonthlyBudgetViewSet, basename='monthly-budget')
 router.register(r'distributions', views.BudgetDistributionViewSet, basename='budget-distribution')
