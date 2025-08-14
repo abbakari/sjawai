@@ -837,6 +837,23 @@ const RollingForecast: React.FC = () => {
           <span className="text-blue-600 font-medium">Rolling Forecast</span>
         </div>
 
+        {/* Demo Data Info Display */}
+        {usingFallbackData && !dataError && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Package className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  Currently showing demo forecast data. All changes are saved locally and will persist during your session.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Data Loading Error Display */}
         {dataError && (
           <div className="bg-orange-50 border border-orange-200 rounded-md p-4 mb-4">
