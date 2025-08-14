@@ -78,6 +78,10 @@ class ApiService {
     });
   }
 
+  async getBudgetById(id: number) {
+    return this.request(`/budgets/${id}/`);
+  }
+
   async deleteBudget(id: number) {
     return this.request(`/budgets/${id}/`, {
       method: 'DELETE',
