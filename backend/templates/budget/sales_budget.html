@@ -1135,10 +1135,156 @@ function bulkSubmit() {
     }, 1500);
 }
 
+// Role-based functionality for Sales Budget
+function initializeBudgetRoleFeatures() {
+    const userRole = '{{ user.role|default:"user" }}';
+
+    switch(userRole) {
+        case 'admin':
+            initializeAdminBudgetInterface();
+            break;
+        case 'manager':
+            initializeManagerBudgetInterface();
+            break;
+        case 'supply_chain':
+            initializeSupplyChainBudgetInterface();
+            break;
+        default:
+            initializeSalesmanBudgetInterface();
+    }
+}
+
+function initializeAdminBudgetInterface() {
+    // Load global budget metrics
+    loadGlobalBudgetMetrics();
+
+    // Enable admin-specific features
+    enableBudgetAllocationControls();
+}
+
+function initializeManagerBudgetInterface() {
+    // Load department metrics
+    loadDepartmentBudgetMetrics();
+
+    // Enable team oversight features
+    enableTeamBudgetControls();
+}
+
+function initializeSupplyChainBudgetInterface() {
+    // Load supply chain specific data
+    loadSupplyChainBudgetData();
+
+    // Disable edit capabilities (read-only for supply chain)
+    disableBudgetEditing();
+}
+
+function initializeSalesmanBudgetInterface() {
+    // Standard salesman interface
+    loadPersonalBudgetMetrics();
+}
+
+function loadGlobalBudgetMetrics() {
+    // Simulate loading global metrics for admin
+    setTimeout(() => {
+        // Update any admin-specific displays
+        console.log('Global budget metrics loaded for admin');
+    }, 500);
+}
+
+function loadDepartmentBudgetMetrics() {
+    // Simulate loading department metrics for manager
+    setTimeout(() => {
+        // Update department-specific displays
+        console.log('Department budget metrics loaded for manager');
+    }, 500);
+}
+
+function loadSupplyChainBudgetData() {
+    // Simulate loading supply chain specific data
+    setTimeout(() => {
+        // Filter budget data for supply chain relevance
+        console.log('Supply chain budget data loaded');
+    }, 500);
+}
+
+function loadPersonalBudgetMetrics() {
+    // Standard personal metrics loading
+    setTimeout(() => {
+        console.log('Personal budget metrics loaded');
+    }, 500);
+}
+
+function enableBudgetAllocationControls() {
+    // Enable admin budget allocation features
+    console.log('Admin budget allocation controls enabled');
+}
+
+function enableTeamBudgetControls() {
+    // Enable manager team oversight features
+    console.log('Manager team budget controls enabled');
+}
+
+function disableBudgetEditing() {
+    // Make budget inputs read-only for supply chain
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.budget-input');
+        inputs.forEach(input => {
+            input.readOnly = true;
+            input.style.backgroundColor = '#f9fafb';
+            input.style.cursor = 'not-allowed';
+        });
+
+        // Disable action buttons
+        const actionButtons = document.querySelectorAll('.budget-table .btn-icon');
+        actionButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
+
+        console.log('Budget editing disabled for supply chain role');
+    }, 1000);
+}
+
+// Role-specific action handlers
+function openGlobalBudgetSettings() {
+    showToast('Opening global budget settings...', 'info');
+    // Navigate to global settings
+}
+
+function openBudgetAnalytics() {
+    showToast('Opening budget analytics dashboard...', 'info');
+    // Navigate to analytics
+}
+
+function openTeamBudgetView() {
+    showToast('Loading team budget overview...', 'info');
+    // Switch to team view
+}
+
+function openApprovalQueue() {
+    window.location.href = '/approval-center/';
+}
+
+function openProcurementView() {
+    showToast('Opening procurement planning view...', 'info');
+    // Navigate to procurement view
+}
+
+function openInventorySync() {
+    showToast('Syncing with inventory system...', 'info');
+    // Sync with inventory
+}
+
 // Initialize budget manager
 let budgetManager;
 document.addEventListener('DOMContentLoaded', function() {
     budgetManager = new SalesBudgetManager();
+
+    // Initialize role-based features after budget manager is ready
+    setTimeout(() => {
+        initializeBudgetRoleFeatures();
+    }, 1000);
 });
 </script>
 {% endblock %}
