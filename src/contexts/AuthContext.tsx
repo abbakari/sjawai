@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const healthCheck = await Promise.race([
             apiService.healthCheck(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
           ]);
           if (healthCheck.data) {
             console.log('Backend API is healthy:', healthCheck.data);
