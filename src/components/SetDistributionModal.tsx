@@ -464,7 +464,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
           {distributionType === 'percentage' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Percentage of BUD 2026
+                Percentage of BUD {currentTargetYear}
               </label>
               <div className="relative">
                 <input
