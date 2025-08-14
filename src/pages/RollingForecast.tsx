@@ -900,7 +900,39 @@ const RollingForecast: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for {selectedBaseYear}-{selectedTargetYear}</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for {selectedBaseYear}-{selectedTargetYear}</h1>
+
+            {/* Year Selectors */}
+            <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border">
+              <label className="text-xs font-medium text-gray-600">Years:</label>
+              <select
+                className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedBaseYear}
+                onChange={(e) => {
+                  setSelectedBaseYear(e.target.value);
+                  console.log('Base year changed to:', e.target.value);
+                }}
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-500">to</span>
+              <select
+                className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedTargetYear}
+                onChange={(e) => {
+                  setSelectedTargetYear(e.target.value);
+                  console.log('Target year changed to:', e.target.value);
+                }}
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex shadow-sm rounded-md overflow-hidden">
               <button
