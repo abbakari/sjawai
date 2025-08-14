@@ -58,6 +58,10 @@ class ApiService {
     return this.request('/auth/me/');
   }
 
+  async getUserProfile() {
+    return this.request('/auth/profile/');
+  }
+
   // Budget API
   async getBudgets(params?: Record<string, any>) {
     const searchParams = params ? `?${new URLSearchParams(params)}` : '';
