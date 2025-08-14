@@ -176,6 +176,16 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Development Routes */}
+      <Route
+        path="/api-test"
+        element={
+          <ProtectedRoute>
+            <ApiTest />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
