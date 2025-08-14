@@ -839,14 +839,14 @@ const RollingForecast: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-orange-400" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-orange-800">Data Loading Warning</h3>
+                <h3 className="text-sm font-medium text-orange-800">Connection Issue</h3>
                 <div className="mt-2 text-sm text-orange-700">{dataError}</div>
                 <div className="mt-2">
                   <button
                     onClick={loadForecastData}
                     className="bg-orange-100 hover:bg-orange-200 text-orange-800 text-xs px-3 py-1 rounded"
                   >
-                    Retry Loading
+                    Retry Connection
                   </button>
                 </div>
               </div>
