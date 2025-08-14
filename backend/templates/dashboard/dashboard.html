@@ -1,0 +1,621 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Dashboard specific styles */
+    .dashboard-container {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        transition: width 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card:hover::before {
+        width: 8px;
+    }
+    
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-trend {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .trend-positive {
+        color: #059669;
+    }
+    
+    .trend-negative {
+        color: #dc2626;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .action-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        space-x: 1rem;
+    }
+    
+    .action-card:hover {
+        border-color: var(--primary-500);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+    }
+    
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .role-badge {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .role-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .refresh-btn, .export-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        min-height: 44px;
+    }
+    
+    .refresh-btn {
+        background: white;
+        border: 1px solid #d1d5db;
+        color: #374151;
+    }
+    
+    .refresh-btn:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+    
+    .export-btn {
+        background: #3b82f6;
+        border: 1px solid #3b82f6;
+        color: white;
+    }
+    
+    .export-btn:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .stats-card {
+            padding: 1.25rem;
+        }
+        
+        .stats-value {
+            font-size: 1.75rem;
+        }
+        
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-card {
+            padding: 1rem;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .refresh-btn, .export-btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+    
+    /* Loading states */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+    
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid #e5e7eb;
+        border-top: 2px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container container py-6">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <span class="text-gray-500 font-light">Dashboard /</span> 
+                {% if user.role == 'admin' %}Administrator
+                {% elif user.role == 'manager' %}Manager
+                {% elif user.role == 'salesman' %}Sales Representative
+                {% elif user.role == 'supply_chain' %}Supply Chain Manager
+                {% else %}User{% endif %}
+            </h1>
+            <p class="text-gray-600">
+                Welcome back, {{ user.get_full_name|default:user.username }}! 
+                <span id="lastUpdated">Last updated: {{ last_refresh|date:"g:i A" }}</span>
+            </p>
+        </div>
+        <div class="header-buttons">
+            <button onclick="refreshDashboard()" class="refresh-btn">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                </svg>
+                Refresh
+            </button>
+            <button onclick="openExportModal()" class="export-btn">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+                Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- Role Badge -->
+    <div class="role-badge">
+        <div class="flex items-center justify-between relative z-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">
+                        {% if user.role == 'admin' %}Administrator Dashboard
+                        {% elif user.role == 'manager' %}Manager Dashboard
+                        {% elif user.role == 'salesman' %}Sales Dashboard
+                        {% elif user.role == 'supply_chain' %}Supply Chain Dashboard
+                        {% else %}User Dashboard{% endif %}
+                    </h3>
+                    <p class="text-white text-opacity-90 text-sm">
+                        {% if user.department %}Department: {{ user.department }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center space-x-2 mb-1">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
+                        <span class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1 animate-pulse"></span>
+                        Online
+                    </span>
+                </div>
+                <p class="text-sm">
+                    Access Level: {% if user.role == 'admin' %}Full System
+                    {% elif user.role == 'manager' %}Department
+                    {% elif user.role == 'supply_chain' %}Supply Chain
+                    {% else %}Personal{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid" id="statsGrid">
+        {% for stat in stats_data %}
+        <div class="stats-card">
+            <div class="stats-icon bg-{{ stat.color }}-100">
+                <svg class="w-6 h-6 text-{{ stat.color }}-600" fill="currentColor" viewBox="0 0 20 20">
+                    {{ stat.icon_svg|safe }}
+                </svg>
+            </div>
+            <div class="stats-value">{{ stat.value }}</div>
+            <div class="text-gray-600 text-sm mb-2">{{ stat.title }}</div>
+            <div class="stats-trend {% if stat.trend.is_positive %}trend-positive{% else %}trend-negative{% endif %}">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    {% if stat.trend.is_positive %}
+                    <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    {% else %}
+                    <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    {% endif %}
+                </svg>
+                {{ stat.trend.value }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ stat.subtitle }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div class="quick-actions-grid">
+            {% for action in quick_actions %}
+            <a href="{{ action.url }}" class="action-card" onclick="handleQuickAction(event, '{{ action.url }}', '{{ action.title }}')">
+                <div class="action-icon bg-{{ action.color }}-100">
+                    <svg class="w-5 h-5 text-{{ action.color }}-600" fill="currentColor" viewBox="0 0 20 20">
+                        {{ action.icon_svg|safe }}
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-medium text-gray-900">{{ action.title }}</h4>
+                    <p class="text-sm text-gray-600">{{ action.description }}</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Activity Widget -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            <button class="text-sm text-blue-600 hover:text-blue-700">View All</button>
+        </div>
+        <div class="space-y-3" id="recentActivity">
+            <!-- Activity items will be loaded dynamically -->
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h4a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm8 8a1 1 0 01-1-1V9a1 1 0 10-2 0v3a1 1 0 01-1 1H6a1 1 0 100 2h8a1 1 0 100-2z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Budget report generated</p>
+                    <p class="text-xs text-gray-500">2 minutes ago</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">New sales forecast approved</p>
+                    <p class="text-xs text-gray-500">15 minutes ago</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Export Dashboard Report</h3>
+            <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="exportForm" onsubmit="handleExport(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label">Export Format</label>
+                        <select name="format" class="form-input">
+                            <option value="pdf">PDF Report</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                            <option value="csv">CSV Data</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Time Period</label>
+                        <select name="period" class="form-input">
+                            <option value="current">Current Month</option>
+                            <option value="quarter">Current Quarter</option>
+                            <option value="year">Current Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="closeExportModal()" class="btn-secondary flex-1">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1">Export</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let refreshTimeout;
+
+function refreshDashboard() {
+    const statsGrid = document.getElementById('statsGrid');
+    statsGrid.classList.add('loading');
+    
+    // Simulate API call
+    setTimeout(() => {
+        statsGrid.classList.remove('loading');
+        document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+        showToast('Dashboard refreshed successfully', 'success');
+    }, 1000);
+    
+    // Update last refresh time
+    clearTimeout(refreshTimeout);
+    refreshTimeout = setTimeout(refreshDashboard, 300000); // Auto-refresh every 5 minutes
+}
+
+function handleQuickAction(event, url, title) {
+    // Add loading state to clicked action
+    const card = event.currentTarget;
+    card.style.opacity = '0.7';
+    card.style.pointerEvents = 'none';
+    
+    // For SPA navigation, prevent default and use app navigation
+    if (window.STMApp && url.startsWith('/')) {
+        event.preventDefault();
+        window.STMApp.navigateTo(url);
+        return;
+    }
+    
+    // Add haptic feedback for mobile
+    if (navigator.vibrate) {
+        navigator.vibrate(10);
+    }
+    
+    // Reset state after navigation
+    setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.pointerEvents = 'auto';
+    }, 500);
+}
+
+function openExportModal() {
+    document.getElementById('exportModal').classList.remove('hidden');
+    
+    // Focus first input
+    setTimeout(() => {
+        document.querySelector('#exportModal select').focus();
+    }, 100);
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+}
+
+function handleExport(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const format = formData.get('format');
+    const period = formData.get('period');
+    
+    // Show loading state
+    const submitBtn = event.target.querySelector('[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Exporting...';
+    submitBtn.disabled = true;
+    
+    // Simulate export process
+    setTimeout(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        closeExportModal();
+        showToast(`Export started: dashboard_report.${format}`, 'success');
+        
+        // Simulate download completion
+        setTimeout(() => {
+            showToast(`Export completed: dashboard_report.${format}`, 'success');
+        }, 2000);
+    }, 1500);
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh setup
+    refreshTimeout = setTimeout(refreshDashboard, 300000);
+    
+    // Load recent activity
+    loadRecentActivity();
+    
+    // Setup keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            refreshDashboard();
+        }
+        if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            openExportModal();
+        }
+    });
+    
+    // Setup intersection observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all cards
+    document.querySelectorAll('.stats-card, .action-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+});
+
+async function loadRecentActivity() {
+    try {
+        const response = await fetch('{% url "api_recent_activity" %}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateRecentActivity(data.activities);
+        }
+    } catch (error) {
+        console.log('Failed to load recent activity:', error);
+    }
+}
+
+function updateRecentActivity(activities) {
+    const container = document.getElementById('recentActivity');
+    container.innerHTML = activities.map(activity => `
+        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div class="w-8 h-8 bg-${activity.color}-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-${activity.color}-600" fill="currentColor" viewBox="0 0 20 20">
+                    ${activity.icon}
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">${activity.title}</p>
+                <p class="text-xs text-gray-500">${activity.time}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeExportModal();
+    }
+});
+
+// Handle visibility change for performance
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        clearTimeout(refreshTimeout);
+    } else {
+        refreshTimeout = setTimeout(refreshDashboard, 300000);
+    }
+});
+</script>
+{% endblock %}
