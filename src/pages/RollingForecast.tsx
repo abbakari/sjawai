@@ -162,22 +162,15 @@ const RollingForecast: React.FC = () => {
     try {
       setIsLoadingData(true);
       setDataError(null);
-      setUsingFallbackData(false);
 
       const forecasts = await rollingForecastService.getAllForecasts();
-      console.log('Loaded forecasts (with potential fallback):', forecasts);
-
-      // Check if we're using fallback data
-      const isFallback = forecasts.length > 0 && forecasts[0]._isFallbackData;
-      setUsingFallbackData(isFallback);
+      console.log('Loaded forecasts from backend:', forecasts);
 
       setTableData(forecasts);
 
     } catch (error) {
       console.error('Failed to load forecast data:', error);
-      // The service now handles fallback data internally, so if we get here,
-      // it means there's a real issue. Set a proper error message
-      setDataError('Unable to load forecast data. Please check your connection.');
+      setDataError('Failed to load forecast data from server. Please ensure the backend is running.');
       setTableData([]);
     } finally {
       setIsLoadingData(false);
