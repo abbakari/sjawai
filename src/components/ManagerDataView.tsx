@@ -117,12 +117,12 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
 
     if (type === 'sales_budget') {
       const budgetItems = customerData as SavedBudgetData[];
-      totalBudgetValue = budgetItems.reduce((sum, item) => sum + item.budget2025, 0);
-      totalActualValue = budgetItems.reduce((sum, item) => sum + item.actual2025, 0);
-      totalForecastValue = budgetItems.reduce((sum, item) => sum + item.budgetValue2026, 0);
-      totalBudgetUnits = budgetItems.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
-      totalActualUnits = budgetItems.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0);
-      totalForecastUnits = budgetItems.reduce((sum, item) => sum + item.budget2026, 0);
+      totalBudgetValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
+      totalActualValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
+      totalForecastValue = budgetItems.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
+      totalBudgetUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedBaseYear, 'budget') / (item.rate || 1)), 0);
+      totalActualUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedBaseYear, 'actual') / (item.rate || 1)), 0);
+      totalForecastUnits = budgetItems.reduce((sum, item) => sum + Math.floor(getYearValue(item, selectedTargetYear, 'budget') / (item.rate || 1)), 0);
     } else {
       const forecastItems = customerData as SavedForecastData[];
       totalForecastValue = forecastItems.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
