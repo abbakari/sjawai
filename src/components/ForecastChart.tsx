@@ -167,7 +167,7 @@ const ForecastChart: React.FC = () => {
               <Calendar className="w-5 h-5 text-orange-600" />
               <span className="text-sm font-medium text-orange-900">Next Update</span>
             </div>
-            <p className="text-sm text-orange-700">Forecast will be updated on January 20, 2025</p>
+            <p className="text-sm text-orange-700">Forecast will be updated on January 20, {new Date().getFullYear()}</p>
           </div>
         </div>
       </div>
