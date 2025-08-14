@@ -51,11 +51,13 @@ const MOCK_USERS = [
 ];
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<any[]>([]);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
