@@ -1936,13 +1936,13 @@ const SalesBudget: React.FC = () => {
                           </>
                         )}
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
-                          BUD {selectedYear2025}
+                          BUD {selectedBaseYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
-                          ACT {selectedYear2025}
+                          ACT {selectedBaseYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-blue-50" style={{width: '100px'}}>
-                          BUD {selectedYear2026}
+                          BUD {selectedTargetYear}
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '80px'}}>
                           RATE
@@ -1957,7 +1957,7 @@ const SalesBudget: React.FC = () => {
                           </div>
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '120px'}}>
-                          BUD {selectedYear2026} Value
+                          BUD {selectedTargetYear} Value
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '100px'}}>
                           DISCOUNT
