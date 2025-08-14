@@ -17,6 +17,13 @@ interface ManagerDataViewProps {
 
 const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+
+  // Dynamic year state
+  const availableYears = generateAvailableYears();
+  const defaultYears = getDefaultYearSelection();
+  const [selectedBaseYear, setSelectedBaseYear] = useState(defaultYears.baseYear);
+  const [selectedTargetYear, setSelectedTargetYear] = useState(defaultYears.targetYear);
+
   const [budgetData, setBudgetData] = useState<SavedBudgetData[]>([]);
   const [forecastData, setForecastData] = useState<SavedForecastData[]>([]);
   const [activeTab, setActiveTab] = useState<'budget' | 'forecast' | 'summary'>('summary');
