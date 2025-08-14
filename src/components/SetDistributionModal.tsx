@@ -223,18 +223,36 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Set Distribution</h2>
                 <p className="text-sm text-gray-600">
-                  {filteredItems.length > 0 
+                  {filteredItems.length > 0
                     ? `${filteredItems.length} item(s) selected for distribution`
                     : 'Select customer and criteria to begin'}
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+
+            <div className="flex items-center gap-4">
+              {/* Year Selector */}
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                <label className="text-xs font-medium text-gray-600">Year:</label>
+                <select
+                  className="text-xs p-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={currentTargetYear}
+                  onChange={(e) => setCurrentTargetYear(e.target.value)}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 
