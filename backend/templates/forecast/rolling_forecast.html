@@ -416,6 +416,49 @@
             </p>
         </div>
         <div class="action-buttons">
+            {% if user.role == 'admin' %}
+            <button onclick="openGlobalAnalytics()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                </svg>
+                Global Analytics
+            </button>
+            <button onclick="openUserManagement()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                </svg>
+                Manage Users
+            </button>
+            {% elif user.role == 'manager' %}
+            <button onclick="openApprovalCenter()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Approval Center
+            </button>
+            <button onclick="openTeamOverview()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+                Team Overview
+            </button>
+            {% elif user.role == 'supply_chain' %}
+            <button onclick="openInventoryPlanning()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Inventory Planning
+            </button>
+            <button onclick="openDistributionView()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                </svg>
+                Distribution
+            </button>
+            {% endif %}
+
+            <!-- Common buttons for all roles -->
             <button onclick="openReportView()" class="btn-icon btn-secondary">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
@@ -429,12 +472,22 @@
                 </svg>
                 Export Data
             </button>
+
+            {% if user.role != 'supply_chain' %}
             <button onclick="openNewCustomerModal()" class="btn-icon btn-primary">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
                 </svg>
                 Add Customer
             </button>
+            {% else %}
+            <button onclick="openStockManagement()" class="btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Manage Stock
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -456,6 +509,73 @@
             </div>
         </div>
     </div>
+
+    <!-- Role-based Information Panel -->
+    {% if user.role == 'manager' %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-blue-800 text-sm">Manager Overview</h3>
+                <div class="text-blue-700 text-sm mt-1">
+                    <p>• Review and approve team forecast submissions</p>
+                    <p>• Monitor departmental forecast accuracy</p>
+                    <p>• Manage team target allocations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'supply_chain' %}
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-purple-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-purple-800 text-sm">Supply Chain View</h3>
+                <div class="text-purple-700 text-sm mt-1">
+                    <p>• Plan inventory based on demand forecasts</p>
+                    <p>• Monitor stock levels and distribution</p>
+                    <p>• Coordinate with procurement teams</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'admin' %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-red-800 text-sm">Administrator Control</h3>
+                <div class="text-red-700 text-sm mt-1">
+                    <p>• Full system access and configuration</p>
+                    <p>• Global forecast oversight and analytics</p>
+                    <p>• User management and system settings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-green-800 text-sm">Sales Forecast</h3>
+                <div class="text-green-700 text-sm mt-1">
+                    <p>• Create and manage your sales forecasts</p>
+                    <p>• Track performance against targets</p>
+                    <p>• Submit forecasts for manager approval</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Forecast Statistics -->
     <div class="forecast-stats">
@@ -658,14 +778,174 @@
         </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No forecast data found</h3>
         <p class="text-gray-600 mb-4">Start planning your forecast by adding customer data.</p>
+        {% if user.role != 'supply_chain' %}
         <button onclick="openNewCustomerModal()" class="btn-icon btn-primary">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
             </svg>
             Add First Customer
         </button>
+        {% else %}
+        <button onclick="openStockManagement()" class="btn-icon btn-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            Manage Inventory
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Data Preservation Indicator -->
+    {% if user.role == 'manager' %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Team Data Overview</h4>
+                <p class="text-sm text-gray-600">Monitor your team's forecast submissions and data preservation</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="teamItemsCount">0</div>
+                    <div class="text-xs text-gray-500">Team Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="teamSubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-orange-600" id="teamPendingCount">0</div>
+                    <div class="text-xs text-gray-500">Pending Review</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'admin' %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">System-wide Forecast Status</h4>
+                <p class="text-sm text-gray-600">Global overview of all forecast data and system health</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="globalItemsCount">0</div>
+                    <div class="text-xs text-gray-500">Global Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="globalSubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-purple-600" id="globalActiveUsers">0</div>
+                    <div class="text-xs text-gray-500">Active Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">My Forecast Status</h4>
+                <p class="text-sm text-gray-600">Track your personal forecast submissions and data preservation</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="myItemsCount">0</div>
+                    <div class="text-xs text-gray-500">My Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="mySubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-orange-600" id="myDraftCount">0</div>
+                    <div class="text-xs text-gray-500">Draft</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Manager-specific Interface -->
+{% if user.role == 'manager' %}
+<div id="managerInterface" class="hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Manager Control Panel</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600" id="managerTotalTeamForecasts">0</div>
+                <div class="text-sm text-blue-800">Team Forecasts</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600" id="managerApprovedForecasts">0</div>
+                <div class="text-sm text-green-800">Approved</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                <div class="text-2xl font-bold text-orange-600" id="managerPendingApprovals">0</div>
+                <div class="text-sm text-orange-800">Pending Approval</div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="openTeamForecastView()" class="w-full btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+                Review Team Forecasts
+            </button>
+            <button onclick="openBulkApprovalModal()" class="w-full btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Bulk Approval Actions
+            </button>
+        </div>
     </div>
 </div>
+{% endif %}
+
+<!-- Supply Chain Interface -->
+{% if user.role == 'supply_chain' %}
+<div id="supplyChainInterface" class="hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Supply Chain Control Panel</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600" id="scInventoryValue">$0</div>
+                <div class="text-sm text-purple-800">Inventory Value</div>
+            </div>
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600" id="scForecastDemand">0</div>
+                <div class="text-sm text-blue-800">Forecasted Demand</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600" id="scStockAccuracy">0%</div>
+                <div class="text-sm text-green-800">Stock Accuracy</div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="openInventoryPlanningModal()" class="w-full btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Inventory Planning
+            </button>
+            <button onclick="openDistributionModal()" class="w-full btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                </svg>
+                Distribution Planning
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Customer Breakdown Modal -->
 <div id="customerBreakdownModal" class="hidden modal-overlay">
