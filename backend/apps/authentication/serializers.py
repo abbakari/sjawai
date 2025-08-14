@@ -7,19 +7,19 @@ from apps.users.models import User, UserPreferences
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Custom JWT token serializer to match frontend auth requirements"""
-    
+
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Remove the username field since we use email
         self.fields.pop('username', None)
-    
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        
+
         # Add custom claims to match frontend expectations
         token['user_id'] = user.id
         token['email'] = user.email
@@ -28,13 +28,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['department'] = user.department
         token['permissions'] = user.role_permissions
         token['accessible_dashboards'] = user.accessible_dashboards
-        
+
         return token
-    
+
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')
-        
+
         if email and password:
             # Use email instead of username for authentication
             user = authenticate(
@@ -42,19 +42,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 email=email,
                 password=password
             )
-            
+
             if not user:
                 raise serializers.ValidationError('Invalid email or password')
-            
+
             if not user.is_active:
                 raise serializers.ValidationError('User account is disabled')
-            
+
             # Update last login
             user.last_login_time = timezone.now()
             user.save(update_fields=['last_login_time'])
-            
+
             refresh = self.get_token(user)
-            
+
             return {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
@@ -62,6 +62,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             }
         else:
             raise serializers.ValidationError('Must include email and password')
+
+    @property
+    def username_field(self):
+        return 'email'
 
 
 class UserSerializer(serializers.ModelSerializer):
