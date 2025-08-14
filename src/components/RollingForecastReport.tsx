@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { DownloadIcon, Edit3, ChevronLeft } from 'lucide-react';
+import { DownloadIcon, Edit3, ChevronLeft, Calendar } from 'lucide-react';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import DataPersistenceManager from '../utils/dataPersistence';
 import { getShortMonthNames } from '../utils/timeUtils';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue,
+  getCurrentYear
+} from '../utils/dynamicYearUtils';
 
 interface RollingForecastReportProps {
   onBack: () => void;
