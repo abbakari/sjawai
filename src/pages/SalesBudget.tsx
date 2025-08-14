@@ -920,16 +920,19 @@ const SalesBudget: React.FC = () => {
         item: item.item,
         category: item.category,
         brand: item.brand,
-        [`budget_${selectedYear2025}`]: item.budget2025,
-        [`actual_${selectedYear2025}`]: item.actual2025,
-        [`budget_${selectedYear2026}`]: item.budget2026,
+        [`budget_${selectedBaseYear}`]: getYearValue(item, selectedBaseYear, 'budget'),
+        [`actual_${selectedBaseYear}`]: getYearValue(item, selectedBaseYear, 'actual'),
+        [`budget_${selectedTargetYear}`]: getYearValue(item, selectedTargetYear, 'budget'),
+        [`value_${selectedTargetYear}`]: getYearValue(item, selectedTargetYear, 'value'),
         rate: item.rate,
         stock: item.stock,
         git: item.git,
-        budgetValue2026: item.budgetValue2026,
         discount: item.discount,
         ...(config.includeMetadata && {
-          monthlyData: item.monthlyData
+          monthlyData: item.monthlyData,
+          yearlyBudgets: item.yearlyBudgets,
+          yearlyActuals: item.yearlyActuals,
+          yearlyValues: item.yearlyValues
         })
       })),
       summary: {
@@ -1643,7 +1646,7 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📅 YEARS:
+                  �� YEARS:
                 </label>
                 <div className="flex gap-1">
                 <select
