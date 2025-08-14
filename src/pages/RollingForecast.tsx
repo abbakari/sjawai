@@ -133,103 +133,58 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  const [tableData, setTableData] = useState([
-    {
-      id: '1',
-      customer: 'Action Aid International (Tz)',
-      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 120,
-      ytd25: 45,
-      forecast: 0,
-      stock: 86,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '2',
-      customer: 'Action Aid International (Tz)',
-      item: 'BF GOODRICH TYRE 265/65R17 120/117S TL ATT/A KO2 LRERWLGO',
-      bud25: 80,
-      ytd25: 25,
-      forecast: 0,
-      stock: 7,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(80, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '3',
-      customer: 'Action Aid International (Tz)',
-      item: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-      bud25: 150,
-      ytd25: 60,
-      forecast: 0,
-      stock: 22,
-      git: 100,
-      eta: '2025-08-24',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(150, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '4',
-      customer: 'ADVENT CONSTRUCTION LTD.',
-      item: 'WHEEL BALANCE ALLOYD RIMS',
-      bud25: 200,
-      ytd25: 85,
-      forecast: 0,
-      stock: 0,
-      git: 0,
-      eta: '',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(200, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
-    },
-    {
-      id: '5',
-      customer: 'ADVENT CONSTRUCTION LTD.',
-      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 90,
-      ytd25: 30,
-      forecast: 0,
-      stock: 15,
-      git: 50,
-      eta: '2025-09-15',
-      budgetDistribution: (() => {
-        const seasonalDist = applySeasonalDistribution(90, 'Default Seasonal');
-        const distribution: {[key: string]: number} = {};
-        seasonalDist.forEach(item => {
-          distribution[item.month] = item.value;
-        });
-        return distribution;
-      })()
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  // Load data from backend
+  const loadForecastData = async () => {
+    try {
+      setIsLoadingData(true);
+      setDataError(null);
+
+      const forecasts = await rollingForecastService.getAllForecasts();
+      console.log('Loaded forecasts from backend:', forecasts);
+
+      setTableData(forecasts);
+
+    } catch (error) {
+      console.error('Failed to load forecast data:', error);
+      setDataError('Failed to load forecast data from server');
+
+      // Fallback to hardcoded data
+      const fallbackData = [
+        {
+          id: '1',
+          customer: 'Action Aid International (Tz)',
+          item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
+          bud25: 120,
+          ytd25: 45,
+          forecast: 0,
+          stock: 86,
+          git: 0,
+          eta: '',
+          budgetDistribution: (() => {
+            const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
+            const distribution: {[key: string]: number} = {};
+            seasonalDist.forEach(item => {
+              distribution[item.month] = item.value;
+            });
+            return distribution;
+          })()
+        }
+      ];
+
+      setTableData(fallbackData);
+    } finally {
+      setIsLoadingData(false);
     }
-  ]);
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadForecastData();
+  }, []);
 
   // Load saved forecast data for current user
   useEffect(() => {
