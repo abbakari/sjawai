@@ -112,58 +112,6 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Convert database row to WorkflowItem
-  const convertDatabaseToWorkflowItem = (row: any): WorkflowItem => {
-    const comments = row.workflow_comments?.map((comment: any) => ({
-      id: comment.id,
-      author: comment.author,
-      authorRole: comment.author_role,
-      message: comment.message,
-      timestamp: comment.created_at,
-      type: comment.type,
-      isFollowBack: comment.is_follow_back
-    })) || [];
-
-    return {
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      description: row.description,
-      createdBy: row.created_by,
-      createdByRole: row.created_by_role,
-      currentState: row.current_state,
-      submittedAt: row.submitted_at,
-      reviewedAt: row.reviewed_at,
-      reviewedBy: row.reviewed_by,
-      approvedBy: row.approved_by,
-      approvedAt: row.approved_at,
-      rejectedBy: row.rejected_by,
-      rejectedAt: row.rejected_at,
-      sentToSupplyChainAt: row.sent_to_supply_chain_at,
-      comments,
-      budgetData: row.budget_data || [],
-      forecastData: row.forecast_data || [],
-      customers: row.customers || [],
-      totalValue: parseFloat(row.total_value) || 0,
-      year: row.year,
-      priority: row.priority
-    };
-  };
-
-  // Convert database row to WorkflowNotification
-  const convertDatabaseToNotification = (row: any): WorkflowNotification => ({
-    id: row.id,
-    recipientId: row.recipient_id,
-    recipientRole: row.recipient_role,
-    fromUser: row.from_user,
-    fromRole: row.from_role,
-    title: row.title,
-    message: row.message,
-    workflowItemId: row.workflow_item_id,
-    type: row.type,
-    timestamp: row.created_at,
-    read: row.is_read
-  });
 
   // Load workflow data from local storage
   const loadWorkflowData = async () => {
