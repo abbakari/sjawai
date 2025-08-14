@@ -1098,6 +1098,30 @@ const SalesBudget: React.FC = () => {
     }
   };
 
+  // Helper function to calculate discounts for budget items
+  const calculateItemDiscount = (item: SalesBudgetItem) => {
+    const discountResult = discountService.calculateDiscount(
+      item.budgetValue2026 || (item.budget2026 * item.rate),
+      item.category,
+      item.brand
+    );
+    return discountResult;
+  };
+
+  // Helper function to apply automatic discount based on category and brand
+  const applyAutomaticDiscount = (item: SalesBudgetItem) => {
+    const discountMultiplier = discountService.getCategoryDiscount(item.category, item.brand);
+    const baseValue = item.budget2026 * item.rate;
+    const discountedValue = baseValue * discountMultiplier;
+    const discountAmount = baseValue - discountedValue;
+
+    return {
+      ...item,
+      budgetValue2026: discountedValue,
+      discount: discountAmount
+    };
+  };
+
   // Calculate totals based on filtered data and year selection
   const totalBudget2025 = selectedYear2025 === '2025'
     ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
