@@ -269,9 +269,21 @@ const SalesBudget: React.FC = () => {
       const budgets = await salesBudgetService.getAllBudgets();
       console.log('Loaded budgets from backend:', budgets);
 
-      // Transform backend data to match component interface and apply automatic discounts
+      // Transform backend data to handle dynamic years and apply automatic discounts
       const transformedData: SalesBudgetItem[] = budgets.map(budget => {
-        const baseBudgetValue = budget.budgetValue2026 || (budget.budget_2026 * budget.rate);
+        // Create dynamic yearly data structure
+        const yearlyBudgets: { [year: string]: number } = {};
+        const yearlyActuals: { [year: string]: number } = {};
+        const yearlyValues: { [year: string]: number } = {};
+
+        // Populate from legacy fields if available
+        if (budget.budget_2025 !== undefined) yearlyBudgets['2025'] = budget.budget_2025;
+        if (budget.actual_2025 !== undefined) yearlyActuals['2025'] = budget.actual_2025;
+        if (budget.budget_2026 !== undefined) yearlyBudgets['2026'] = budget.budget_2026;
+
+        // Calculate target year budget value with discount
+        const targetYearBudget = yearlyBudgets[selectedTargetYear] || budget.budget_2026 || 0;
+        const baseBudgetValue = targetYearBudget * budget.rate;
 
         // Apply automatic discount based on category and brand
         const discountMultiplier = discountService.getCategoryDiscount(budget.category, budget.brand);
@@ -282,6 +294,8 @@ const SalesBudget: React.FC = () => {
         const finalDiscount = budget.discount > calculatedDiscount ? budget.discount : calculatedDiscount;
         const finalBudgetValue = baseBudgetValue - finalDiscount;
 
+        yearlyValues[selectedTargetYear] = finalBudgetValue;
+
         return {
           id: budget.id,
           selected: false,
@@ -290,13 +304,12 @@ const SalesBudget: React.FC = () => {
           category: budget.category,
           brand: budget.brand,
           itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
-          budget2025: budget.budget_2025,
-          actual2025: budget.actual_2025,
-          budget2026: budget.budget_2026,
+          yearlyBudgets,
+          yearlyActuals,
+          yearlyValues,
           rate: budget.rate,
           stock: budget.stock,
           git: budget.git,
-          budgetValue2026: finalBudgetValue,
           discount: finalDiscount,
           monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
             month: month.short,
@@ -306,7 +319,12 @@ const SalesBudget: React.FC = () => {
             stock: budget.stock,
             git: budget.git,
             discount: 0
-          }))
+          })),
+          // Legacy compatibility
+          budget2025: budget.budget_2025,
+          actual2025: budget.actual_2025,
+          budget2026: budget.budget_2026,
+          budgetValue2026: finalBudgetValue
         };
       });
 
