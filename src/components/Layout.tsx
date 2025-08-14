@@ -210,7 +210,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         
         {/* Horizontal Navigation */}
         <HorizontalNavigation />
-        
+
+        {/* API Status for Salesman */}
+        <div className="py-2 px-4 bg-white border-b border-gray-200">
+          <ApiStatus />
+        </div>
+
         {/* Main content */}
         <main className="py-6">
           <div className="page-container">
