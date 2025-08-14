@@ -86,21 +86,59 @@ const UserManagement: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleAddUser = (userData: any) => {
-    const newUser = {
-      id: (users.length + 1).toString(),
-      ...userData,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastLogin: new Date().toISOString()
-    };
-    setUsers([...users, newUser]);
-    setIsAddUserModalOpen(false);
+  // Load users from backend
+  const loadUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await apiService.getUsers();
+      if (response.data && response.data.results) {
+        setUsers(response.data.results);
+      } else if (response.data) {
+        setUsers(Array.isArray(response.data) ? response.data : []);
+      }
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+      setError('Failed to load users from server');
+      // Fallback to mock data
+      setUsers(MOCK_USERS);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditUser = (userData: any) => {
-    setUsers(users.map(user => user.id === userData.id ? userData : user));
-    setEditingUser(null);
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleAddUser = async (userData: any) => {
+    try {
+      const response = await apiService.createUser(userData);
+      if (response.data) {
+        setUsers([...users, response.data]);
+        setIsAddUserModalOpen(false);
+      } else {
+        throw new Error('Failed to create user');
+      }
+    } catch (err: any) {
+      console.error('Failed to create user:', err);
+      setError('Failed to create user');
+    }
+  };
+
+  const handleEditUser = async (userData: any) => {
+    try {
+      const response = await apiService.updateUser(userData.id, userData);
+      if (response.data) {
+        setUsers(users.map(user => user.id === userData.id ? response.data : user));
+        setEditingUser(null);
+      } else {
+        throw new Error('Failed to update user');
+      }
+    } catch (err: any) {
+      console.error('Failed to update user:', err);
+      setError('Failed to update user');
+    }
   };
 
   const handleDeleteUser = (userId: string) => {
