@@ -39,19 +39,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const demoUsers = [
-    { email: 'admin@example.com', password: 'password', role: 'Administrator' },
-    { email: 'salesman@example.com', password: 'password', role: 'Salesman' },
-    { email: 'manager@example.com', password: 'password', role: 'Manager' },
-    { email: 'supply@example.com', password: 'password', role: 'Supply Chain' }
-  ];
-
-  const fillDemoCredentials = (email: string, password: string) => {
-    // Reset any loading states when filling demo credentials
-    setIsLoading(false);
-    setEmail(email);
-    setPassword(password);
-  };
 
   // Reset loading state if there's an error
   useEffect(() => {
