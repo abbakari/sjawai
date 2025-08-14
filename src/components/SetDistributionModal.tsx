@@ -39,6 +39,7 @@ interface SetDistributionModalProps {
   selectedCategory: string;
   selectedBrand: string;
   selectedItem: string;
+  selectedTargetYear?: string; // Add year prop
   onApplyDistribution: (distributionData: { [itemId: number]: MonthlyBudget[] }) => void;
 }
 
