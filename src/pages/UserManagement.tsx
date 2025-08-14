@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddUserModal from '../components/AddUserModal';
 import { Plus, Edit, Trash2, Search, Filter, Users, UserCheck, UserX, UserPlus } from 'lucide-react';
 import { UserRole } from '../types/auth';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
+import { apiService } from '../lib/api';
 
 // Mock users data
 const MOCK_USERS = [
