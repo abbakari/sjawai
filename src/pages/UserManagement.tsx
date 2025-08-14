@@ -10,4 +10,4 @@ const UserManagementPage: React.FC = () => {
   );
 };
 
-export default UserManagement;
+export default UserManagementPage;
