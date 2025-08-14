@@ -125,6 +125,26 @@ class ApiService {
     return this.request('/users/');
   }
 
+  async createUser(userData: any) {
+    return this.request('/users/', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateUser(id: string, userData: any) {
+    return this.request(`/users/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request(`/users/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
   // Health check (note: health endpoint is at root level, not under /api/)
   async healthCheck() {
     const url = `${this.baseURL.replace('/api', '')}/health/`;
