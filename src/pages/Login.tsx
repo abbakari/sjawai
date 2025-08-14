@@ -152,42 +152,14 @@ const Login: React.FC = () => {
             </div>
           </form>
 
-          {/* Demo Users */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Users</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              {demoUsers.map((user) => (
-                <button
-                  key={user.email}
-                  type="button"
-                  onClick={() => fillDemoCredentials(user.email, user.password)}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-gray-900">{user.role}</div>
-                    <div className="text-xs text-gray-500">{user.email}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="mt-6">
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Demo Instructions</h3>
+                  <h3 className="text-sm font-medium text-blue-800">Getting Started</h3>
                   <div className="mt-2 text-sm text-blue-700">
-                    <p>• Click any demo user to auto-fill credentials</p>
-                    <p>• All users use password: <strong>password</strong></p>
+                    <p>• Use the superuser credentials created via Django admin</p>
+                    <p>• Create additional users through the admin interface</p>
                     <p>• Each role has different access and features</p>
                   </div>
                 </div>
