@@ -21,20 +21,37 @@ class MonthlyBudgetSerializer(serializers.ModelSerializer):
 
 class YearlyBudgetSerializer(serializers.ModelSerializer):
     """Yearly Budget serializer matching frontend YearlyBudgetData interface"""
-    
+
     monthly_data = MonthlyBudgetSerializer(source='monthly_budgets', many=True, read_only=True)
     created_by_name = serializers.CharField(source='created_by.name', read_only=True)
     monthly_data_summary = serializers.ReadOnlyField()
-    
+
+    # Add combined fields for frontend compatibility
+    itemCombined = serializers.SerializerMethodField()
+    budgetValue2026 = serializers.SerializerMethodField()
+
     class Meta:
         model = YearlyBudget
         fields = [
             'id', 'customer', 'item', 'category', 'brand', 'year',
             'total_budget', 'created_by', 'created_by_name', 'created_at',
             'updated_at', 'status', 'version', 'is_active',
-            'monthly_data', 'monthly_data_summary'
+            'monthly_data', 'monthly_data_summary', 'itemCombined', 'budgetValue2026',
+            # Dynamic year fields
+            'yearly_budgets', 'yearly_actuals', 'yearly_values',
+            # Legacy compatibility fields
+            'budget_2025', 'actual_2025', 'budget_2026', 'rate', 'stock', 'git', 'discount'
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+    def get_itemCombined(self, obj):
+        """Generate combined item description for frontend"""
+        return f"{obj.item} ({obj.category} - {obj.brand})"
+
+    def get_budgetValue2026(self, obj):
+        """Calculate budget value for 2026 based on rate"""
+        budget_2026 = obj.yearly_budgets.get('2026', obj.budget_2026)
+        return float(budget_2026) * float(obj.rate) if budget_2026 and obj.rate else 0
     
     def create(self, validated_data):
         # Set created_by from request user
