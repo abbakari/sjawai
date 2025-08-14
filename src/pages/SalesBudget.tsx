@@ -2069,10 +2069,10 @@ const SalesBudget: React.FC = () => {
                               </>
                             )}
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${selectedYear2025 === '2025' ? (row.budget2025/1000).toFixed(0) : (row.budget2026/1000).toFixed(0)}k
+                              ${(getYearValue(row, selectedBaseYear, 'budget')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${selectedYear2025 === '2025' ? (row.actual2025/1000).toFixed(0) : '0'}k
+                              ${(getYearValue(row, selectedBaseYear, 'actual')/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
                               {user?.role === 'manager' ? (
