@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useBudget, YearlyBudgetData } from '../contexts/BudgetContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import { salesBudgetService, SalesBudgetItem as APISalesBudgetItem } from '../services/salesBudgetService';
 import {
   TrendingUp,
   Info as InfoIcon,
