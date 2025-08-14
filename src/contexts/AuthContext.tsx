@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, AuthContextType, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
 
-// Mock user data for development (fallback when Supabase not configured)
+// Mock user data for development
 const MOCK_USERS: Record<string, User> = {
   'admin@example.com': {
     id: '1',
