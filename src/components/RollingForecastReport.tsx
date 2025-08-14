@@ -215,9 +215,9 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
       prevData.map(row => {
         if (row.id === rowId) {
           const updatedRow = { ...row, [field]: value };
-          // Recalculate FORECAST2025 if monthly data changed
+          // Recalculate forecast total if monthly data changed
           if (['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].includes(field)) {
-            updatedRow.FORECAST2025 = [
+            updatedRow.FORECAST_YEAR = [
               updatedRow.JAN, updatedRow.FEB, updatedRow.MAR, updatedRow.APR,
               updatedRow.MAY, updatedRow.JUN, updatedRow.JUL, updatedRow.AUG,
               updatedRow.SEP, updatedRow.OCT, updatedRow.NOV, updatedRow.DEC
