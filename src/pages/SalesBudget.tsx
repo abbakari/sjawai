@@ -2415,6 +2415,12 @@ const SalesBudget: React.FC = () => {
           isOpen={isSeasonalGrowthModalOpen}
           onClose={() => setIsSeasonalGrowthModalOpen(false)}
         />
+
+        {/* Discount Management Modal */}
+        <DiscountManagementModal
+          isOpen={isDiscountManagementModalOpen}
+          onClose={() => setIsDiscountManagementModalOpen(false)}
+        />
       </div>
     </Layout>
   );
