@@ -28,6 +28,14 @@ import {
   formatDateTimeForDisplay,
   getTimeAgo
 } from '../utils/timeUtils';
+import {
+  generateAvailableYears,
+  getDefaultYearSelection,
+  getYearValue as getYearValueUtil,
+  setYearValue,
+  createSampleYearlyData,
+  transformLegacyToYearly
+} from '../utils/dynamicYearUtils';
 
 const RollingForecast: React.FC = () => {
   const { user } = useAuth();
