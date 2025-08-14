@@ -166,14 +166,16 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
       if (distributionType === 'equal') {
         distribution = distributeQuantityEqually(itemQuantity);
       } else if (distributionType === 'percentage') {
-        distribution = distributeByPercentage(item.budget2026, percentageValue);
+        const currentBudget = getYearValue(item, currentTargetYear, 'budget');
+        distribution = distributeByPercentage(currentBudget, percentageValue);
       } else if (distributionType === 'seasonal') {
-        // Use holiday-aware seasonal distribution based on existing BUD 2026 value
-        if (item.budget2026 > 0) {
-          const seasonalDistributions = applySeasonalDistribution(item.budget2026, 'Default Seasonal');
+        // Use holiday-aware seasonal distribution based on existing target year budget value
+        const currentBudget = getYearValue(item, currentTargetYear, 'budget');
+        if (currentBudget > 0) {
+          const seasonalDistributions = applySeasonalDistribution(currentBudget, 'Default Seasonal');
           distribution = seasonalDistributions.map(dist => dist.value);
         } else {
-          // If no BUD 2026 value, use input quantity with seasonal distribution
+          // If no target year budget value, use input quantity with seasonal distribution
           const quantityToDistribute = itemQuantity || 0;
           if (quantityToDistribute > 0) {
             const seasonalDistributions = applySeasonalDistribution(quantityToDistribute, 'Default Seasonal');
