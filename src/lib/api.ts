@@ -16,14 +16,18 @@ class ApiService {
   }
 
   private async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('access_token');
+
     const defaultOptions: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -119,6 +123,26 @@ class ApiService {
   // Users API
   async getUsers() {
     return this.request('/users/');
+  }
+
+  async createUser(userData: any) {
+    return this.request('/users/', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateUser(id: string, userData: any) {
+    return this.request(`/users/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request(`/users/${id}/`, {
+      method: 'DELETE',
+    });
   }
 
   // Health check (note: health endpoint is at root level, not under /api/)

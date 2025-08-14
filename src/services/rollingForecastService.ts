@@ -36,6 +36,7 @@ export class RollingForecastService {
     }
   }
 
+
   async createForecast(forecastData: Partial<RollingForecastItem>): Promise<RollingForecastItem> {
     try {
       const backendData = this.transformFrontendToBackend(forecastData);

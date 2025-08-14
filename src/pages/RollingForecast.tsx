@@ -170,32 +170,8 @@ const RollingForecast: React.FC = () => {
 
     } catch (error) {
       console.error('Failed to load forecast data:', error);
-      setDataError('Failed to load forecast data from server');
-
-      // Fallback to hardcoded data
-      const fallbackData = [
-        {
-          id: '1',
-          customer: 'Action Aid International (Tz)',
-          item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-          bud25: 120,
-          ytd25: 45,
-          forecast: 0,
-          stock: 86,
-          git: 0,
-          eta: '',
-          budgetDistribution: (() => {
-            const seasonalDist = applySeasonalDistribution(120, 'Default Seasonal');
-            const distribution: {[key: string]: number} = {};
-            seasonalDist.forEach(item => {
-              distribution[item.month] = item.value;
-            });
-            return distribution;
-          })()
-        }
-      ];
-
-      setTableData(fallbackData);
+      setDataError('Failed to load forecast data from server. Please ensure the backend is running.');
+      setTableData([]);
     } finally {
       setIsLoadingData(false);
     }
@@ -861,7 +837,7 @@ const RollingForecast: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-orange-400" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-orange-800">Data Loading Warning</h3>
+                <h3 className="text-sm font-medium text-orange-800">Data Loading Error</h3>
                 <div className="mt-2 text-sm text-orange-700">{dataError}</div>
                 <div className="mt-2">
                   <button

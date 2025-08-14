@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddUserModal from '../components/AddUserModal';
 import { Plus, Edit, Trash2, Search, Filter, Users, UserCheck, UserX, UserPlus } from 'lucide-react';
 import { UserRole } from '../types/auth';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
+import { apiService } from '../lib/api';
 
 // Mock users data
 const MOCK_USERS = [
@@ -50,11 +51,13 @@ const MOCK_USERS = [
 ];
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<any[]>([]);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
@@ -83,25 +86,73 @@ const UserManagement: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleAddUser = (userData: any) => {
-    const newUser = {
-      id: (users.length + 1).toString(),
-      ...userData,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastLogin: new Date().toISOString()
-    };
-    setUsers([...users, newUser]);
-    setIsAddUserModalOpen(false);
+  // Load users from backend
+  const loadUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await apiService.getUsers();
+      if (response.data && response.data.results) {
+        setUsers(response.data.results);
+      } else if (response.data) {
+        setUsers(Array.isArray(response.data) ? response.data : []);
+      }
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+      setError('Failed to load users from server');
+      // Fallback to mock data
+      setUsers(MOCK_USERS);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditUser = (userData: any) => {
-    setUsers(users.map(user => user.id === userData.id ? userData : user));
-    setEditingUser(null);
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleAddUser = async (userData: any) => {
+    try {
+      const response = await apiService.createUser(userData);
+      if (response.data) {
+        setUsers([...users, response.data]);
+        setIsAddUserModalOpen(false);
+      } else {
+        throw new Error('Failed to create user');
+      }
+    } catch (err: any) {
+      console.error('Failed to create user:', err);
+      setError('Failed to create user');
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
+  const handleEditUser = async (userData: any) => {
+    try {
+      const response = await apiService.updateUser(userData.id, userData);
+      if (response.data) {
+        setUsers(users.map(user => user.id === userData.id ? response.data : user));
+        setEditingUser(null);
+      } else {
+        throw new Error('Failed to update user');
+      }
+    } catch (err: any) {
+      console.error('Failed to update user:', err);
+      setError('Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    try {
+      await apiService.deleteUser(userId);
+      setUsers(users.filter(user => user.id !== userId));
+    } catch (err: any) {
+      console.error('Failed to delete user:', err);
+      setError('Failed to delete user');
+    }
   };
 
   const handleToggleUserStatus = (userId: string) => {
@@ -131,6 +182,33 @@ const UserManagement: React.FC = () => {
             Add User
           </button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">{error}</div>
+                <div className="mt-2">
+                  <button
+                    onClick={() => setError(null)}
+                    className="bg-red-100 hover:bg-red-200 text-red-800 text-xs px-3 py-1 rounded"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-8">
+            <div className="text-gray-600">Loading users...</div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

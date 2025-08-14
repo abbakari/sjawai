@@ -122,41 +122,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Try API login first
       console.log('Attempting API login for:', email);
       const response = await apiService.login(email, password);
 
       if (response.error) {
-        console.log('API login failed, using mock authentication fallback');
-
-        // Fallback to mock authentication
-        const mockUser = MOCK_USERS[email];
-        if (!mockUser) {
-          throw new Error('Invalid email or password');
-        }
-        if (password !== 'password') {
-          throw new Error('Invalid email or password');
-        }
-
-        const updatedUser = {
-          ...mockUser,
-          lastLogin: new Date().toISOString()
-        };
-
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Mock login successful for:', email);
+        throw new Error(response.error);
       } else if (response.data) {
         // API login successful
         console.log('API login successful for:', email);
         const userData = response.data as any;
+
+        // Store JWT tokens
+        if (userData.access) {
+          localStorage.setItem('access_token', userData.access);
+        }
+        if (userData.refresh) {
+          localStorage.setItem('refresh_token', userData.refresh);
+        }
+
         const apiUser: User = {
-          id: userData.user?.id?.toString() || userData.id?.toString() || '1',
-          name: userData.user?.name || `${userData.user?.first_name || ''} ${userData.user?.last_name || ''}`.trim() || userData.name || email,
-          email: userData.user?.email || userData.email || email,
-          role: (userData.user?.role || userData.role || 'salesman') as UserRole,
-          department: userData.user?.department || userData.department || 'Sales',
-          permissions: ROLE_PERMISSIONS[(userData.user?.role || userData.role || 'salesman') as UserRole] || [],
+          id: userData.user?.id?.toString() || '1',
+          name: userData.user?.name || email,
+          email: userData.user?.email || email,
+          role: (userData.user?.role || 'salesman') as UserRole,
+          department: userData.user?.department || 'Sales',
+          permissions: userData.user?.permissions || ROLE_PERMISSIONS[(userData.user?.role || 'salesman') as UserRole] || [],
           isActive: userData.user?.is_active !== false,
           createdAt: userData.user?.created_at || new Date().toISOString(),
           lastLogin: new Date().toISOString()
@@ -164,28 +154,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         setUser(apiUser);
         localStorage.setItem('user', JSON.stringify(apiUser));
+      } else {
+        throw new Error('No response data received');
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      // Fallback to mock if API completely fails
-      try {
-        const mockUser = MOCK_USERS[email];
-        if (mockUser && password === 'password') {
-          const updatedUser = {
-            ...mockUser,
-            lastLogin: new Date().toISOString()
-          };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-          console.log('Used mock fallback for:', email);
-        } else {
-          throw new Error('Invalid email or password');
-        }
-      } catch (fallbackErr) {
-        const errorMessage = err.message || 'Login failed';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      }
+      const errorMessage = err.message || 'Login failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -194,6 +170,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       localStorage.removeItem('user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       setUser(null);
     } catch (err) {
       console.error('Error during logout:', err);
