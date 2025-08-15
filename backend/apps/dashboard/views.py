@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.conf import settings
 import json
 from datetime import datetime, timedelta
 
