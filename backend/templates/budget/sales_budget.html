@@ -484,6 +484,22 @@ function refreshBudgets() {
     setTimeout(() => location.reload(), 1000);
 }
 
+function openBudgetPlanner() {
+    showToast('Opening budget planner interface...', 'success');
+}
+
+function openBulkActions() {
+    showToast('Opening bulk actions panel...', 'success');
+}
+
+function openBudgetAnalytics() {
+    showToast('Loading budget analytics dashboard...', 'success');
+}
+
+function openVarianceAnalysis() {
+    showToast('Opening variance analysis tool...', 'success');
+}
+
 // Toast notification function
 function showToast(message, type) {
     const container = document.getElementById('toast-container');
