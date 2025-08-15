@@ -1,0 +1,392 @@
+{% load static %}
+
+<!-- User Communication Center Modal -->
+<div id="user-communication-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeUserCommunicationCenter()"></div>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full">
+            <!-- Header -->
+            <div class="bg-blue-600 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Communication Center</h2>
+                        <p class="text-sm text-blue-100">Send messages and communicate with team members</p>
+                    </div>
+                    <button onclick="closeUserCommunicationCenter()" class="text-white hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showUserCommTab('inbox')" class="user-comm-tab active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600" id="user-tab-inbox">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        Inbox <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full ml-2" id="user-unread-count">3</span>
+                    </button>
+                    <button onclick="showUserCommTab('compose')" class="user-comm-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" id="user-tab-compose">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Compose
+                    </button>
+                    <button onclick="showUserCommTab('sent')" class="user-comm-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" id="user-tab-sent">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        Sent
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="bg-white" style="height: 600px; overflow-y: auto;">
+                
+                <!-- Inbox Tab -->
+                <div id="user-comm-inbox" class="user-comm-content p-6">
+                    <div class="mb-6">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1">
+                                <input type="text" id="user-message-search" placeholder="Search messages..." 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       onkeyup="filterUserMessages()">
+                            </div>
+                            <select id="user-filter-category" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="filterUserMessages()">
+                                <option value="all">All Categories</option>
+                                <option value="stock_request">Stock Requests</option>
+                                <option value="budget_approval">Budget Approvals</option>
+                                <option value="forecast_inquiry">Forecast Inquiries</option>
+                                <option value="supply_chain">Supply Chain</option>
+                                <option value="general">General</option>
+                                <option value="system_alert">System Alerts</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Messages List -->
+                    <div class="space-y-4" id="user-messages-list">
+                        
+                        <!-- Sample Admin Response -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                            <span class="text-sm font-medium text-red-600">AD</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <p class="text-sm font-medium text-gray-900">Admin</p>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">System Admin</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                                        </div>
+                                        <p class="text-sm text-gray-900 font-medium mt-1">Re: Stock Request: BF GOODRICH TYRE 235/85R16</p>
+                                        <p class="text-sm text-gray-700 mt-1">Your stock request has been approved. 50 units will be allocated from the main warehouse. Expected delivery: 2-3 business days.</p>
+                                        <div class="flex items-center mt-2 space-x-4">
+                                            <span class="text-xs text-gray-400">1 hour ago</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Stock Request</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Resolved</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button onclick="replyToUserMessage('msg1')" class="text-blue-600 hover:text-blue-900">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Manager Message -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <span class="text-sm font-medium text-purple-600">MJ</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <p class="text-sm font-medium text-gray-900">Mary Johnson</p>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Manager</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Medium Priority</span>
+                                        </div>
+                                        <p class="text-sm text-gray-900 font-medium mt-1">Budget Review Meeting - Tomorrow 2 PM</p>
+                                        <p class="text-sm text-gray-700 mt-1">Please prepare your Q1 budget analysis and forecasts for our review meeting tomorrow. Bring the latest customer data.</p>
+                                        <div class="flex items-center mt-2 space-x-4">
+                                            <span class="text-xs text-gray-400">3 hours ago</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Budget Review</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button onclick="replyToUserMessage('msg2')" class="text-blue-600 hover:text-blue-900">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Alert -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-yellow-800">System Maintenance Notice</p>
+                                    <p class="text-sm text-yellow-700 mt-1">Scheduled system maintenance on Sunday 2 AM - 4 AM. Budget and forecast systems will be temporarily unavailable.</p>
+                                    <span class="text-xs text-yellow-600 mt-2 block">1 day ago • System Alert</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Compose Tab -->
+                <div id="user-comm-compose" class="user-comm-content hidden p-6">
+                    <form id="user-compose-form" onsubmit="sendUserMessage(event)">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">To</label>
+                                <select name="recipient" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select recipient...</option>
+                                    {% if user.role == 'salesman' %}
+                                    <option value="manager">My Manager</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="supply-chain">Supply Chain Team</option>
+                                    {% elif user.role == 'manager' %}
+                                    <option value="admin">Admin</option>
+                                    <option value="team-salesmen">My Team (Salesmen)</option>
+                                    <option value="supply-chain">Supply Chain Team</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Subject</label>
+                                <input type="text" name="subject" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Category</label>
+                                <select name="category" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="general">General</option>
+                                    {% if user.role == 'salesman' %}
+                                    <option value="stock_request">Stock Request</option>
+                                    <option value="budget_approval">Budget Approval</option>
+                                    <option value="forecast_inquiry">Forecast Inquiry</option>
+                                    {% endif %}
+                                    {% if user.role == 'manager' %}
+                                    <option value="budget_approval">Budget Approval</option>
+                                    <option value="forecast_inquiry">Forecast Inquiry</option>
+                                    <option value="supply_chain">Supply Chain</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Priority</label>
+                                <select name="priority" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    {% if user.role in 'manager,admin' %}
+                                    <option value="critical">Critical</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Message</label>
+                                <textarea name="message" rows="6" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Attachment (optional)</label>
+                                <input type="file" name="attachment" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                            </div>
+                            
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="resetUserComposeForm()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Clear
+                                </button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                                    Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sent Tab -->
+                <div id="user-comm-sent" class="user-comm-content hidden p-6">
+                    <div class="space-y-4">
+                        <!-- Sample Sent Message -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <span class="text-sm font-medium text-green-600">ME</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <p class="text-sm font-medium text-gray-900">To: Admin</p>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">High Priority</span>
+                                        </div>
+                                        <p class="text-sm text-gray-900 font-medium mt-1">Stock Request: BF GOODRICH TYRE 235/85R16</p>
+                                        <p class="text-sm text-gray-700 mt-1">Urgent: Customer needs 50 units for Action Aid International project. Current stock shows 5 units only.</p>
+                                        <div class="flex items-center mt-2 space-x-4">
+                                            <span class="text-xs text-gray-400">5 hours ago</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Stock Request</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Resolved</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="text-green-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-comm-tab.active {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.user-comm-content {
+    display: none;
+}
+
+.user-comm-content:not(.hidden) {
+    display: block;
+}
+</style>
+
+<script>
+// User Communication Center Functions
+function openUserCommunicationCenter() {
+    document.getElementById('user-communication-modal').classList.remove('hidden');
+    loadUserMessages();
+}
+
+function closeUserCommunicationCenter() {
+    document.getElementById('user-communication-modal').classList.add('hidden');
+}
+
+function showUserCommTab(tabName) {
+    // Hide all content
+    document.querySelectorAll('.user-comm-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.user-comm-tab').forEach(tab => {
+        tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected content
+    document.getElementById(`user-comm-${tabName}`).classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById(`user-tab-${tabName}`);
+    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+}
+
+function loadUserMessages() {
+    // Load messages from Django backend
+    showToast('Loading your messages...', 'success');
+}
+
+function filterUserMessages() {
+    const search = document.getElementById('user-message-search').value;
+    const category = document.getElementById('user-filter-category').value;
+    
+    showToast(`Filtering messages: ${search || 'all'}, ${category}`, 'success');
+}
+
+function replyToUserMessage(messageId) {
+    showToast(`Replying to message: ${messageId}`, 'success');
+    showUserCommTab('compose');
+}
+
+function sendUserMessage(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    // Send via Django API
+    fetch('/api/communication/send/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Message sent successfully!', 'success');
+            resetUserComposeForm();
+            showUserCommTab('sent');
+        } else {
+            showToast('Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Send error:', error);
+        showToast('Error sending message', 'error');
+    });
+}
+
+function resetUserComposeForm() {
+    document.getElementById('user-compose-form').reset();
+}
+
+// Auto-update message count
+function updateMessageCount() {
+    // This would typically call the Django backend
+    const unreadCount = Math.floor(Math.random() * 5);
+    const countElement = document.getElementById('user-unread-count');
+    if (countElement) {
+        countElement.textContent = unreadCount;
+        countElement.style.display = unreadCount > 0 ? 'inline' : 'none';
+    }
+}
+
+// Update every 30 seconds
+setInterval(updateMessageCount, 30000);
+</script>
