@@ -82,6 +82,14 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # Custom context processors (replace React contexts)
+                'apps.context_processors.user_context',
+                'apps.context_processors.budget_context',
+                'apps.context_processors.stock_context',
+                'apps.context_processors.workflow_context',
+                'apps.context_processors.app_settings_context',
+                'apps.context_processors.navigation_context',
             ],
         },
     },
