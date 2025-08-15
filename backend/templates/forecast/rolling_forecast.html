@@ -487,6 +487,18 @@ function exportForecasts() {
     }, 2000);
 }
 
+function openBulkApprovalModal() {
+    showToast('Opening bulk approval interface...', 'success');
+}
+
+function openTeamForecastReport() {
+    showToast('Loading team forecast report...', 'success');
+}
+
+function openForecastWorkflow() {
+    showToast('Opening forecast workflow manager...', 'success');
+}
+
 // Toast notification function
 function showToast(message, type) {
     const container = document.getElementById('toast-container');
