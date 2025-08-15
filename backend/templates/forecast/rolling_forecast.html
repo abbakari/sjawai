@@ -1,0 +1,1874 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Rolling Forecast - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Rolling Forecast specific styles */
+    .forecast-container {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .forecast-controls {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .forecast-timeline {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .forecast-timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+    
+    .forecast-table-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        position: relative;
+    }
+    
+    .forecast-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+    
+    .forecast-table th {
+        background: #f8fafc;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .forecast-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .forecast-table tr:hover {
+        background: #f9fafb;
+    }
+    
+    .forecast-input {
+        width: 100%;
+        min-width: 80px;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        text-align: right;
+        background: white;
+    }
+    
+    .forecast-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .forecast-input.future-month {
+        background: #eff6ff;
+        border-color: #93c5fd;
+    }
+    
+    .forecast-input.past-month {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .month-header {
+        text-align: center;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .month-header.current-month {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+    
+    .month-header.future-month {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    
+    .customer-row {
+        font-weight: 600;
+        background: #f8fafc;
+    }
+    
+    .customer-row td {
+        border-top: 2px solid #e5e7eb;
+        padding: 1rem;
+    }
+    
+    .expandable-row {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .expandable-row:hover {
+        background: #f3f4f6;
+    }
+    
+    .expand-icon {
+        transition: transform 0.2s;
+    }
+    
+    .expand-icon.expanded {
+        transform: rotate(90deg);
+    }
+    
+    .item-row {
+        padding-left: 2rem;
+    }
+    
+    .forecast-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-trend {
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .stat-trend.positive {
+        color: #059669;
+    }
+    
+    .stat-trend.negative {
+        color: #dc2626;
+    }
+    
+    .forecast-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-period {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .customer-selector {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-right: 0.5rem;
+        min-width: 150px;
+    }
+    
+    .customer-breakdown-modal {
+        max-width: 90vw;
+        width: 800px;
+    }
+    
+    .monthly-breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .monthly-breakdown-table th,
+    .monthly-breakdown-table td {
+        padding: 0.75rem;
+        text-align: right;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .monthly-breakdown-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .total-row {
+        font-weight: 600;
+        background: #f8fafc;
+        border-top: 2px solid #d1d5db;
+    }
+    
+    .variance-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .variance-positive {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .variance-negative {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .forecast-controls {
+            padding: 1rem;
+        }
+        
+        .forecast-timeline {
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .forecast-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .forecast-table th,
+        .forecast-table td {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .customer-breakdown-modal {
+            width: 95vw;
+            max-width: none;
+        }
+        
+        .forecast-actions {
+            padding: 0.75rem;
+        }
+        
+        .timeline-period {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
+    }
+    
+    /* Scroll indicators */
+    .table-scroll-container {
+        position: relative;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .scroll-indicator {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        pointer-events: none;
+        z-index: 5;
+    }
+    
+    .scroll-indicator.left {
+        left: 0;
+        background: linear-gradient(90deg, rgba(255,255,255,0.9), transparent);
+    }
+    
+    .scroll-indicator.right {
+        right: 0;
+        background: linear-gradient(270deg, rgba(255,255,255,0.9), transparent);
+    }
+    
+    /* Loading and error states */
+    .forecast-loading {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+    
+    .forecast-loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border: 3px solid #e5e7eb;
+        border-top: 3px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    .error-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+    
+    .success-indicator {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .warning-indicator {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forecast-container container py-6">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Rolling Forecast Management</h1>
+            <p class="text-gray-600">
+                Plan and track future sales across customers and time periods
+            </p>
+        </div>
+        <div class="action-buttons">
+            {% if user.role == 'admin' %}
+            <button onclick="openGlobalAnalytics()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                </svg>
+                Global Analytics
+            </button>
+            <button onclick="openUserManagement()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                </svg>
+                Manage Users
+            </button>
+            {% elif user.role == 'manager' %}
+            <button onclick="openApprovalCenter()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Approval Center
+            </button>
+            <button onclick="openTeamOverview()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+                Team Overview
+            </button>
+            {% elif user.role == 'supply_chain' %}
+            <button onclick="openInventoryPlanning()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Inventory Planning
+            </button>
+            <button onclick="openDistributionView()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                </svg>
+                Distribution
+            </button>
+            {% endif %}
+
+            <!-- Common buttons for all roles -->
+            <button onclick="openReportView()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h4a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm8 8a1 1 0 01-1-1V9a1 1 0 10-2 0v3a1 1 0 01-1 1H6a1 1 0 100 2h8a1 1 0 100-2z" clip-rule="evenodd"></path>
+                </svg>
+                Generate Report
+            </button>
+            <button onclick="openExportModal()" class="btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+                Export Data
+            </button>
+
+            {% if user.role != 'supply_chain' %}
+            <button onclick="openNewCustomerModal()" class="btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                Add Customer
+            </button>
+            {% else %}
+            <button onclick="openStockManagement()" class="btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Manage Stock
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Forecast Timeline -->
+    <div class="forecast-timeline">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-semibold mb-2">Current Forecast Period</h3>
+                <div class="timeline-period">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span id="forecastPeriod">January 2025 - December 2026</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm opacity-90 mb-1">Next Review Date</p>
+                <p class="font-semibold" id="nextReviewDate">March 15, 2025</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role-based Information Panel -->
+    {% if user.role == 'manager' %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-blue-800 text-sm">Manager Overview</h3>
+                <div class="text-blue-700 text-sm mt-1">
+                    <p>• Review and approve team forecast submissions</p>
+                    <p>• Monitor departmental forecast accuracy</p>
+                    <p>• Manage team target allocations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'supply_chain' %}
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-purple-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-purple-800 text-sm">Supply Chain View</h3>
+                <div class="text-purple-700 text-sm mt-1">
+                    <p>• Plan inventory based on demand forecasts</p>
+                    <p>• Monitor stock levels and distribution</p>
+                    <p>• Coordinate with procurement teams</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'admin' %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-red-800 text-sm">Administrator Control</h3>
+                <div class="text-red-700 text-sm mt-1">
+                    <p>• Full system access and configuration</p>
+                    <p>• Global forecast oversight and analytics</p>
+                    <p>• User management and system settings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            <div>
+                <h3 class="font-medium text-green-800 text-sm">Sales Forecast</h3>
+                <div class="text-green-700 text-sm mt-1">
+                    <p>• Create and manage your sales forecasts</p>
+                    <p>• Track performance against targets</p>
+                    <p>• Submit forecasts for manager approval</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Forecast Statistics -->
+    <div class="forecast-stats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalForecastValue">$0</div>
+            <div class="stat-label">Total Forecast Value</div>
+            <div class="stat-trend positive" id="forecastTrend">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                +12.5% vs Budget
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeCustomers">0</div>
+            <div class="stat-label">Active Customers</div>
+            <div class="stat-trend positive">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                +3 new
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="forecastAccuracy">0%</div>
+            <div class="stat-label">Forecast Accuracy</div>
+            <div class="stat-trend positive">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                +2.1% this quarter
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="varianceIndicator">0%</div>
+            <div class="stat-label">Budget Variance</div>
+            <div class="stat-trend negative" id="varianceTrend">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                -3.2% under budget
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Controls -->
+    <div class="forecast-controls">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Forecast Configuration</h3>
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">View:</label>
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="customer-item" onclick="toggleForecastView('customer-item')">
+                        Customer-Item
+                    </button>
+                    <button class="view-toggle-btn" data-view="customer-breakdown" onclick="toggleForecastView('customer-breakdown')">
+                        Customer Breakdown
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Customer Filter</label>
+                <select id="customerFilter" class="budget-select w-full" onchange="applyForecastFilters()">
+                    <option value="">All Customers</option>
+                    <!-- Options populated dynamically -->
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Year Range</label>
+                <select id="yearRangeFilter" class="budget-select w-full" onchange="updateForecastPeriod()">
+                    <option value="2025-2026" selected>2025-2026</option>
+                    <option value="2026-2027">2026-2027</option>
+                    <option value="2025-2027">2025-2027</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Forecast Type</label>
+                <select id="forecastTypeFilter" class="budget-select w-full" onchange="applyForecastFilters()">
+                    <option value="all">All Forecasts</option>
+                    <option value="conservative">Conservative</option>
+                    <option value="optimistic">Optimistic</option>
+                    <option value="realistic" selected>Realistic</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Status Filter</label>
+                <select id="statusFilter" class="budget-select w-full" onchange="applyForecastFilters()">
+                    <option value="">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Actions -->
+    <div class="forecast-actions">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="selectAllForecast" class="checkbox-input" onchange="toggleSelectAllForecast()">
+                    <span class="text-sm font-medium text-gray-700">Select All</span>
+                </label>
+                <span id="selectedForecastCount" class="text-sm text-gray-600">0 items selected</span>
+            </div>
+            <div class="action-buttons">
+                <button onclick="saveForecastData()" class="btn-icon btn-success" id="saveForecastBtn" disabled>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 12.586V5a1 1 0 10-2 0v7.586l-1.293-1.293z"></path>
+                    </svg>
+                    Save Changes
+                </button>
+                <button onclick="submitForecastForApproval()" class="btn-icon btn-warning" id="submitForecastBtn" disabled>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.429a1 1 0 001.17-1.409l-7-14z"></path>
+                    </svg>
+                    Submit for Approval
+                </button>
+                <button onclick="openSeasonalDistributionModal()" class="btn-icon btn-secondary">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                    Seasonal Distribution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Table -->
+    <div class="forecast-table-container" id="forecastTableContainer">
+        <div class="table-scroll-container" id="tableScrollContainer">
+            <div class="scroll-indicator left" id="leftScrollIndicator"></div>
+            <div class="scroll-indicator right" id="rightScrollIndicator"></div>
+            
+            <table class="forecast-table" id="forecastTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="sticky-column">
+                            <input type="checkbox" class="checkbox-input" id="headerForecastCheckbox" onchange="toggleSelectAllForecast()">
+                        </th>
+                        <th rowspan="2" class="sticky-column">Customer</th>
+                        <th rowspan="2" class="sticky-column">Item</th>
+                        <th rowspan="2">Category</th>
+                        <th colspan="12" class="month-header">2025 Monthly Forecast</th>
+                        <th rowspan="2">2025 Total</th>
+                        <th colspan="12" class="month-header">2026 Monthly Forecast</th>
+                        <th rowspan="2">2026 Total</th>
+                        <th rowspan="2">Actions</th>
+                    </tr>
+                    <tr>
+                        <!-- 2025 Months -->
+                        <th class="month-header">Jan</th>
+                        <th class="month-header">Feb</th>
+                        <th class="month-header current-month">Mar</th>
+                        <th class="month-header future-month">Apr</th>
+                        <th class="month-header future-month">May</th>
+                        <th class="month-header future-month">Jun</th>
+                        <th class="month-header future-month">Jul</th>
+                        <th class="month-header future-month">Aug</th>
+                        <th class="month-header future-month">Sep</th>
+                        <th class="month-header future-month">Oct</th>
+                        <th class="month-header future-month">Nov</th>
+                        <th class="month-header future-month">Dec</th>
+                        <!-- 2026 Months -->
+                        <th class="month-header future-month">Jan</th>
+                        <th class="month-header future-month">Feb</th>
+                        <th class="month-header future-month">Mar</th>
+                        <th class="month-header future-month">Apr</th>
+                        <th class="month-header future-month">May</th>
+                        <th class="month-header future-month">Jun</th>
+                        <th class="month-header future-month">Jul</th>
+                        <th class="month-header future-month">Aug</th>
+                        <th class="month-header future-month">Sep</th>
+                        <th class="month-header future-month">Oct</th>
+                        <th class="month-header future-month">Nov</th>
+                        <th class="month-header future-month">Dec</th>
+                    </tr>
+                </thead>
+                <tbody id="forecastTableBody">
+                    <!-- Table rows will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="forecastLoadingState" class="text-center py-8 hidden">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading forecast data...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="forecastEmptyState" class="text-center py-12 hidden">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No forecast data found</h3>
+        <p class="text-gray-600 mb-4">Start planning your forecast by adding customer data.</p>
+        {% if user.role != 'supply_chain' %}
+        <button onclick="openNewCustomerModal()" class="btn-icon btn-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+            </svg>
+            Add First Customer
+        </button>
+        {% else %}
+        <button onclick="openStockManagement()" class="btn-icon btn-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            Manage Inventory
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Data Preservation Indicator -->
+    {% if user.role == 'manager' %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Team Data Overview</h4>
+                <p class="text-sm text-gray-600">Monitor your team's forecast submissions and data preservation</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="teamItemsCount">0</div>
+                    <div class="text-xs text-gray-500">Team Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="teamSubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-orange-600" id="teamPendingCount">0</div>
+                    <div class="text-xs text-gray-500">Pending Review</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.role == 'admin' %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">System-wide Forecast Status</h4>
+                <p class="text-sm text-gray-600">Global overview of all forecast data and system health</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="globalItemsCount">0</div>
+                    <div class="text-xs text-gray-500">Global Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="globalSubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-purple-600" id="globalActiveUsers">0</div>
+                    <div class="text-xs text-gray-500">Active Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-1">My Forecast Status</h4>
+                <p class="text-sm text-gray-600">Track your personal forecast submissions and data preservation</p>
+            </div>
+            <div class="flex items-center space-x-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="myItemsCount">0</div>
+                    <div class="text-xs text-gray-500">My Items</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="mySubmittedCount">0</div>
+                    <div class="text-xs text-gray-500">Submitted</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-orange-600" id="myDraftCount">0</div>
+                    <div class="text-xs text-gray-500">Draft</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Manager-specific Interface -->
+{% if user.role == 'manager' %}
+<div id="managerInterface" class="hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Manager Control Panel</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600" id="managerTotalTeamForecasts">0</div>
+                <div class="text-sm text-blue-800">Team Forecasts</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600" id="managerApprovedForecasts">0</div>
+                <div class="text-sm text-green-800">Approved</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                <div class="text-2xl font-bold text-orange-600" id="managerPendingApprovals">0</div>
+                <div class="text-sm text-orange-800">Pending Approval</div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="openTeamForecastView()" class="w-full btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+                Review Team Forecasts
+            </button>
+            <button onclick="openBulkApprovalModal()" class="w-full btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Bulk Approval Actions
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Supply Chain Interface -->
+{% if user.role == 'supply_chain' %}
+<div id="supplyChainInterface" class="hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Supply Chain Control Panel</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600" id="scInventoryValue">$0</div>
+                <div class="text-sm text-purple-800">Inventory Value</div>
+            </div>
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600" id="scForecastDemand">0</div>
+                <div class="text-sm text-blue-800">Forecasted Demand</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600" id="scStockAccuracy">0%</div>
+                <div class="text-sm text-green-800">Stock Accuracy</div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="openInventoryPlanningModal()" class="w-full btn-icon btn-primary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Inventory Planning
+            </button>
+            <button onclick="openDistributionModal()" class="w-full btn-icon btn-secondary">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                </svg>
+                Distribution Planning
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Customer Breakdown Modal -->
+<div id="customerBreakdownModal" class="hidden modal-overlay">
+    <div class="modal customer-breakdown-modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Customer Forecast Breakdown</h3>
+            <button onclick="closeCustomerBreakdownModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-4">
+                <label class="form-label">Select Customer</label>
+                <select id="modalCustomerSelect" class="customer-selector" onchange="loadCustomerBreakdown()">
+                    <option value="">Choose a customer...</option>
+                    <!-- Options populated dynamically -->
+                </select>
+            </div>
+            
+            <div id="customerBreakdownContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Customer Modal -->
+<div id="newCustomerModal" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Add New Customer Forecast</h3>
+            <button onclick="closeNewCustomerModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="newCustomerForm" onsubmit="handleNewCustomerSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" name="customerName" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Customer Code</label>
+                        <input type="text" name="customerCode" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Item</label>
+                        <input type="text" name="item" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Region</label>
+                        <select name="region" class="form-input" required>
+                            <option value="">Select Region</option>
+                            <option value="Africa">Africa</option>
+                            <option value="Asia">Asia</option>
+                            <option value="Europe">Europe</option>
+                            <option value="Americas">Americas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Segment</label>
+                        <select name="segment" class="form-input" required>
+                            <option value="">Select Segment</option>
+                            <option value="NGO">NGO</option>
+                            <option value="Government">Government</option>
+                            <option value="Corporate">Corporate</option>
+                            <option value="SME">SME</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="closeNewCustomerModal()" class="btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Add Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div id="forecastExportModal" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold">Export Forecast Data</h3>
+            <button onclick="closeForecastExportModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="forecastExportForm" onsubmit="handleForecastExport(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label">Export Format</label>
+                        <select name="format" class="form-input">
+                            <option value="excel">Excel Workbook</option>
+                            <option value="csv">CSV Files</option>
+                            <option value="pdf">PDF Report</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Time Period</label>
+                        <select name="period" class="form-input">
+                            <option value="current">Current Period</option>
+                            <option value="next12">Next 12 Months</option>
+                            <option value="all">All Data</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Include</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" name="includeDetails" checked>
+                                <span class="text-sm">Detailed breakdown</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" name="includeSummary" checked>
+                                <span class="text-sm">Summary statistics</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" name="includeCharts">
+                                <span class="text-sm">Visual charts</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="closeForecastExportModal()" class="btn-secondary flex-1">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1">Export</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Rolling Forecast JavaScript functionality
+class RollingForecastManager {
+    constructor() {
+        this.forecastData = [];
+        this.filteredData = [];
+        this.selectedItems = new Set();
+        this.currentView = 'customer-item';
+        this.currentCustomer = '';
+        this.months = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+        this.currentMonth = new Date().getMonth(); // 0-based
+        this.currentYear = new Date().getFullYear();
+        this.init();
+    }
+
+    async init() {
+        await this.loadForecastData();
+        this.setupEventListeners();
+        this.populateFilters();
+        this.renderTable();
+        this.updateStatistics();
+        this.setupScrollIndicators();
+    }
+
+    async loadForecastData() {
+        try {
+            this.showLoading(true);
+            
+            // Load from API
+            const response = await fetch('{% url "api_forecasts" %}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.forecastData = data.forecasts || [];
+            } else {
+                // Use sample data if API fails
+                this.forecastData = this.generateSampleData();
+            }
+            
+            this.filteredData = [...this.forecastData];
+            
+        } catch (error) {
+            console.error('Failed to load forecast data:', error);
+            this.forecastData = this.generateSampleData();
+            this.filteredData = [...this.forecastData];
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    generateSampleData() {
+        const customers = [
+            { name: 'Action Aid International (Tz)', code: 'AAI001' },
+            { name: 'World Vision Tanzania', code: 'WVT002' },
+            { name: 'Plan International', code: 'PI003' },
+            { name: 'Oxfam Tanzania', code: 'OT004' }
+        ];
+        
+        const items = [
+            'Laptop Dell Latitude 7420',
+            'Desktop HP EliteDesk 800',
+            'Monitor LG 27"',
+            'Printer Canon MF445'
+        ];
+        
+        const categories = ['Electronics', 'Office Equipment', 'IT Hardware', 'Peripherals'];
+        
+        const data = [];
+        let id = 1;
+        
+        customers.forEach(customer => {
+            items.forEach((item, itemIndex) => {
+                const monthlyData = {};
+                
+                // Generate monthly forecast data for 2025 and 2026
+                for (let year = 2025; year <= 2026; year++) {
+                    for (let month = 0; month < 12; month++) {
+                        const key = `${year}_${month}`;
+                        const baseValue = Math.floor(Math.random() * 5000) + 1000;
+                        // Add seasonal variation
+                        const seasonalMultiplier = this.getSeasonalMultiplier(month);
+                        monthlyData[key] = Math.floor(baseValue * seasonalMultiplier);
+                    }
+                }
+                
+                data.push({
+                    id: id++,
+                    customer: customer.name,
+                    customerCode: customer.code,
+                    item: item,
+                    category: categories[itemIndex % categories.length],
+                    monthlyData: monthlyData,
+                    selected: false,
+                    status: 'draft'
+                });
+            });
+        });
+        
+        return data;
+    }
+
+    getSeasonalMultiplier(month) {
+        // Simple seasonal pattern: higher in Q4, lower in Q2
+        const patterns = [1.0, 0.9, 0.8, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
+        return patterns[month];
+    }
+
+    setupEventListeners() {
+        // Filter change handlers
+        ['customerFilter', 'yearRangeFilter', 'forecastTypeFilter', 'statusFilter'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', () => this.applyForecastFilters());
+            }
+        });
+
+        // Scroll indicators
+        const scrollContainer = document.getElementById('tableScrollContainer');
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', () => this.updateScrollIndicators());
+        }
+    }
+
+    populateFilters() {
+        const customers = [...new Set(this.forecastData.map(item => item.customer))];
+        
+        this.populateSelect('customerFilter', customers);
+        this.populateSelect('modalCustomerSelect', customers);
+    }
+
+    populateSelect(selectId, options) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        const currentValue = select.value;
+        
+        // Clear existing options except first
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+        
+        // Add new options
+        options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option;
+            optionElement.textContent = option;
+            select.appendChild(optionElement);
+        });
+        
+        // Restore selection if still valid
+        if (options.includes(currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+    applyForecastFilters() {
+        const customerFilter = document.getElementById('customerFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        this.filteredData = this.forecastData.filter(item => {
+            return (!customerFilter || item.customer === customerFilter) &&
+                   (!statusFilter || item.status === statusFilter);
+        });
+
+        this.renderTable();
+        this.updateStatistics();
+    }
+
+    renderTable() {
+        const tbody = document.getElementById('forecastTableBody');
+        
+        if (this.filteredData.length === 0) {
+            this.showEmptyState(true);
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        this.showEmptyState(false);
+        
+        tbody.innerHTML = this.filteredData.map(item => {
+            const rows = [];
+            
+            // Main row
+            rows.push(`
+                <tr class="forecast-row" data-id="${item.id}">
+                    <td class="sticky-column">
+                        <input type="checkbox" class="checkbox-input row-checkbox" 
+                               data-id="${item.id}" onchange="forecastManager.toggleItemSelection(${item.id})"
+                               ${this.selectedItems.has(item.id) ? 'checked' : ''}>
+                    </td>
+                    <td class="sticky-column font-medium">${item.customer}</td>
+                    <td class="sticky-column">${item.item}</td>
+                    <td>${item.category}</td>
+                    ${this.renderMonthlyInputs(item, 2025)}
+                    <td class="font-semibold">${this.formatNumber(this.calculateYearTotal(item, 2025))}</td>
+                    ${this.renderMonthlyInputs(item, 2026)}
+                    <td class="font-semibold">${this.formatNumber(this.calculateYearTotal(item, 2026))}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="forecastManager.saveForecastItem(${item.id})" class="btn-icon btn-success" title="Save">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 12.586V5a1 1 0 10-2 0v7.586l-1.293-1.293z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="forecastManager.viewItemBreakdown(${item.id})" class="btn-icon btn-secondary" title="View Details">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `);
+            
+            return rows.join('');
+        }).join('');
+    }
+
+    renderMonthlyInputs(item, year) {
+        return this.months.map((month, index) => {
+            const key = `${year}_${index}`;
+            const value = item.monthlyData[key] || 0;
+            const isPast = year < this.currentYear || (year === this.currentYear && index < this.currentMonth);
+            const isCurrent = year === this.currentYear && index === this.currentMonth;
+            const cssClass = isPast ? 'past-month' : (isCurrent ? 'current-month' : 'future-month');
+            
+            return `
+                <td>
+                    <input type="number" 
+                           class="forecast-input ${cssClass}" 
+                           value="${value}"
+                           onchange="forecastManager.updateMonthlyValue(${item.id}, '${key}', this.value)"
+                           ${isPast ? 'readonly' : ''}>
+                </td>
+            `;
+        }).join('');
+    }
+
+    calculateYearTotal(item, year) {
+        let total = 0;
+        for (let month = 0; month < 12; month++) {
+            const key = `${year}_${month}`;
+            total += item.monthlyData[key] || 0;
+        }
+        return total;
+    }
+
+    updateMonthlyValue(itemId, key, value) {
+        const item = this.forecastData.find(item => item.id === itemId);
+        if (item) {
+            item.monthlyData[key] = parseFloat(value) || 0;
+            this.updateStatistics();
+            this.updateRowTotals(itemId);
+        }
+    }
+
+    updateRowTotals(itemId) {
+        // Update the year totals for the specific row
+        const item = this.forecastData.find(item => item.id === itemId);
+        if (item) {
+            const row = document.querySelector(`tr[data-id="${itemId}"]`);
+            if (row) {
+                const cells = row.querySelectorAll('td');
+                // Update 2025 total (cell index depends on layout)
+                const total2025 = this.calculateYearTotal(item, 2025);
+                const total2026 = this.calculateYearTotal(item, 2026);
+                
+                // Find and update total cells
+                cells.forEach(cell => {
+                    if (cell.classList.contains('font-semibold')) {
+                        // This is a total cell - update appropriately
+                    }
+                });
+            }
+        }
+    }
+
+    updateStatistics() {
+        let totalForecast = 0;
+        let activeCustomers = new Set();
+        
+        this.filteredData.forEach(item => {
+            totalForecast += this.calculateYearTotal(item, 2025) + this.calculateYearTotal(item, 2026);
+            activeCustomers.add(item.customer);
+        });
+        
+        document.getElementById('totalForecastValue').textContent = this.formatCurrency(totalForecast);
+        document.getElementById('activeCustomers').textContent = activeCustomers.size.toString();
+        document.getElementById('forecastAccuracy').textContent = '89.2%';
+        document.getElementById('varianceIndicator').textContent = '-3.2%';
+    }
+
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    formatNumber(amount) {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    toggleItemSelection(itemId) {
+        if (this.selectedItems.has(itemId)) {
+            this.selectedItems.delete(itemId);
+        } else {
+            this.selectedItems.add(itemId);
+        }
+        this.updateSelectionUI();
+    }
+
+    updateSelectionUI() {
+        const selectedCount = this.selectedItems.size;
+        document.getElementById('selectedForecastCount').textContent = `${selectedCount} items selected`;
+        
+        const saveForecastBtn = document.getElementById('saveForecastBtn');
+        const submitForecastBtn = document.getElementById('submitForecastBtn');
+        
+        if (saveForecastBtn) saveForecastBtn.disabled = selectedCount === 0;
+        if (submitForecastBtn) submitForecastBtn.disabled = selectedCount === 0;
+    }
+
+    setupScrollIndicators() {
+        const container = document.getElementById('tableScrollContainer');
+        if (!container) return;
+
+        const updateIndicators = () => {
+            const leftIndicator = document.getElementById('leftScrollIndicator');
+            const rightIndicator = document.getElementById('rightScrollIndicator');
+            
+            if (leftIndicator) {
+                leftIndicator.style.opacity = container.scrollLeft > 0 ? '1' : '0';
+            }
+            
+            if (rightIndicator) {
+                const maxScroll = container.scrollWidth - container.clientWidth;
+                rightIndicator.style.opacity = container.scrollLeft < maxScroll ? '1' : '0';
+            }
+        };
+
+        container.addEventListener('scroll', updateIndicators);
+        window.addEventListener('resize', updateIndicators);
+        updateIndicators();
+    }
+
+    updateScrollIndicators() {
+        // Called on scroll
+        this.setupScrollIndicators();
+    }
+
+    showLoading(show) {
+        const loadingState = document.getElementById('forecastLoadingState');
+        const tableContainer = document.getElementById('forecastTableContainer');
+        
+        if (loadingState) loadingState.classList.toggle('hidden', !show);
+        if (tableContainer) tableContainer.classList.toggle('hidden', show);
+    }
+
+    showEmptyState(show) {
+        const emptyState = document.getElementById('forecastEmptyState');
+        if (emptyState) emptyState.classList.toggle('hidden', !show);
+    }
+
+    async saveForecastItem(itemId) {
+        const item = this.forecastData.find(item => item.id === itemId);
+        if (item) {
+            try {
+                const response = await fetch(`{% url "api_forecast_detail" 0 %}`.replace('0', itemId), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN || '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(item)
+                });
+                
+                if (response.ok) {
+                    showToast('Forecast saved successfully', 'success');
+                } else {
+                    showToast('Failed to save forecast', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving forecast', 'error');
+            }
+        }
+    }
+
+    viewItemBreakdown(itemId) {
+        const item = this.forecastData.find(item => item.id === itemId);
+        if (item) {
+            // Open breakdown modal or navigate to detail view
+            showToast(`Viewing breakdown for ${item.customer} - ${item.item}`, 'info');
+        }
+    }
+}
+
+// Global functions for HTML event handlers
+function toggleForecastView(view) {
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+    });
+    forecastManager.currentView = view;
+    if (view === 'customer-breakdown') {
+        openCustomerBreakdownModal();
+    } else {
+        forecastManager.renderTable();
+    }
+}
+
+function toggleSelectAllForecast() {
+    const selectAllChecked = document.getElementById('selectAllForecast').checked;
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllChecked;
+        const itemId = parseInt(checkbox.dataset.id);
+        if (selectAllChecked) {
+            forecastManager.selectedItems.add(itemId);
+        } else {
+            forecastManager.selectedItems.delete(itemId);
+        }
+    });
+    
+    forecastManager.updateSelectionUI();
+}
+
+function openCustomerBreakdownModal() {
+    document.getElementById('customerBreakdownModal').classList.remove('hidden');
+}
+
+function closeCustomerBreakdownModal() {
+    document.getElementById('customerBreakdownModal').classList.add('hidden');
+}
+
+function openNewCustomerModal() {
+    document.getElementById('newCustomerModal').classList.remove('hidden');
+}
+
+function closeNewCustomerModal() {
+    document.getElementById('newCustomerModal').classList.add('hidden');
+    document.getElementById('newCustomerForm').reset();
+}
+
+function openExportModal() {
+    document.getElementById('forecastExportModal').classList.remove('hidden');
+}
+
+function closeForecastExportModal() {
+    document.getElementById('forecastExportModal').classList.add('hidden');
+}
+
+function handleNewCustomerSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    const newItem = {
+        id: Math.max(...forecastManager.forecastData.map(item => item.id)) + 1,
+        customer: formData.get('customerName'),
+        customerCode: formData.get('customerCode'),
+        item: formData.get('item'),
+        category: formData.get('category'),
+        monthlyData: {},
+        selected: false,
+        status: 'draft'
+    };
+    
+    // Initialize monthly data
+    for (let year = 2025; year <= 2026; year++) {
+        for (let month = 0; month < 12; month++) {
+            const key = `${year}_${month}`;
+            newItem.monthlyData[key] = 0;
+        }
+    }
+    
+    forecastManager.forecastData.push(newItem);
+    forecastManager.applyForecastFilters();
+    forecastManager.populateFilters();
+    closeNewCustomerModal();
+    showToast('New customer forecast added successfully', 'success');
+}
+
+function handleForecastExport(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const format = formData.get('format');
+    const period = formData.get('period');
+    
+    // Simulate export
+    showToast(`Exporting forecast data as ${format}...`, 'success');
+    closeForecastExportModal();
+    
+    setTimeout(() => {
+        showToast(`Export completed: forecast_data.${format}`, 'success');
+    }, 2000);
+}
+
+function saveForecastData() {
+    const selectedItems = Array.from(forecastManager.selectedItems);
+    showToast(`Saving ${selectedItems.length} forecast items...`, 'success');
+    
+    setTimeout(() => {
+        showToast('All selected forecast items saved successfully', 'success');
+    }, 1500);
+}
+
+function submitForecastForApproval() {
+    const selectedItems = Array.from(forecastManager.selectedItems);
+    showToast(`Submitting ${selectedItems.length} items for approval...`, 'success');
+    
+    setTimeout(() => {
+        showToast('Forecast items submitted for approval successfully', 'success');
+    }, 1500);
+}
+
+function updateForecastPeriod() {
+    const yearRange = document.getElementById('yearRangeFilter').value;
+    const periods = {
+        '2025-2026': 'January 2025 - December 2026',
+        '2026-2027': 'January 2026 - December 2027',
+        '2025-2027': 'January 2025 - December 2027'
+    };
+    
+    document.getElementById('forecastPeriod').textContent = periods[yearRange] || 'Custom Period';
+    forecastManager.applyForecastFilters();
+}
+
+function openReportView() {
+    showToast('Opening forecast report view...', 'info');
+}
+
+function openSeasonalDistributionModal() {
+    showToast('Opening seasonal distribution settings...', 'info');
+}
+
+function loadCustomerBreakdown() {
+    const customer = document.getElementById('modalCustomerSelect').value;
+    if (!customer) return;
+    
+    const customerData = forecastManager.forecastData.filter(item => item.customer === customer);
+    const content = document.getElementById('customerBreakdownContent');
+    
+    if (customerData.length === 0) {
+        content.innerHTML = '<p class="text-gray-600">No data found for this customer.</p>';
+        return;
+    }
+    
+    // Generate breakdown table
+    content.innerHTML = `
+        <div class="mb-4">
+            <h4 class="font-semibold text-lg mb-2">${customer}</h4>
+            <p class="text-gray-600 text-sm">${customerData.length} items forecasted</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="monthly-breakdown-table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Item</th>
+                        <th>2025 Total</th>
+                        <th>2026 Total</th>
+                        <th>Total Forecast</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${customerData.map(item => `
+                        <tr>
+                            <td class="text-left">${item.item}</td>
+                            <td>${forecastManager.formatNumber(forecastManager.calculateYearTotal(item, 2025))}</td>
+                            <td>${forecastManager.formatNumber(forecastManager.calculateYearTotal(item, 2026))}</td>
+                            <td>${forecastManager.formatNumber(forecastManager.calculateYearTotal(item, 2025) + forecastManager.calculateYearTotal(item, 2026))}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td class="text-left font-semibold">Total</td>
+                        <td class="font-semibold">${forecastManager.formatNumber(customerData.reduce((sum, item) => sum + forecastManager.calculateYearTotal(item, 2025), 0))}</td>
+                        <td class="font-semibold">${forecastManager.formatNumber(customerData.reduce((sum, item) => sum + forecastManager.calculateYearTotal(item, 2026), 0))}</td>
+                        <td class="font-semibold">${forecastManager.formatNumber(customerData.reduce((sum, item) => sum + forecastManager.calculateYearTotal(item, 2025) + forecastManager.calculateYearTotal(item, 2026), 0))}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
+
+// Role-based functionality
+function initializeRoleBasedFeatures() {
+    const userRole = '{{ user.role|default:"user" }}';
+
+    switch(userRole) {
+        case 'manager':
+            initializeManagerInterface();
+            break;
+        case 'supply_chain':
+            initializeSupplyChainInterface();
+            break;
+        case 'admin':
+            initializeAdminInterface();
+            break;
+        default:
+            initializeSalesmanInterface();
+    }
+}
+
+function initializeManagerInterface() {
+    // Show manager-specific interface
+    const managerInterface = document.getElementById('managerInterface');
+    if (managerInterface) {
+        managerInterface.classList.remove('hidden');
+    }
+
+    // Load manager-specific data
+    loadManagerMetrics();
+
+    // Update data preservation indicators for team
+    updateTeamDataIndicators();
+}
+
+function initializeSupplyChainInterface() {
+    // Show supply chain-specific interface
+    const scInterface = document.getElementById('supplyChainInterface');
+    if (scInterface) {
+        scInterface.classList.remove('hidden');
+    }
+
+    // Load supply chain metrics
+    loadSupplyChainMetrics();
+
+    // Hide customer management buttons
+    const addCustomerBtn = document.querySelector('[onclick="openNewCustomerModal()"]');
+    if (addCustomerBtn) {
+        addCustomerBtn.style.display = 'none';
+    }
+}
+
+function initializeAdminInterface() {
+    // Load admin-specific data
+    loadGlobalMetrics();
+    updateGlobalDataIndicators();
+}
+
+function initializeSalesmanInterface() {
+    // Standard salesman interface - no additional setup needed
+    updatePersonalDataIndicators();
+}
+
+function loadManagerMetrics() {
+    // Simulate loading manager metrics
+    setTimeout(() => {
+        document.getElementById('managerTotalTeamForecasts').textContent = '45';
+        document.getElementById('managerApprovedForecasts').textContent = '32';
+        document.getElementById('managerPendingApprovals').textContent = '13';
+
+        document.getElementById('teamItemsCount').textContent = '45';
+        document.getElementById('teamSubmittedCount').textContent = '32';
+        document.getElementById('teamPendingCount').textContent = '13';
+    }, 500);
+}
+
+function loadSupplyChainMetrics() {
+    // Simulate loading supply chain metrics
+    setTimeout(() => {
+        document.getElementById('scInventoryValue').textContent = '$1.2M';
+        document.getElementById('scForecastDemand').textContent = '1,247';
+        document.getElementById('scStockAccuracy').textContent = '98.5%';
+    }, 500);
+}
+
+function loadGlobalMetrics() {
+    // Simulate loading global admin metrics
+    setTimeout(() => {
+        document.getElementById('globalItemsCount').textContent = '342';
+        document.getElementById('globalSubmittedCount').textContent = '234';
+        document.getElementById('globalActiveUsers').textContent = '24';
+    }, 500);
+}
+
+function updatePersonalDataIndicators() {
+    // Update personal data indicators for salesman
+    setTimeout(() => {
+        const items = forecastManager ? forecastManager.filteredData.length : 8;
+        const submitted = Math.floor(items * 0.6);
+        const draft = items - submitted;
+
+        document.getElementById('myItemsCount').textContent = items.toString();
+        document.getElementById('mySubmittedCount').textContent = submitted.toString();
+        document.getElementById('myDraftCount').textContent = draft.toString();
+    }, 500);
+}
+
+function updateTeamDataIndicators() {
+    // Already handled in loadManagerMetrics
+}
+
+function updateGlobalDataIndicators() {
+    // Already handled in loadGlobalMetrics
+}
+
+// Role-specific action handlers
+function openGlobalAnalytics() {
+    showToast('Opening global analytics dashboard...', 'info');
+    // Navigate to global analytics
+}
+
+function openUserManagement() {
+    window.location.href = '/user-management/';
+}
+
+function openApprovalCenter() {
+    window.location.href = '/approval-center/';
+}
+
+function openTeamOverview() {
+    showToast('Opening team overview...', 'info');
+    // Show team overview modal or navigate
+}
+
+function openInventoryPlanning() {
+    showToast('Opening inventory planning module...', 'info');
+    // Navigate to inventory planning
+}
+
+function openDistributionView() {
+    showToast('Opening distribution view...', 'info');
+    // Navigate to distribution management
+}
+
+function openStockManagement() {
+    showToast('Opening stock management...', 'info');
+    // Open stock management modal
+}
+
+function openTeamForecastView() {
+    showToast('Loading team forecast data...', 'info');
+    // Switch to team view
+    forecastManager.currentView = 'team-view';
+    forecastManager.loadTeamForecastData();
+}
+
+function openBulkApprovalModal() {
+    showToast('Opening bulk approval interface...', 'info');
+    // Open bulk approval modal
+}
+
+function openInventoryPlanningModal() {
+    showToast('Opening inventory planning tools...', 'info');
+    // Open inventory planning modal
+}
+
+function openDistributionModal() {
+    showToast('Opening distribution planning...', 'info');
+    // Open distribution modal
+}
+
+// Initialize forecast manager
+let forecastManager;
+document.addEventListener('DOMContentLoaded', function() {
+    forecastManager = new RollingForecastManager();
+
+    // Initialize role-based features after forecast manager is ready
+    setTimeout(() => {
+        initializeRoleBasedFeatures();
+    }, 1000);
+});
+</script>
+{% endblock %}

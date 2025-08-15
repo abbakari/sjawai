@@ -1,566 +1,585 @@
 /**
- * STMBudget - Advanced JavaScript Framework
- * Mobile-First SPA-like functionality with Django backend
+ * STMBudget - Advanced SPA-like JavaScript Application
+ * Mobile-first, PWA-ready application with advanced caching and navigation
  */
 
-class STMBudgetApp {
+class STMApp {
     constructor() {
-        this.cache = new Map();
-        this.loadingStates = new Set();
+        this.isInitialized = false;
         this.currentPage = null;
-        this.navigationHistory = [];
-        this.touchStartX = null;
-        this.touchStartY = null;
-        this.scrollPosition = {};
+        this.loadingTimeout = null;
+        this.navigationCache = new Map();
+        this.performanceMetrics = {
+            pageLoads: 0,
+            totalLoadTime: 0,
+            cacheHits: 0,
+            cacheMisses: 0
+        };
         
-        this.init();
-    }
-    
-    init() {
-        this.setupEventListeners();
-        this.setupServiceWorker();
-        this.setupOfflineSupport();
-        this.setupGestureNavigation();
-        this.setupInfiniteScroll();
-        this.setupPullToRefresh();
-        this.preloadCriticalResources();
-        this.setupPerformanceMonitoring();
+        // Configuration
+        this.config = {
+            animationDuration: 300,
+            cacheTimeout: 300000, // 5 minutes
+            preloadDelay: 100,
+            maxCacheSize: 50,
+            enableAnalytics: true,
+            enablePrefetch: true,
+            enableServiceWorker: true
+        };
         
-        console.log('STMBudget App initialized');
+        // Bind methods
+        this.navigateTo = this.navigateTo.bind(this);
+        this.handlePopState = this.handlePopState.bind(this);
+        this.handleFormSubmit = this.handleFormSubmit.bind(this);
+        this.handleLinkClick = this.handleLinkClick.bind(this);
     }
-    
-    // Event Listeners Setup
+
+    /**
+     * Initialize the application
+     */
+    async init() {
+        if (this.isInitialized) return;
+        
+        console.log('🚀 Initializing STMBudget App...');
+        
+        try {
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            // Initialize components
+            this.initializeComponents();
+            
+            // Setup navigation
+            this.setupNavigation();
+            
+            // Initialize data manager
+            if (window.dataManager) {
+                await window.dataManager.init();
+            }
+            
+            // Setup service worker
+            if (this.config.enableServiceWorker) {
+                this.setupServiceWorker();
+            }
+            
+            // Setup performance monitoring
+            this.setupPerformanceMonitoring();
+            
+            // Initialize touch gestures
+            this.setupTouchGestures();
+            
+            // Mark as initialized
+            this.isInitialized = true;
+            
+            console.log('✅ STMBudget App initialized successfully');
+            
+            // Dispatch ready event
+            this.dispatchEvent('app:ready');
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize STMBudget App:', error);
+            this.handleError(error);
+        }
+    }
+
+    /**
+     * Setup event listeners
+     */
     setupEventListeners() {
-        // SPA Navigation
-        document.addEventListener('click', this.handleNavigation.bind(this));
+        // Navigation events
+        window.addEventListener('popstate', this.handlePopState);
         
-        // Form submissions
-        document.addEventListener('submit', this.handleFormSubmission.bind(this));
+        // Form events
+        document.addEventListener('submit', this.handleFormSubmit);
         
-        // Keyboard shortcuts
-        document.addEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
+        // Link events
+        document.addEventListener('click', this.handleLinkClick);
         
-        // Page visibility for performance optimization
-        document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
-        
-        // Network status
-        window.addEventListener('online', this.handleOnline.bind(this));
-        window.addEventListener('offline', this.handleOffline.bind(this));
-        
-        // Window events
-        window.addEventListener('beforeunload', this.saveScrollPosition.bind(this));
-        window.addEventListener('popstate', this.handlePopState.bind(this));
-        
-        // Touch events for mobile interactions
-        document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
-        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
-    }
-    
-    // SPA-like Navigation
-    async handleNavigation(e) {
-        const link = e.target.closest('a[href]');
-        if (!link || link.target === '_blank' || link.href.includes('mailto:') || link.href.includes('tel:')) {
-            return;
-        }
-        
-        const url = new URL(link.href);
-        if (url.origin !== window.location.origin) {
-            return;
-        }
-        
-        e.preventDefault();
-        await this.navigateTo(url.pathname + url.search);
-    }
-    
-    async navigateTo(url, options = {}) {
-        if (this.loadingStates.has(url)) {
-            return;
-        }
-        
-        const { pushState = true, showLoader = true } = options;
-        
-        this.loadingStates.add(url);
-        
-        if (showLoader) {
-            this.showPageLoader();
-        }
-        
-        try {
-            // Save current scroll position
-            this.saveScrollPosition();
-            
-            // Check cache first
-            let html = this.cache.get(url);
-            
-            if (!html) {
-                // Fetch new content
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                html = await response.text();
-                
-                // Cache the result
-                this.cache.set(url, html);
-                
-                // Limit cache size
-                if (this.cache.size > 10) {
-                    const firstKey = this.cache.keys().next().value;
-                    this.cache.delete(firstKey);
-                }
-            }
-            
-            // Update page content
-            this.updatePageContent(html);
-            
-            // Update browser history
-            if (pushState) {
-                this.navigationHistory.push(window.location.href);
-                history.pushState({ url }, '', url);
-            }
-            
-            // Restore or reset scroll position
-            setTimeout(() => {
-                this.restoreScrollPosition(url);
-            }, 100);
-            
-            // Update current page reference
-            this.currentPage = url;
-            
-            // Trigger page change event
-            this.dispatchEvent('pageChange', { url });
-            
-        } catch (error) {
-            console.error('Navigation error:', error);
-            this.showToast('Failed to load page. Please try again.', 'error');
-            
-            // Fallback to traditional navigation
-            window.location.href = url;
-        } finally {
-            this.loadingStates.delete(url);
-            this.hidePageLoader();
-        }
-    }
-    
-    updatePageContent(html) {
-        const parser = new DOMParser();
-        const newDoc = parser.parseFromString(html, 'text/html');
-        
-        // Update title
-        document.title = newDoc.title;
-        
-        // Update main content
-        const newContent = newDoc.querySelector('main');
-        const currentContent = document.querySelector('main');
-        
-        if (newContent && currentContent) {
-            // Add exit animation
-            currentContent.style.opacity = '0';
-            currentContent.style.transform = 'translateX(-20px)';
-            
-            setTimeout(() => {
-                currentContent.innerHTML = newContent.innerHTML;
-                
-                // Add enter animation
-                currentContent.style.opacity = '1';
-                currentContent.style.transform = 'translateX(0)';
-                
-                // Re-initialize page-specific functionality
-                this.initializePageComponents();
-            }, 150);
-        }
-        
-        // Update navigation state
-        this.updateNavigationState();
-    }
-    
-    // Advanced Form Handling
-    async handleFormSubmission(e) {
-        const form = e.target;
-        if (!form.hasAttribute('data-ajax') && !form.classList.contains('ajax-form')) {
-            return;
-        }
-        
-        e.preventDefault();
-        
-        const submitButton = form.querySelector('[type="submit"]');
-        const originalText = submitButton ? submitButton.textContent : '';
-        
-        try {
-            // Show loading state
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = `
-                    <span class="spinner w-4 h-4 mr-2"></span>
-                    ${originalText.includes('Sign In') ? 'Signing In...' : 'Submitting...'}
-                `;
-            }
-            
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-                method: form.method,
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-                if (result.redirect) {
-                    await this.navigateTo(result.redirect);
-                } else if (result.message) {
-                    this.showToast(result.message, 'success');
-                }
-                
-                // Reset form if successful
-                form.reset();
+        // Visibility change for performance
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.pauseBackgroundTasks();
             } else {
-                this.handleFormErrors(form, result.errors || { __all__: [result.message || 'An error occurred'] });
-            }
-            
-        } catch (error) {
-            console.error('Form submission error:', error);
-            this.showToast('Network error. Please try again.', 'error');
-        } finally {
-            // Restore button state
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
-            }
-        }
-    }
-    
-    handleFormErrors(form, errors) {
-        // Clear previous errors
-        form.querySelectorAll('.error-message').forEach(el => el.remove());
-        form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-        
-        // Display new errors
-        Object.entries(errors).forEach(([field, messages]) => {
-            if (field === '__all__') {
-                this.showToast(messages[0], 'error');
-                return;
-            }
-            
-            const input = form.querySelector(`[name="${field}"]`);
-            if (input) {
-                input.classList.add('error');
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message text-red-600 text-sm mt-1';
-                errorDiv.textContent = messages[0];
-                input.parentElement.appendChild(errorDiv);
+                this.resumeBackgroundTasks();
             }
         });
+        
+        // Online/offline events
+        window.addEventListener('online', () => {
+            this.handleConnectivityChange(true);
+        });
+        
+        window.addEventListener('offline', () => {
+            this.handleConnectivityChange(false);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            this.handleKeyboardShortcuts(e);
+        });
+        
+        // Touch events for mobile
+        if ('ontouchstart' in window) {
+            this.setupMobileEvents();
+        }
     }
-    
-    // Touch and Gesture Support
-    handleTouchStart(e) {
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
-    }
-    
-    handleTouchMove(e) {
-        if (!this.touchStartX || !this.touchStartY) return;
+
+    /**
+     * Setup mobile-specific events
+     */
+    setupMobileEvents() {
+        // Add touch class
+        document.body.classList.add('touch-device');
         
-        const currentX = e.touches[0].clientX;
-        const currentY = e.touches[0].clientY;
-        
-        const diffX = this.touchStartX - currentX;
-        const diffY = this.touchStartY - currentY;
-        
-        // Horizontal swipe detection
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                // Swipe left (next page)
-                this.handleSwipeNavigation('next');
-            } else {
-                // Swipe right (previous page)
-                this.handleSwipeNavigation('prev');
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
             }
-        }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Handle viewport changes
+        window.addEventListener('resize', this.debounce(() => {
+            this.handleViewportChange();
+        }, 250));
     }
-    
-    handleTouchEnd(e) {
-        this.touchStartX = null;
-        this.touchStartY = null;
-    }
-    
-    handleSwipeNavigation(direction) {
-        if (direction === 'prev' && this.navigationHistory.length > 0) {
-            const prevUrl = this.navigationHistory.pop();
-            this.navigateTo(prevUrl, { pushState: false });
-        }
-    }
-    
-    // Gesture Navigation Setup
-    setupGestureNavigation() {
-        if ('navigation' in window && 'addEventListener' in window.navigation) {
-            window.navigation.addEventListener('navigate', (e) => {
-                if (e.canIntercept && e.destination.url !== window.location.href) {
-                    e.intercept({
-                        handler: () => this.navigateTo(e.destination.url, { pushState: false })
-                    });
-                }
-            });
-        }
-    }
-    
-    // Pull to Refresh
-    setupPullToRefresh() {
-        let pullStartY = null;
-        let pullElement = null;
+
+    /**
+     * Setup touch gestures
+     */
+    setupTouchGestures() {
+        let startX = 0;
+        let startY = 0;
+        let isGesturing = false;
         
         document.addEventListener('touchstart', (e) => {
-            if (window.scrollY === 0) {
-                pullStartY = e.touches[0].clientY;
+            if (e.touches.length === 1) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isGesturing = true;
             }
         }, { passive: true });
         
         document.addEventListener('touchmove', (e) => {
-            if (pullStartY !== null) {
-                const currentY = e.touches[0].clientY;
-                const pullDistance = currentY - pullStartY;
-                
-                if (pullDistance > 0) {
-                    if (!pullElement) {
-                        pullElement = this.createPullToRefreshIndicator();
-                    }
-                    
-                    const progress = Math.min(pullDistance / 100, 1);
-                    pullElement.style.transform = `translateY(${pullDistance * 0.5}px)`;
-                    pullElement.style.opacity = progress;
-                    
-                    if (pullDistance > 100) {
-                        pullElement.classList.add('ready');
-                    } else {
-                        pullElement.classList.remove('ready');
-                    }
+            if (!isGesturing || e.touches.length !== 1) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            
+            // Swipe detection
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    this.handleSwipeRight();
+                } else {
+                    this.handleSwipeLeft();
                 }
+                isGesturing = false;
             }
-        }, { passive: false });
+        }, { passive: true });
         
         document.addEventListener('touchend', () => {
-            if (pullElement && pullElement.classList.contains('ready')) {
-                this.refreshCurrentPage();
-            }
-            
-            if (pullElement) {
-                pullElement.remove();
-                pullElement = null;
-            }
-            
-            pullStartY = null;
+            isGesturing = false;
         }, { passive: true });
     }
-    
-    createPullToRefreshIndicator() {
-        const indicator = document.createElement('div');
-        indicator.className = 'pull-to-refresh-indicator';
-        indicator.innerHTML = `
-            <div class="spinner w-6 h-6 mx-auto"></div>
-            <div class="text-sm text-gray-600 mt-2">Pull to refresh</div>
-        `;
-        indicator.style.cssText = `
-            position: fixed;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 1rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 1000;
-            text-align: center;
-            opacity: 0;
-            transition: all 0.3s ease;
-        `;
-        
-        document.body.appendChild(indicator);
-        return indicator;
-    }
-    
-    async refreshCurrentPage() {
-        // Clear cache for current page
-        this.cache.delete(this.currentPage);
-        
-        // Show refresh indicator
-        this.showToast('Refreshing...', 'info');
-        
-        // Re-fetch current page
-        await this.navigateTo(this.currentPage, { pushState: false, showLoader: false });
-        
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
+
+    /**
+     * Handle swipe gestures
+     */
+    handleSwipeRight() {
+        // Navigate back
+        if (window.history.length > 1) {
+            window.history.back();
         }
     }
-    
-    // Data Preloading and Caching
-    preloadCriticalResources() {
-        // Preload common pages based on user role
-        const userRole = window.USER_DATA?.role;
-        const preloadUrls = this.getPreloadUrls(userRole);
-        
-        // Use requestIdleCallback for non-blocking preloading
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                this.preloadUrls(preloadUrls);
-            });
-        } else {
-            setTimeout(() => this.preloadUrls(preloadUrls), 2000);
+
+    handleSwipeLeft() {
+        // Navigate forward if possible
+        if (window.history.length > 1) {
+            window.history.forward();
         }
     }
-    
-    getPreloadUrls(role) {
-        const baseUrls = ['/dashboard/'];
+
+    /**
+     * Initialize components
+     */
+    initializeComponents() {
+        // Initialize toast notifications
+        this.initializeToasts();
         
-        switch (role) {
-            case 'admin':
-                return [...baseUrls, '/user-management/', '/admin-panel/'];
-            case 'manager':
-                return [...baseUrls, '/approval-center/', '/sales-budget/'];
-            case 'salesman':
-                return [...baseUrls, '/sales-budget/', '/rolling-forecast/'];
-            case 'supply_chain':
-                return [...baseUrls, '/inventory-management/', '/distribution-management/'];
-            default:
-                return baseUrls;
-        }
-    }
-    
-    async preloadUrls(urls) {
-        for (const url of urls) {
-            try {
-                const response = await fetch(url, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                
-                if (response.ok) {
-                    const html = await response.text();
-                    this.cache.set(url, html);
-                }
-            } catch (error) {
-                console.log(`Failed to preload ${url}:`, error);
-            }
-            
-            // Small delay between requests
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-    }
-    
-    // Infinite Scroll Implementation
-    setupInfiniteScroll() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const element = entry.target;
-                    const url = element.dataset.loadMore;
-                    
-                    if (url && !this.loadingStates.has(url)) {
-                        this.loadMoreContent(element, url);
-                    }
-                }
-            });
-        }, { rootMargin: '100px' });
+        // Initialize modals
+        this.initializeModals();
         
-        // Observe load-more triggers
-        document.querySelectorAll('[data-load-more]').forEach(el => {
-            observer.observe(el);
-        });
+        // Initialize forms
+        this.initializeForms();
+        
+        // Initialize charts if available
+        if (window.STMCharts) {
+            window.STMCharts.init();
+        }
+        
+        // Initialize data tables
+        this.initializeDataTables();
+        
+        // Initialize tooltips
+        this.initializeTooltips();
     }
-    
-    async loadMoreContent(element, url) {
-        this.loadingStates.add(url);
+
+    /**
+     * Setup navigation system
+     */
+    setupNavigation() {
+        this.currentPage = window.location.pathname;
+        
+        // Preload critical pages
+        if (this.config.enablePrefetch) {
+            this.preloadCriticalPages();
+        }
+        
+        // Update active navigation
+        this.updateActiveNavigation();
+    }
+
+    /**
+     * Navigate to a new page with SPA-like behavior
+     */
+    async navigateTo(url, options = {}) {
+        const startTime = performance.now();
         
         try {
-            const response = await fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
+            // Show loading state
+            this.showPageLoading();
             
-            if (response.ok) {
-                const html = await response.text();
-                const container = element.previousElementSibling;
-                container.insertAdjacentHTML('beforeend', html);
-                
-                // Update or remove load-more trigger
-                const newUrl = element.dataset.nextUrl;
-                if (newUrl) {
-                    element.dataset.loadMore = newUrl;
-                } else {
-                    element.remove();
-                }
+            // Check cache first
+            const cachedContent = this.getFromCache(url);
+            
+            let content;
+            if (cachedContent && !options.forceRefresh) {
+                content = cachedContent;
+                this.performanceMetrics.cacheHits++;
+            } else {
+                // Fetch new content
+                content = await this.fetchPageContent(url);
+                this.cacheContent(url, content);
+                this.performanceMetrics.cacheMisses++;
             }
+            
+            // Update page content
+            await this.updatePageContent(content, url);
+            
+            // Update browser history
+            if (!options.skipHistory) {
+                window.history.pushState({ url }, '', url);
+            }
+            
+            // Update navigation state
+            this.currentPage = url;
+            this.updateActiveNavigation();
+            
+            // Hide loading state
+            this.hidePageLoading();
+            
+            // Track performance
+            const loadTime = performance.now() - startTime;
+            this.trackPageLoad(url, loadTime);
+            
+            // Dispatch navigation event
+            this.dispatchEvent('app:navigate', { url, loadTime });
+            
         } catch (error) {
-            console.error('Load more error:', error);
-            this.showToast('Failed to load more content', 'error');
-        } finally {
-            this.loadingStates.delete(url);
+            console.error('Navigation error:', error);
+            this.hidePageLoading();
+            this.showToast('Failed to load page. Please try again.', 'error');
+            throw error;
         }
     }
-    
-    // Scroll Position Management
-    saveScrollPosition() {
-        this.scrollPosition[this.currentPage] = window.scrollY;
-    }
-    
-    restoreScrollPosition(url) {
-        const savedPosition = this.scrollPosition[url];
-        if (savedPosition !== undefined) {
-            window.scrollTo(0, savedPosition);
-        } else {
-            window.scrollTo(0, 0);
-        }
-    }
-    
-    // UI Helper Methods
-    showPageLoader() {
-        let loader = document.getElementById('page-loader');
-        if (!loader) {
-            loader = document.createElement('div');
-            loader.id = 'page-loader';
-            loader.className = 'fixed top-0 left-0 w-full h-1 bg-blue-600 z-50';
-            loader.style.transform = 'scaleX(0)';
-            loader.style.transformOrigin = 'left';
-            loader.style.transition = 'transform 0.3s ease';
-            document.body.appendChild(loader);
+
+    /**
+     * Fetch page content via AJAX
+     */
+    async fetchPageContent(url) {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        requestAnimationFrame(() => {
-            loader.style.transform = 'scaleX(0.7)';
-        });
+        return await response.text();
     }
-    
-    hidePageLoader() {
-        const loader = document.getElementById('page-loader');
-        if (loader) {
-            loader.style.transform = 'scaleX(1)';
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.remove(), 300);
-            }, 200);
+
+    /**
+     * Update page content with smooth transitions
+     */
+    async updatePageContent(html, url) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extract main content
+        const newContent = doc.querySelector('main') || doc.querySelector('#main-content') || doc.body;
+        const currentContent = document.querySelector('main') || document.querySelector('#main-content');
+        
+        if (newContent && currentContent) {
+            // Fade out current content
+            await this.animateElement(currentContent, 'fadeOut');
+            
+            // Update content
+            currentContent.innerHTML = newContent.innerHTML;
+            
+            // Update page title
+            const newTitle = doc.querySelector('title');
+            if (newTitle) {
+                document.title = newTitle.textContent;
+            }
+            
+            // Re-initialize components for new content
+            this.initializePageComponents(currentContent);
+            
+            // Fade in new content
+            await this.animateElement(currentContent, 'fadeIn');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
-    
+
+    /**
+     * Initialize components for newly loaded content
+     */
+    initializePageComponents(container) {
+        // Re-initialize forms
+        this.initializeForms(container);
+        
+        // Re-initialize tooltips
+        this.initializeTooltips(container);
+        
+        // Re-initialize charts
+        if (window.STMCharts) {
+            container.querySelectorAll('.chart-container').forEach(chart => {
+                window.STMCharts.initializeChart(chart);
+            });
+        }
+        
+        // Re-initialize data tables
+        this.initializeDataTables(container);
+    }
+
+    /**
+     * Handle popstate events (back/forward navigation)
+     */
+    handlePopState(event) {
+        const url = event.state?.url || window.location.pathname;
+        this.navigateTo(url, { skipHistory: true });
+    }
+
+    /**
+     * Handle form submissions with AJAX
+     */
+    async handleFormSubmit(event) {
+        const form = event.target;
+        
+        // Check if form should be handled by SPA
+        if (!form.classList.contains('spa-form') && !form.hasAttribute('data-spa')) {
+            return;
+        }
+        
+        event.preventDefault();
+        
+        try {
+            const formData = new FormData(form);
+            const method = form.method || 'POST';
+            const action = form.action || window.location.pathname;
+            
+            // Show loading state on submit button
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn) {
+                this.setButtonLoading(submitBtn, true);
+            }
+            
+            const response = await fetch(action, {
+                method: method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': window.CSRF_TOKEN || ''
+                },
+                credentials: 'same-origin'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showToast(result.message || 'Operation completed successfully', 'success');
+                
+                // Handle redirect
+                if (result.redirect) {
+                    this.navigateTo(result.redirect);
+                }
+                
+                // Refresh current page data if needed
+                if (result.refresh) {
+                    this.refreshPageData();
+                }
+            } else {
+                this.showToast(result.message || 'Operation failed', 'error');
+                
+                // Show form errors
+                if (result.errors) {
+                    this.showFormErrors(form, result.errors);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.showToast('An error occurred. Please try again.', 'error');
+        } finally {
+            // Remove loading state
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn) {
+                this.setButtonLoading(submitBtn, false);
+            }
+        }
+    }
+
+    /**
+     * Handle link clicks for SPA navigation
+     */
+    handleLinkClick(event) {
+        const link = event.target.closest('a');
+        
+        if (!link || 
+            !link.href || 
+            link.target === '_blank' ||
+            link.hasAttribute('download') ||
+            link.href.startsWith('mailto:') ||
+            link.href.startsWith('tel:') ||
+            link.href.includes('://') && !link.href.startsWith(window.location.origin) ||
+            link.classList.contains('external-link')) {
+            return;
+        }
+        
+        event.preventDefault();
+        
+        // Add haptic feedback on mobile
+        if (navigator.vibrate) {
+            navigator.vibrate(10);
+        }
+        
+        this.navigateTo(link.href);
+    }
+
+    /**
+     * Cache management
+     */
+    cacheContent(url, content) {
+        if (this.navigationCache.size >= this.config.maxCacheSize) {
+            // Remove oldest entry
+            const firstKey = this.navigationCache.keys().next().value;
+            this.navigationCache.delete(firstKey);
+        }
+        
+        this.navigationCache.set(url, {
+            content,
+            timestamp: Date.now()
+        });
+    }
+
+    getFromCache(url) {
+        const cached = this.navigationCache.get(url);
+        
+        if (!cached) return null;
+        
+        // Check if cache is expired
+        if (Date.now() - cached.timestamp > this.config.cacheTimeout) {
+            this.navigationCache.delete(url);
+            return null;
+        }
+        
+        return cached.content;
+    }
+
+    clearCache() {
+        this.navigationCache.clear();
+    }
+
+    /**
+     * Loading states
+     */
+    showPageLoading() {
+        const loader = document.getElementById('page-loader') || this.createPageLoader();
+        loader.classList.remove('hidden');
+        
+        this.loadingTimeout = setTimeout(() => {
+            this.hidePageLoading();
+            this.showToast('Loading is taking longer than expected...', 'warning');
+        }, 10000);
+    }
+
+    hidePageLoading() {
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+            loader.classList.add('hidden');
+        }
+        
+        if (this.loadingTimeout) {
+            clearTimeout(this.loadingTimeout);
+            this.loadingTimeout = null;
+        }
+    }
+
+    createPageLoader() {
+        const loader = document.createElement('div');
+        loader.id = 'page-loader';
+        loader.className = 'fixed top-0 left-0 w-full h-1 bg-blue-600 z-50 loading-bar hidden';
+        loader.innerHTML = '<div class="h-full bg-blue-800 animate-pulse"></div>';
+        document.body.appendChild(loader);
+        return loader;
+    }
+
+    setButtonLoading(button, loading) {
+        if (loading) {
+            button.disabled = true;
+            button.dataset.originalText = button.textContent;
+            button.innerHTML = '<span class="spinner mr-2"></span>Loading...';
+        } else {
+            button.disabled = false;
+            button.textContent = button.dataset.originalText || 'Submit';
+        }
+    }
+
+    /**
+     * Toast notifications
+     */
+    initializeToasts() {
+        if (!document.getElementById('toast-container')) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed top-4 right-4 z-50 space-y-2';
+            document.body.appendChild(container);
+        }
+    }
+
     showToast(message, type = 'info', duration = 5000) {
         const container = document.getElementById('toast-container');
         if (!container) return;
         
         const toast = document.createElement('div');
-        toast.className = `toast ${type} slide-up`;
+        toast.className = `toast ${type} slide-in-right`;
         toast.innerHTML = `
             <div class="flex items-center justify-between">
                 <span>${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-4 text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
@@ -570,246 +589,234 @@ class STMBudgetApp {
         
         container.appendChild(toast);
         
-        // Auto-remove after duration
+        // Auto remove
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
+            if (toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }
         }, duration);
     }
-    
-    // Keyboard Shortcuts
-    handleKeyboardShortcuts(e) {
-        // Ctrl/Cmd + K for search
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            this.openSearch();
-        }
-        
-        // Ctrl/Cmd + R for refresh
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            this.refreshCurrentPage();
-        }
-        
-        // ESC to close modals
-        if (e.key === 'Escape') {
-            this.closeTopModal();
-        }
+
+    /**
+     * Animations
+     */
+    async animateElement(element, animation) {
+        return new Promise(resolve => {
+            element.style.transition = `all ${this.config.animationDuration}ms ease`;
+            
+            switch (animation) {
+                case 'fadeOut':
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(-10px)';
+                    break;
+                case 'fadeIn':
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                    break;
+            }
+            
+            setTimeout(resolve, this.config.animationDuration);
+        });
     }
-    
-    openSearch() {
-        // Implement global search functionality
-        console.log('Search opened');
-    }
-    
-    closeTopModal() {
-        const modals = document.querySelectorAll('.modal-overlay');
-        if (modals.length > 0) {
-            modals[modals.length - 1].remove();
-        }
-    }
-    
-    // Performance Monitoring
+
+    /**
+     * Performance monitoring
+     */
     setupPerformanceMonitoring() {
-        // Monitor page load times
-        window.addEventListener('load', () => {
-            if ('performance' in window && 'getEntriesByType' in performance) {
-                const navigation = performance.getEntriesByType('navigation')[0];
-                const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-                
-                console.log(`Page load time: ${loadTime}ms`);
-                
-                // Report slow pages
-                if (loadTime > 3000) {
-                    console.warn('Slow page load detected');
+        if (!this.config.enableAnalytics) return;
+        
+        // Monitor navigation performance
+        this.performanceObserver = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+                if (entry.entryType === 'navigation') {
+                    console.log('Navigation timing:', entry);
                 }
             }
         });
         
-        // Monitor memory usage
-        if ('memory' in performance) {
-            setInterval(() => {
-                const memory = performance.memory;
-                const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
-                
-                if (usedMB > 100) {
-                    console.warn(`High memory usage: ${usedMB}MB`);
-                    this.optimizeMemory();
-                }
-            }, 30000);
-        }
+        this.performanceObserver.observe({ entryTypes: ['navigation'] });
     }
-    
-    optimizeMemory() {
-        // Clear old cache entries
-        if (this.cache.size > 5) {
-            const entries = Array.from(this.cache.entries());
-            entries.slice(0, Math.floor(entries.length / 2)).forEach(([key]) => {
-                this.cache.delete(key);
-            });
-        }
+
+    trackPageLoad(url, loadTime) {
+        this.performanceMetrics.pageLoads++;
+        this.performanceMetrics.totalLoadTime += loadTime;
         
-        // Force garbage collection if available
-        if ('gc' in window) {
-            window.gc();
+        if (this.config.enableAnalytics) {
+            console.log(`📊 Page load: ${url} (${loadTime.toFixed(2)}ms)`);
         }
     }
-    
-    // Service Worker Setup
-    setupServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/sw.js')
-                .then(registration => {
-                    console.log('SW registered:', registration);
-                    
-                    // Handle updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                this.showToast('App update available. Refresh to update.', 'info');
-                            }
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.log('SW registration failed:', error);
-                });
-        }
+
+    getPerformanceMetrics() {
+        return {
+            ...this.performanceMetrics,
+            averageLoadTime: this.performanceMetrics.totalLoadTime / this.performanceMetrics.pageLoads || 0,
+            cacheHitRate: this.performanceMetrics.cacheHits / (this.performanceMetrics.cacheHits + this.performanceMetrics.cacheMisses) || 0
+        };
     }
-    
-    // Offline Support
-    setupOfflineSupport() {
-        window.addEventListener('online', this.handleOnline.bind(this));
-        window.addEventListener('offline', this.handleOffline.bind(this));
-        
-        // Check initial state
-        if (!navigator.onLine) {
-            this.handleOffline();
-        }
+
+    /**
+     * Utility functions
+     */
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
-    
-    handleOnline() {
-        this.showToast('Back online', 'success');
-        document.body.classList.remove('offline');
-        
-        // Sync any pending data
-        this.syncPendingData();
+
+    dispatchEvent(eventName, detail = {}) {
+        const event = new CustomEvent(eventName, { detail });
+        document.dispatchEvent(event);
     }
-    
-    handleOffline() {
-        this.showToast('You are offline', 'warning');
-        document.body.classList.add('offline');
+
+    handleError(error) {
+        console.error('STMApp Error:', error);
+        this.showToast('An unexpected error occurred. Please refresh the page.', 'error');
     }
-    
-    syncPendingData() {
-        // Implement data synchronization when back online
-        console.log('Syncing pending data...');
+
+    // Additional methods for form handling, modals, etc. would be implemented here
+    initializeForms(container = document) {
+        // Form initialization logic
     }
-    
-    // Page Visibility Handling
-    handleVisibilityChange() {
-        if (document.hidden) {
-            // Page hidden - pause non-critical operations
-            this.pauseBackgroundTasks();
-        } else {
-            // Page visible - resume operations
-            this.resumeBackgroundTasks();
-        }
-    }
-    
-    pauseBackgroundTasks() {
-        // Pause animations, polling, etc.
-        console.log('Pausing background tasks');
-    }
-    
-    resumeBackgroundTasks() {
-        // Resume operations
-        console.log('Resuming background tasks');
-    }
-    
-    // Page Component Initialization
-    initializePageComponents() {
-        // Re-initialize components after page change
-        this.initializeTooltips();
-        this.initializeModals();
-        this.initializeCharts();
-        this.initializeForms();
-    }
-    
-    initializeTooltips() {
-        // Initialize tooltip functionality
-        document.querySelectorAll('[data-tooltip]').forEach(el => {
-            // Add tooltip behavior
-        });
-    }
-    
+
     initializeModals() {
-        // Initialize modal functionality
-        document.querySelectorAll('[data-modal]').forEach(el => {
-            el.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.openModal(el.dataset.modal);
-            });
-        });
+        // Modal initialization logic
     }
-    
-    initializeCharts() {
-        // Initialize chart components
-        document.querySelectorAll('[data-chart]').forEach(el => {
-            // Initialize chart
-        });
+
+    initializeDataTables(container = document) {
+        // Data table initialization logic
     }
-    
-    initializeForms() {
-        // Initialize form enhancements
-        document.querySelectorAll('.form-input').forEach(input => {
-            // Add form input enhancements
-        });
+
+    initializeTooltips(container = document) {
+        // Tooltip initialization logic
     }
-    
-    openModal(modalId) {
-        // Implement modal opening logic
-        console.log(`Opening modal: ${modalId}`);
-    }
-    
-    // Navigation State Management
-    updateNavigationState() {
-        // Update active navigation items
-        const currentPath = window.location.pathname;
-        
-        document.querySelectorAll('.nav-link').forEach(link => {
-            if (link.pathname === currentPath) {
+
+    updateActiveNavigation() {
+        // Update active navigation state
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === this.currentPage) {
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');
             }
         });
     }
-    
-    handlePopState(e) {
-        if (e.state && e.state.url) {
-            this.navigateTo(e.state.url, { pushState: false });
+
+    preloadCriticalPages() {
+        // Preload important pages
+        const criticalPages = ['/dashboard/', '/sales-budget/', '/user-management/'];
+        
+        criticalPages.forEach(page => {
+            setTimeout(() => {
+                this.fetchPageContent(page).then(content => {
+                    this.cacheContent(page, content);
+                }).catch(() => {
+                    // Silently fail for preloading
+                });
+            }, this.config.preloadDelay * criticalPages.indexOf(page));
+        });
+    }
+
+    handleKeyboardShortcuts(e) {
+        // Implement keyboard shortcuts
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 'k':
+                    e.preventDefault();
+                    // Open search
+                    break;
+                case '/':
+                    e.preventDefault();
+                    // Focus search
+                    break;
+            }
         }
     }
-    
-    // Event Dispatcher
-    dispatchEvent(eventName, detail = {}) {
-        const event = new CustomEvent(eventName, { detail });
-        document.dispatchEvent(event);
+
+    handleConnectivityChange(isOnline) {
+        if (isOnline) {
+            this.showToast('Connection restored', 'success', 3000);
+        } else {
+            this.showToast('You are offline. Some features may be limited.', 'warning', 8000);
+        }
+    }
+
+    handleViewportChange() {
+        // Handle viewport changes for responsive behavior
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+
+    pauseBackgroundTasks() {
+        // Pause non-critical background tasks when page is hidden
+    }
+
+    resumeBackgroundTasks() {
+        // Resume background tasks when page becomes visible
+    }
+
+    setupServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(registration => {
+                    console.log('SW registered:', registration);
+                })
+                .catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+        }
+    }
+
+    showFormErrors(form, errors) {
+        // Clear existing errors
+        form.querySelectorAll('.error-message').forEach(el => el.remove());
+        
+        // Show new errors
+        Object.entries(errors).forEach(([field, messages]) => {
+            const input = form.querySelector(`[name="${field}"]`);
+            if (input) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message text-red-600 text-sm mt-1';
+                errorDiv.textContent = Array.isArray(messages) ? messages[0] : messages;
+                input.parentNode.appendChild(errorDiv);
+            }
+        });
+    }
+
+    refreshPageData() {
+        // Refresh current page data without full navigation
+        if (this.currentPage) {
+            this.navigateTo(this.currentPage, { forceRefresh: true, skipHistory: true });
+        }
     }
 }
 
 // Initialize the application
-const app = new STMBudgetApp();
+const app = new STMApp();
 
-// Global utilities
+// Global reference
 window.STMApp = app;
-window.showToast = app.showToast.bind(app);
-window.navigateTo = app.navigateTo.bind(app);
 
-// Export for module systems
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => app.init());
+} else {
+    app.init();
+}
+
+// Global utility functions
+window.showToast = (message, type, duration) => app.showToast(message, type, duration);
+window.navigateTo = (url, options) => app.navigateTo(url, options);
+
+// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = STMBudgetApp;
+    module.exports = STMApp;
 }
