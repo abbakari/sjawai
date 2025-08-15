@@ -51,7 +51,7 @@ def login_view(request):
     
     context = {
         'page_title': 'Sign In',
-        'debug': settings.DEBUG if hasattr('settings', 'DEBUG') else False
+        'debug': settings.DEBUG if hasattr(settings, 'DEBUG') else False
     }
     return render(request, 'auth/login.html', context)
 
