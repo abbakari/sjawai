@@ -1,0 +1,437 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Sales Budget - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    .budget-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .budget-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-draft {
+        background-color: #e5e7eb;
+        color: #374151;
+    }
+    
+    .budget-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+    }
+    
+    .budget-utilization {
+        width: 100%;
+        height: 8px;
+        background-color: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .budget-progress {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .chart-container {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .action-btn.primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+    }
+    
+    .action-btn.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .action-btn.secondary {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .action-btn.secondary:hover {
+        background: #f9fafb;
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .action-btn.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .action-btn.danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Sales Budget</h1>
+                <p class="text-gray-600 mt-1">Manage and track sales budgets</p>
+                <p class="text-sm text-gray-500">
+                    {% if user.role == 'admin' %}
+                        Viewing all budgets across organization
+                    {% elif user.role == 'manager' %}
+                        Viewing budgets for {{ user.department|title }} department
+                    {% else %}
+                        Viewing your personal budgets
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="flex gap-3">
+                {% if can_create %}
+                <button 
+                    onclick="openCreateBudgetModal()"
+                    class="action-btn primary"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create Budget
+                </button>
+                {% endif %}
+                
+                <button 
+                    onclick="exportBudgets()"
+                    class="action-btn secondary"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export
+                </button>
+                
+                <button 
+                    onclick="refreshBudgets()"
+                    class="action-btn secondary"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Budget Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="budget-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Total Budget</h3>
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                    </svg>
+                </div>
+                <div class="budget-amount">$2.4M</div>
+                <p class="text-sm text-gray-500">Allocated budget</p>
+            </div>
+            
+            <div class="budget-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Used Budget</h3>
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                </div>
+                <div class="budget-amount">$1.9M</div>
+                <p class="text-sm text-gray-500">79% utilized</p>
+                <div class="budget-utilization mt-2">
+                    <div class="budget-progress" style="width: 79%"></div>
+                </div>
+            </div>
+            
+            <div class="budget-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Remaining</h3>
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+                <div class="budget-amount">$500K</div>
+                <p class="text-sm text-gray-500">Available funds</p>
+            </div>
+            
+            <div class="budget-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Pending Approval</h3>
+                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="budget-amount">3</div>
+                <p class="text-sm text-gray-500">Budgets awaiting review</p>
+            </div>
+        </div>
+
+        <!-- Budgets List -->
+        <div class="bg-white rounded-lg shadow border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Budget Entries</h3>
+                    <div class="flex items-center space-x-2">
+                        <select class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                            <option>All Status</option>
+                            <option>Pending</option>
+                            <option>Approved</option>
+                            <option>Rejected</option>
+                        </select>
+                        <select class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                            <option>This Year</option>
+                            <option>This Quarter</option>
+                            <option>This Month</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+                {% for budget in budgets %}
+                <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3">
+                                <h4 class="text-lg font-medium text-gray-900">
+                                    Budget #{{ budget.id }} - {{ budget.title|default:"Sales Budget" }}
+                                </h4>
+                                <span class="status-badge status-{{ budget.status|default:'draft' }}">
+                                    {{ budget.status|title|default:'Draft' }}
+                                </span>
+                            </div>
+                            <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                                <span>Created by: {{ budget.created_by.get_full_name|default:budget.created_by.username }}</span>
+                                <span>•</span>
+                                <span>{{ budget.created_at|date:"M d, Y" }}</span>
+                                {% if budget.department %}
+                                <span>•</span>
+                                <span>{{ budget.department|title }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2 flex items-center space-x-6">
+                                <div>
+                                    <span class="text-sm text-gray-500">Amount:</span>
+                                    <span class="text-sm font-medium text-gray-900">${{ budget.amount|default:"0"|floatformat:0 }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500">Period:</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ budget.period|default:"Q1 2024" }}</span>
+                                </div>
+                                {% if budget.description %}
+                                <div>
+                                    <span class="text-sm text-gray-500">Description:</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ budget.description|truncatechars:50 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button 
+                                onclick="viewBudget({{ budget.id }})"
+                                class="action-btn secondary"
+                                title="View Details"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View
+                            </button>
+                            
+                            {% if budget.status == 'draft' or budget.created_by == user %}
+                            <button 
+                                onclick="editBudget({{ budget.id }})"
+                                class="action-btn secondary"
+                                title="Edit Budget"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit
+                            </button>
+                            {% endif %}
+                            
+                            {% if can_approve and budget.status == 'pending' %}
+                            <button 
+                                onclick="approveBudget({{ budget.id }})"
+                                class="action-btn success"
+                                title="Approve Budget"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Approve
+                            </button>
+                            
+                            <button 
+                                onclick="rejectBudget({{ budget.id }})"
+                                class="action-btn danger"
+                                title="Reject Budget"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Reject
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No budgets found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating your first budget.</p>
+                    {% if can_create %}
+                    <div class="mt-6">
+                        <button 
+                            onclick="openCreateBudgetModal()"
+                            class="action-btn primary"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create Budget
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<script>
+function openCreateBudgetModal() {
+    showToast('Create budget functionality coming soon...', 'success');
+}
+
+function viewBudget(budgetId) {
+    showToast(`Viewing budget ${budgetId}...`, 'success');
+}
+
+function editBudget(budgetId) {
+    showToast(`Edit budget ${budgetId} functionality coming soon...`, 'success');
+}
+
+function approveBudget(budgetId) {
+    if (confirm('Are you sure you want to approve this budget?')) {
+        showToast(`Budget ${budgetId} approved successfully`, 'success');
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+function rejectBudget(budgetId) {
+    if (confirm('Are you sure you want to reject this budget?')) {
+        showToast(`Budget ${budgetId} rejected`, 'error');
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+function exportBudgets() {
+    showToast('Exporting budgets...', 'success');
+    setTimeout(() => {
+        showToast('Budgets exported successfully', 'success');
+    }, 2000);
+}
+
+function refreshBudgets() {
+    showToast('Refreshing budget data...', 'success');
+    setTimeout(() => location.reload(), 1000);
+}
+
+// Toast notification function
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-3 rounded-md shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transform transition-all duration-300 translate-x-full`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
