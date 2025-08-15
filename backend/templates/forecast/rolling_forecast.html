@@ -1,0 +1,451 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Rolling Forecast - STMBudget{% endblock %}
+
+{% block extra_head %}
+<style>
+    .forecast-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .forecast-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .forecast-chart {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .forecast-trend {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .trend-up {
+        color: #10b981;
+    }
+    
+    .trend-down {
+        color: #ef4444;
+    }
+    
+    .period-tab {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .period-tab.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+    
+    .period-tab:hover:not(.active) {
+        background: #f3f4f6;
+        text-decoration: none;
+        color: #6b7280;
+    }
+    
+    .accuracy-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .accuracy-excellent {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .accuracy-good {
+        background-color: #bfdbfe;
+        color: #1e40af;
+    }
+    
+    .accuracy-fair {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .accuracy-poor {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .forecast-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+    }
+    
+    .mini-chart {
+        width: 100%;
+        height: 60px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .mini-chart::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.8);
+        transform: translateY(-50%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Rolling Forecast</h1>
+                <p class="text-gray-600 mt-1">Predictive sales analysis and forecasting</p>
+                <p class="text-sm text-gray-500">
+                    {% if user.role == 'admin' %}
+                        Viewing all forecasts across organization
+                    {% elif user.role == 'manager' %}
+                        Viewing forecasts for {{ user.department|title }} department
+                    {% else %}
+                        Viewing your personal forecasts
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="flex gap-3">
+                {% if can_create %}
+                <button 
+                    onclick="openCreateForecastModal()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    New Forecast
+                </button>
+                {% endif %}
+                
+                <button 
+                    onclick="exportForecasts()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Period Selector -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Forecast Period</h3>
+                <div class="flex rounded-lg border border-gray-300 overflow-hidden">
+                    <button class="period-tab active" onclick="setPeriod('quarter')">
+                        Quarter
+                    </button>
+                    <button class="period-tab" onclick="setPeriod('month')">
+                        Month
+                    </button>
+                    <button class="period-tab" onclick="setPeriod('year')">
+                        Year
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">Q1 2024</div>
+                    <div class="text-sm text-gray-500">Current Period</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">92.3%</div>
+                    <div class="text-sm text-gray-500">Forecast Accuracy</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">$1.8M</div>
+                    <div class="text-sm text-gray-500">Projected Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="forecast-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Sales Forecast</h3>
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                </div>
+                <div class="forecast-value">$1.8M</div>
+                <div class="forecast-trend trend-up">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l9.2-9.2M17 17V7H7"></path>
+                    </svg>
+                    <span class="text-sm">+12.5% vs last period</span>
+                </div>
+                <div class="mini-chart"></div>
+            </div>
+            
+            <div class="forecast-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Accuracy Score</h3>
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                </div>
+                <div class="forecast-value">92.3%</div>
+                <div class="forecast-trend trend-up">
+                    <span class="accuracy-badge accuracy-excellent">Excellent</span>
+                </div>
+                <div class="mini-chart"></div>
+            </div>
+            
+            <div class="forecast-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Variance</h3>
+                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="forecast-value">±7.2%</div>
+                <div class="forecast-trend">
+                    <span class="accuracy-badge accuracy-good">Within Range</span>
+                </div>
+                <div class="mini-chart"></div>
+            </div>
+            
+            <div class="forecast-card">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Confidence</h3>
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="forecast-value">89%</div>
+                <div class="forecast-trend trend-up">
+                    <span class="accuracy-badge accuracy-excellent">High</span>
+                </div>
+                <div class="mini-chart"></div>
+            </div>
+        </div>
+
+        <!-- Forecasts List -->
+        <div class="bg-white rounded-lg shadow border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Forecast Entries</h3>
+                    <div class="flex items-center space-x-2">
+                        <select class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                            <option>All Status</option>
+                            <option>Pending</option>
+                            <option>Approved</option>
+                            <option>Under Review</option>
+                        </select>
+                        <select class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                            <option>This Quarter</option>
+                            <option>Next Quarter</option>
+                            <option>This Year</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+                {% for forecast in forecasts %}
+                <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3">
+                                <h4 class="text-lg font-medium text-gray-900">
+                                    Forecast #{{ forecast.id }} - {{ forecast.title|default:"Sales Forecast" }}
+                                </h4>
+                                <span class="accuracy-badge accuracy-{{ forecast.accuracy_level|default:'good' }}">
+                                    {{ forecast.status|title|default:'Draft' }}
+                                </span>
+                            </div>
+                            <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                                <span>Created by: {{ forecast.created_by.get_full_name|default:forecast.created_by.username }}</span>
+                                <span>•</span>
+                                <span>{{ forecast.created_at|date:"M d, Y" }}</span>
+                                {% if forecast.department %}
+                                <span>•</span>
+                                <span>{{ forecast.department|title }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <span class="text-sm text-gray-500">Forecast Value:</span>
+                                    <span class="text-sm font-medium text-gray-900">${{ forecast.amount|default:"0"|floatformat:0 }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500">Period:</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ forecast.period|default:"Q1 2024" }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500">Accuracy:</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ forecast.accuracy|default:"92.3" }}%</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500">Confidence:</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ forecast.confidence|default:"89" }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button 
+                                onclick="viewForecast({{ forecast.id }})"
+                                class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                title="View Details"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View
+                            </button>
+                            
+                            {% if forecast.status == 'draft' or forecast.created_by == user %}
+                            <button 
+                                onclick="editForecast({{ forecast.id }})"
+                                class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                title="Edit Forecast"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit
+                            </button>
+                            {% endif %}
+                            
+                            <button 
+                                onclick="analyzeForecast({{ forecast.id }})"
+                                class="inline-flex items-center px-3 py-1 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                                title="Analyze Forecast"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Analyze
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No forecasts found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating your first forecast.</p>
+                    {% if can_create %}
+                    <div class="mt-6">
+                        <button 
+                            onclick="openCreateForecastModal()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create Forecast
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<script>
+function setPeriod(period) {
+    // Update active tab
+    document.querySelectorAll('.period-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    showToast(`Switched to ${period} view`, 'success');
+}
+
+function openCreateForecastModal() {
+    showToast('Create forecast functionality coming soon...', 'success');
+}
+
+function viewForecast(forecastId) {
+    showToast(`Viewing forecast ${forecastId}...`, 'success');
+}
+
+function editForecast(forecastId) {
+    showToast(`Edit forecast ${forecastId} functionality coming soon...`, 'success');
+}
+
+function analyzeForecast(forecastId) {
+    showToast(`Analyzing forecast ${forecastId}...`, 'success');
+}
+
+function exportForecasts() {
+    showToast('Exporting forecasts...', 'success');
+    setTimeout(() => {
+        showToast('Forecasts exported successfully', 'success');
+    }, 2000);
+}
+
+// Toast notification function
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-3 rounded-md shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transform transition-all duration-300 translate-x-full`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
