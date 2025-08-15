@@ -1,0 +1,47 @@
+{% load static %}
+
+<footer class="bg-white border-t border-gray-200 mt-auto">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <div class="text-sm text-gray-500">
+                    © 2024 STMBudget. All rights reserved.
+                </div>
+                <div class="hidden md:block h-4 border-l border-gray-300"></div>
+                <div class="text-sm text-gray-500">
+                    Version 2.0.0
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6 text-sm text-gray-500">
+                <a href="#" onclick="showHelp()" class="hover:text-gray-700 transition-colors duration-200">
+                    Help
+                </a>
+                <a href="#" onclick="showSupport()" class="hover:text-gray-700 transition-colors duration-200">
+                    Support
+                </a>
+                <a href="#" onclick="showPrivacy()" class="hover:text-gray-700 transition-colors duration-200">
+                    Privacy
+                </a>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span>System Online</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+function showHelp() {
+    alert('Help documentation coming soon...');
+}
+
+function showSupport() {
+    alert('Support contact information coming soon...');
+}
+
+function showPrivacy() {
+    alert('Privacy policy coming soon...');
+}
+</script>

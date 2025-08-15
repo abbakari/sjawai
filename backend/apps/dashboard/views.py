@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.conf import settings
 import json
 from datetime import datetime, timedelta
 
@@ -50,7 +51,7 @@ def login_view(request):
     
     context = {
         'page_title': 'Sign In',
-        'debug': settings.DEBUG if hasattr('settings', 'DEBUG') else False
+        'debug': settings.DEBUG if hasattr(settings, 'DEBUG') else False
     }
     return render(request, 'auth/login.html', context)
 
@@ -384,7 +385,7 @@ def get_user_stats(user):
 def get_user_quick_actions(user):
     """Get quick actions based on user role"""
     actions = []
-    
+
     if user.role == 'admin':
         actions = [
             {
@@ -420,5 +421,19 @@ def get_user_quick_actions(user):
             }
         ]
     # Add more role-specific actions...
-    
+
     return actions
+
+
+def handler404(request, exception):
+    """Custom 404 error handler"""
+    return render(request, 'error/404.html', {
+        'page_title': 'Page Not Found'
+    }, status=404)
+
+
+def handler500(request):
+    """Custom 500 error handler"""
+    return render(request, 'error/500.html', {
+        'page_title': 'Server Error'
+    }, status=500)

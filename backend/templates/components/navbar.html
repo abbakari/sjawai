@@ -1,200 +1,239 @@
 {% load static %}
 
-<nav class="navbar">
-    <div class="container">
-        <div class="flex items-center justify-between">
+<nav class="app-header bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
             <!-- Logo and Brand -->
-            <div class="flex items-center space-x-4">
-                <a href="{% url 'dashboard' %}" class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">STM</span>
-                    </div>
-                    <span class="font-bold text-xl text-gray-900">STMBudget</span>
-                </a>
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <a href="/dashboard/" class="text-2xl font-bold text-blue-600">STMBudget</a>
+                </div>
                 
-                <!-- Role Badge -->
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                    {% if user.role == 'admin' %}bg-red-100 text-red-800
-                    {% elif user.role == 'manager' %}bg-blue-100 text-blue-800
-                    {% elif user.role == 'salesman' %}bg-green-100 text-green-800
-                    {% elif user.role == 'supply_chain' %}bg-purple-100 text-purple-800
-                    {% else %}bg-gray-100 text-gray-800{% endif %}">
-                    {{ user.get_role_display|default:user.role|title }}
-                </span>
-            </div>
-            
-            <!-- Navigation Links -->
-            <div class="hidden md:flex items-center space-x-1">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                    </svg>
-                    Dashboard
-                </a>
-                
-                {% if user.role == 'admin' %}
-                    <a href="{% url 'user_management' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                <!-- Main Navigation -->
+                <div class="hidden md:ml-8 md:flex md:space-x-8">
+                    <a href="/dashboard/" 
+                       class="{% if request.resolver_match.url_name == 'dashboard' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v3H8V5z"></path>
                         </svg>
-                        Users
+                        Dashboard
                     </a>
-                    <a href="{% url 'admin_panel' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
-                        </svg>
-                        Admin
-                    </a>
-                {% elif user.role == 'manager' %}
-                    <a href="{% url 'approval_center' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
-                        Approvals
-                    </a>
-                {% elif user.role == 'supply_chain' %}
-                    <a href="{% url 'inventory_management' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM6 9a1 1 0 112 0v6a1 1 0 11-2 0V9zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
-                        </svg>
-                        Inventory
-                    </a>
-                    <a href="{% url 'distribution_management' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
-                            <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"></path>
-                        </svg>
-                        Distribution
-                    </a>
-                {% endif %}
-                
-                {% if user.role in 'salesman,manager,admin'|split:',' %}
-                    <a href="{% url 'sales_budget' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                    
+                    {% if user.role in 'salesman,manager,admin' %}
+                    <a href="/sales-budget/" 
+                       class="{% if request.resolver_match.url_name == 'sales_budget' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
                         </svg>
                         Budget
                     </a>
-                    <a href="{% url 'rolling_forecast' %}" class="nav-link">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                    {% endif %}
+                    
+                    {% if user.role in 'salesman,manager,admin' %}
+                    <a href="/rolling-forecast/" 
+                       class="{% if request.resolver_match.url_name == 'rolling_forecast' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
                         Forecast
                     </a>
-                {% endif %}
+                    {% endif %}
+                    
+                    {% if user.role in 'manager,admin' %}
+                    <a href="/approval-center/" 
+                       class="{% if request.resolver_match.url_name == 'approval_center' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                        </svg>
+                        Approvals
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role in 'supply_chain,admin' %}
+                    <a href="/inventory-management/" 
+                       class="{% if request.resolver_match.url_name == 'inventory_management' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        Inventory
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'admin' %}
+                    <a href="/admin-panel/" 
+                       class="{% if request.resolver_match.url_name == 'admin_panel' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Admin
+                    </a>
+                    {% endif %}
+                </div>
             </div>
-            
-            <!-- User Menu -->
-            <div class="flex items-center space-x-4">
+
+            <!-- Right side - User menu -->
+            <div class="flex items-center">
                 <!-- Notifications -->
-                <button class="relative p-2 text-gray-500 hover:text-gray-700 transition-colors">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
+                <button type="button" 
+                        class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 mr-3">
+                    <span class="sr-only">View notifications</span>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v6a2 2 0 01-2 2h-6a2 2 0 01-2-2v-6m8 0V9a4 4 0 00-8 0v3m8 0H9m0 0l-3 3m3-3l-3-3"></path>
                     </svg>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                
-                <!-- User Profile Dropdown -->
-                <div class="relative">
-                    <button onclick="toggleUserMenu()" class="flex items-center space-x-2 p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-medium">{{ user.first_name.0|default:user.username.0 }}{{ user.last_name.0|default:'' }}</span>
+
+                <!-- User dropdown -->
+                <div class="relative" id="user-menu">
+                    <button 
+                        type="button" 
+                        class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                        onclick="toggleUserMenu()"
+                        aria-expanded="false"
+                    >
+                        <span class="sr-only">Open user menu</span>
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                            {{ user.first_name|first|default:user.username|first|upper }}
                         </div>
-                        <span class="hidden md:block font-medium">{{ user.get_full_name|default:user.username }}</span>
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        <span class="ml-3 text-gray-700 text-sm font-medium hidden md:block">
+                            {{ user.get_full_name|default:user.username }}
+                        </span>
+                        <svg class="ml-2 h-4 w-4 text-gray-400 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
-                    
-                    <!-- Dropdown Menu -->
-                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                        <div class="py-1">
-                            <div class="px-4 py-2 border-b border-gray-100">
-                                <p class="text-sm font-medium text-gray-900">{{ user.get_full_name|default:user.username }}</p>
-                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+
+                    <!-- Dropdown menu -->
+                    <div 
+                        id="user-menu-dropdown"
+                        class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50"
+                        role="menu"
+                    >
+                        <div class="py-1" role="none">
+                            <div class="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
+                                {{ user.role|title|default:'User' }}
+                                {% if user.department %} • {{ user.department|title }}{% endif %}
                             </div>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg class="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            
+                            <a href="/dashboard/" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                               role="menuitem">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
-                                Profile Settings
+                                My Profile
                             </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg class="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
+                            
+                            <a href="#" 
+                               onclick="showSettings()"
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                               role="menuitem">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
-                                Preferences
+                                Settings
                             </a>
-                            <div class="border-t border-gray-100">
-                                <form method="post" action="{% url 'logout' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">
-                                        <svg class="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        Sign Out
-                                    </button>
-                                </form>
-                            </div>
+                            
+                            <div class="border-t border-gray-100"></div>
+                            
+                            <a href="/logout/" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                               role="menuitem">
+                                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Sign out
+                            </a>
                         </div>
                     </div>
                 </div>
+
+                <!-- Mobile menu button -->
+                <button 
+                    type="button" 
+                    class="md:hidden ml-3 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-200"
+                    onclick="toggleMobileMenu()"
+                >
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
             </div>
-            
-            <!-- Mobile Menu Button -->
-            <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                </svg>
-            </button>
         </div>
-        
-        <!-- Mobile Menu -->
-        <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200">
-            <div class="space-y-1 pt-4">
-                <a href="{% url 'dashboard' %}" class="nav-link block">Dashboard</a>
-                {% if user.role == 'admin' %}
-                    <a href="{% url 'user_management' %}" class="nav-link block">User Management</a>
-                    <a href="{% url 'admin_panel' %}" class="nav-link block">Admin Panel</a>
-                {% elif user.role == 'manager' %}
-                    <a href="{% url 'approval_center' %}" class="nav-link block">Approval Center</a>
-                {% elif user.role == 'supply_chain' %}
-                    <a href="{% url 'inventory_management' %}" class="nav-link block">Inventory Management</a>
-                    <a href="{% url 'distribution_management' %}" class="nav-link block">Distribution Management</a>
-                {% endif %}
-                {% if user.role in 'salesman,manager,admin'|split:',' %}
-                    <a href="{% url 'sales_budget' %}" class="nav-link block">Sales Budget</a>
-                    <a href="{% url 'rolling_forecast' %}" class="nav-link block">Rolling Forecast</a>
-                {% endif %}
-            </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="pt-2 pb-3 space-y-1 border-t border-gray-200">
+            <a href="/dashboard/" 
+               class="{% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Dashboard
+            </a>
+            
+            {% if user.role in 'salesman,manager,admin' %}
+            <a href="/sales-budget/" 
+               class="{% if request.resolver_match.url_name == 'sales_budget' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Budget
+            </a>
+            {% endif %}
+            
+            {% if user.role in 'salesman,manager,admin' %}
+            <a href="/rolling-forecast/" 
+               class="{% if request.resolver_match.url_name == 'rolling_forecast' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Forecast
+            </a>
+            {% endif %}
+            
+            {% if user.role in 'manager,admin' %}
+            <a href="/approval-center/" 
+               class="{% if request.resolver_match.url_name == 'approval_center' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Approvals
+            </a>
+            {% endif %}
+            
+            {% if user.role in 'supply_chain,admin' %}
+            <a href="/inventory-management/" 
+               class="{% if request.resolver_match.url_name == 'inventory_management' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Inventory
+            </a>
+            {% endif %}
+            
+            {% if user.role == 'admin' %}
+            <a href="/admin-panel/" 
+               class="{% if request.resolver_match.url_name == 'admin_panel' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200">
+                Admin
+            </a>
+            {% endif %}
         </div>
     </div>
 </nav>
 
 <script>
 function toggleUserMenu() {
-    const menu = document.getElementById('userMenu');
-    menu.classList.toggle('hidden');
-    
-    // Close menu when clicking outside
-    document.addEventListener('click', function closeMenu(e) {
-        if (!menu.contains(e.target) && !e.target.closest('button')) {
-            menu.classList.add('hidden');
-            document.removeEventListener('click', closeMenu);
-        }
-    });
+    const dropdown = document.getElementById('user-menu-dropdown');
+    dropdown.classList.toggle('hidden');
 }
 
 function toggleMobileMenu() {
-    const menu = document.getElementById('mobileMenu');
+    const menu = document.getElementById('mobile-menu');
     menu.classList.toggle('hidden');
 }
 
-// Close mobile menu on window resize
-window.addEventListener('resize', () => {
-    if (window.innerWidth >= 768) {
-        document.getElementById('mobileMenu').classList.add('hidden');
+function showSettings() {
+    alert('Settings panel coming soon...');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const userMenu = document.getElementById('user-menu');
+    const dropdown = document.getElementById('user-menu-dropdown');
+    
+    if (!userMenu.contains(event.target)) {
+        dropdown.classList.add('hidden');
     }
 });
 </script>
