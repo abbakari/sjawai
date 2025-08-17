@@ -1,0 +1,243 @@
+{% extends "base/base_auth.html" %}
+{% load static %}
+
+{% block title %}Login - STMBudget{% endblock %}
+
+{% block auth_title %}Sign In{% endblock %}
+{% block auth_subtitle %}Access your role-specific dashboard and tools{% endblock %}
+
+{% block auth_content %}
+<!-- Login Form -->
+<form method="post" action="{% url 'authentication:login' %}" class="auth-form" id="login-form">
+    {% csrf_token %}
+    
+    <!-- Error Messages -->
+    {% if form.errors or error %}
+        <div class="alert alert-danger" role="alert">
+            <div class="d-flex align-items-center">
+                <svg class="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <div>
+                    <strong>Login Error</strong>
+                    <div class="mt-1">
+                        {{ error|default:"Invalid email or password. Please try again." }}
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                {{ error }}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Success Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Email Field -->
+    <div class="form-floating">
+        <input type="email" 
+               class="form-control" 
+               id="id_email" 
+               name="email" 
+               placeholder="Enter your email"
+               value="{{ form.email.value|default:'' }}"
+               required
+               autocomplete="email">
+        <label for="id_email">
+            <svg class="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l1.326-.795 5.64 3.47A1 1 0 0 1 14 13h-2.5a.5.5 0 0 0 0 1H14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2Zm3.708 6.208L1 11.105V5.383l4.708 2.825ZM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2-7-4.2Z"/>
+            </svg>
+            Email address
+        </label>
+    </div>
+
+    <!-- Password Field -->
+    <div class="form-floating">
+        <input type="password" 
+               class="form-control" 
+               id="id_password" 
+               name="password" 
+               placeholder="Enter your password"
+               required
+               autocomplete="current-password">
+        <label for="id_password">
+            <svg class="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            </svg>
+            Password
+        </label>
+        <button type="button" 
+                class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent"
+                id="toggle-password"
+                style="z-index: 10;">
+            <svg id="eye-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Remember Me -->
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+        <label class="form-check-label" for="remember_me">
+            Remember me for 30 days
+        </label>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary w-100 mb-3" id="login-btn">
+        <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+        <span class="btn-text">Sign in</span>
+    </button>
+
+    <!-- Forgot Password Link -->
+    <div class="text-center">
+        <a href="{% url 'authentication:password_reset' %}" class="text-decoration-none">
+            Forgot your password?
+        </a>
+    </div>
+</form>
+
+<!-- Demo Users Section -->
+<div class="demo-users">
+    <div class="text-center mb-3">
+        <div class="position-relative">
+            <hr class="my-0">
+            <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">
+                Demo Users
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-2">
+        {% for demo_user in demo_users %}
+        <div class="col-6">
+            <button type="button" 
+                    class="demo-user-btn w-100 text-start border-0"
+                    data-email="{{ demo_user.email }}" 
+                    data-password="{{ demo_user.password }}"
+                    onclick="fillDemoCredentials('{{ demo_user.email }}', '{{ demo_user.password }}')">
+                <div class="small fw-bold text-dark">{{ demo_user.role }}</div>
+                <div class="x-small text-muted">{{ demo_user.email }}</div>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Demo Instructions -->
+<div class="mt-3">
+    <div class="alert alert-info border-0" style="background: rgba(13, 110, 253, 0.1);">
+        <div class="d-flex align-items-start">
+            <svg class="me-2 mt-1 flex-shrink-0" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+            </svg>
+            <div>
+                <h6 class="mb-1 text-info">Demo Instructions</h6>
+                <div class="small text-info-emphasis">
+                    <p class="mb-1">• Click any demo user to auto-fill credentials</p>
+                    <p class="mb-1">• All users use password: <strong>password</strong></p>
+                    <p class="mb-0">• Each role has different access and features</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const spinner = loginBtn.querySelector('.spinner-border');
+    const btnText = loginBtn.querySelector('.btn-text');
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('id_password');
+    const eyeIcon = document.getElementById('eye-icon');
+
+    // Password toggle functionality
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.innerHTML = '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>';
+        } else {
+            eyeIcon.innerHTML = '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>';
+        }
+    });
+
+    // Form submission handling
+    loginForm.addEventListener('submit', function(e) {
+        spinner.classList.remove('d-none');
+        btnText.textContent = 'Signing in...';
+        loginBtn.disabled = true;
+    });
+
+    // Form validation
+    const emailInput = document.getElementById('id_email');
+    emailInput.addEventListener('blur', function() {
+        if (this.value && !isValidEmail(this.value)) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+});
+
+// Demo user functionality
+function fillDemoCredentials(email, password) {
+    document.getElementById('id_email').value = email;
+    document.getElementById('id_password').value = password;
+    
+    // Add visual feedback
+    const demoButtons = document.querySelectorAll('.demo-user-btn');
+    demoButtons.forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.demo-user-btn').classList.add('active');
+    
+    // Focus on login button
+    setTimeout(() => {
+        document.getElementById('login-btn').focus();
+    }, 100);
+}
+</script>
+
+<style>
+.demo-user-btn.active {
+    background: rgba(102, 126, 234, 0.3) !important;
+    border-color: rgba(102, 126, 234, 0.5) !important;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.x-small {
+    font-size: 0.75rem;
+}
+
+#toggle-password {
+    color: #6c757d;
+}
+
+#toggle-password:hover {
+    color: #495057;
+}
+</style>
+{% endblock %}
