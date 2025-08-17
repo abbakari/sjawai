@@ -1,0 +1,731 @@
+<!-- Inventory Management Dashboard -->
+<div class="inventory-dashboard">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="icon-package me-2 text-primary"></i>
+                    Inventory Management
+                </h1>
+                <p class="page-subtitle text-muted mb-0">
+                    Monitor, track, and manage your inventory levels and stock movements
+                </p>
+            </div>
+            <div class="page-actions d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="refreshInventoryData()" id="refresh-inventory-btn">
+                    <i class="icon-refresh me-2"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-success" onclick="openAddItemModal()" id="add-item-btn">
+                    <i class="icon-plus me-2"></i>
+                    Add Item
+                </button>
+                <button class="btn btn-warning" onclick="openStockAdjustmentModal()" id="adjust-stock-btn">
+                    <i class="icon-edit me-2"></i>
+                    Stock Adjustment
+                </button>
+                <button class="btn btn-primary" onclick="generateInventoryReport()" id="generate-report-btn">
+                    <i class="icon-file-text me-2"></i>
+                    Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Quick Stats -->
+    <div class="inventory-stats mb-5">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-primary mb-1">$1.2M</h3>
+                                <p class="stats-label text-muted mb-0">Total Inventory Value</p>
+                                <small class="stats-subtitle text-muted">Current stock worth</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-dollar-sign text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +5.2% this month
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-success mb-1">1,247</h3>
+                                <p class="stats-label text-muted mb-0">Total SKUs</p>
+                                <small class="stats-subtitle text-muted">Active products</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-layers text-success"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-plus"></i> +23 new items
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-warning mb-1">23</h3>
+                                <p class="stats-label text-muted mb-0">Low Stock Items</p>
+                                <small class="stats-subtitle text-muted">Need attention</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-alert-triangle text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-3">
+                            <span class="trend-negative">
+                                <i class="icon-alert-circle"></i> 5 critical levels
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-info mb-1">98.5%</h3>
+                                <p class="stats-label text-muted mb-0">Stock Accuracy</p>
+                                <small class="stats-subtitle text-muted">System vs actual</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-target text-info"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +1.2% improved
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Charts and Analytics -->
+    <div class="inventory-analytics mb-5">
+        <div class="row g-4">
+            <!-- Stock Movement Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Stock Movement Trends</h5>
+                            <div class="chart-controls">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" data-period="week">Week</button>
+                                    <button class="btn btn-outline-primary" data-period="month">Month</button>
+                                    <button class="btn btn-outline-primary" data-period="quarter">Quarter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="stockMovementChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Distribution -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title mb-0">Category Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="categoryDistributionChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions and Alerts -->
+    <div class="inventory-actions mb-5">
+        <div class="row g-4">
+            <!-- Quick Actions -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-lg-3 col-md-6">
+                                <button class="quick-action btn btn-outline-primary w-100 h-100 p-3" onclick="openBulkUpdateModal()">
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                        <i class="icon-upload fs-2 mb-2 text-primary"></i>
+                                        <strong class="mb-1">Bulk Update</strong>
+                                        <small class="text-muted">Update multiple items</small>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6">
+                                <button class="quick-action btn btn-outline-success w-100 h-100 p-3" onclick="openStockTakeModal()">
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                        <i class="icon-check-square fs-2 mb-2 text-success"></i>
+                                        <strong class="mb-1">Stock Take</strong>
+                                        <small class="text-muted">Physical count</small>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6">
+                                <button class="quick-action btn btn-outline-warning w-100 h-100 p-3" onclick="viewLowStockItems()">
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                        <i class="icon-alert-triangle fs-2 mb-2 text-warning"></i>
+                                        <strong class="mb-1">Low Stock</strong>
+                                        <small class="text-muted">View alerts</small>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6">
+                                <button class="quick-action btn btn-outline-info w-100 h-100 p-3" onclick="openReorderModal()">
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                        <i class="icon-shopping-cart fs-2 mb-2 text-info"></i>
+                                        <strong class="mb-1">Reorder</strong>
+                                        <small class="text-muted">Create purchase order</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Critical Alerts -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Critical Alerts</h5>
+                            <span class="badge bg-danger">5</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert-list">
+                            <div class="alert-item">
+                                <div class="alert-icon bg-danger">
+                                    <i class="icon-alert-triangle text-white"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Critical Stock Level</strong>
+                                    <p class="text-muted mb-1">Product XYZ-001 has only 2 units left</p>
+                                    <small class="text-muted">2 hours ago</small>
+                                </div>
+                            </div>
+                            
+                            <div class="alert-item">
+                                <div class="alert-icon bg-warning">
+                                    <i class="icon-clock text-white"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Expiring Soon</strong>
+                                    <p class="text-muted mb-1">Batch #2024-001 expires in 5 days</p>
+                                    <small class="text-muted">4 hours ago</small>
+                                </div>
+                            </div>
+                            
+                            <div class="alert-item">
+                                <div class="alert-icon bg-info">
+                                    <i class="icon-truck text-white"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Shipment Delayed</strong>
+                                    <p class="text-muted mb-1">Expected delivery pushed to next week</p>
+                                    <small class="text-muted">1 day ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewAllAlerts()">
+                                View All Alerts
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="recent-activities mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recent Inventory Activities</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadRecentActivities()">
+                        <i class="icon-refresh me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="activity-timeline" id="inventory-activity-timeline">
+                    <div class="activity-item">
+                        <div class="activity-icon bg-success">
+                            <i class="icon-plus text-white"></i>
+                        </div>
+                        <div class="activity-content">
+                            <strong>Stock Received</strong>
+                            <p class="text-muted mb-1">500 units of Product ABC received from Supplier XYZ</p>
+                            <small class="text-muted">10 minutes ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-primary">
+                            <i class="icon-edit text-white"></i>
+                        </div>
+                        <div class="activity-content">
+                            <strong>Item Updated</strong>
+                            <p class="text-muted mb-1">Product DEF-456 details updated by John Manager</p>
+                            <small class="text-muted">25 minutes ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-warning">
+                            <i class="icon-minus text-white"></i>
+                        </div>
+                        <div class="activity-content">
+                            <strong>Stock Issued</strong>
+                            <p class="text-muted mb-1">200 units of Product GHI issued to Sales Team</p>
+                            <small class="text-muted">1 hour ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-info">
+                            <i class="icon-package text-white"></i>
+                        </div>
+                        <div class="activity-content">
+                            <strong>New Product Added</strong>
+                            <p class="text-muted mb-1">Product JKL-789 added to inventory system</p>
+                            <small class="text-muted">2 hours ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="inventory-table-section">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Inventory Items</h5>
+                    <div class="table-controls d-flex gap-2">
+                        <div class="search-box">
+                            <input type="text" class="form-control form-control-sm" placeholder="Search items..." id="inventory-search">
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="icon-filter me-1"></i>Filter
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-filter="all">All Items</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="low-stock">Low Stock</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="out-of-stock">Out of Stock</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="overstocked">Overstocked</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% include 'inventory/includes/stock_table.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Modals -->
+<div id="inventory-modals-container">
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'inventory/modals/add_item_modal.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Adjustment Modal -->
+    <div class="modal fade" id="stockAdjustmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stock Adjustment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'inventory/modals/stock_modal.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Inventory Management JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeInventoryManagement();
+});
+
+function initializeInventoryManagement() {
+    console.log('📦 Initializing inventory management...');
+    
+    // Initialize charts
+    initializeInventoryCharts();
+    
+    // Initialize search and filters
+    initializeInventorySearch();
+    
+    // Setup event listeners
+    setupInventoryEventListeners();
+}
+
+function initializeInventoryCharts() {
+    // Stock Movement Chart
+    const movementCtx = document.getElementById('stockMovementChart');
+    if (movementCtx && typeof Chart !== 'undefined') {
+        new Chart(movementCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Stock In',
+                    data: [120, 190, 150, 180, 220, 160, 140],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Stock Out',
+                    data: [80, 150, 120, 160, 180, 140, 110],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryDistributionChart');
+    if (categoryCtx && typeof Chart !== 'undefined') {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books'],
+                datasets: [{
+                    data: [35, 25, 20, 12, 8],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initializeInventorySearch() {
+    const searchInput = document.getElementById('inventory-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', STMBudget.utils.debounce(function() {
+            const searchTerm = this.value.toLowerCase();
+            filterInventoryTable(searchTerm);
+        }, 300));
+    }
+}
+
+function setupInventoryEventListeners() {
+    // Chart period controls
+    const periodButtons = document.querySelectorAll('[data-period]');
+    periodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            periodButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            updateChartPeriod(this.dataset.period);
+        });
+    });
+}
+
+function refreshInventoryData() {
+    const refreshBtn = document.getElementById('refresh-inventory-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    setTimeout(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        STMBudget.notifications.show('Inventory data refreshed successfully', 'success');
+    }, 1500);
+}
+
+function openAddItemModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addItemModal'));
+    modal.show();
+}
+
+function openStockAdjustmentModal() {
+    const modal = new bootstrap.Modal(document.getElementById('stockAdjustmentModal'));
+    modal.show();
+}
+
+function generateInventoryReport() {
+    STMBudget.notifications.show('Generating inventory report...', 'info');
+    
+    setTimeout(() => {
+        STMBudget.notifications.show('Inventory report generated successfully', 'success');
+    }, 2000);
+}
+
+function openBulkUpdateModal() {
+    STMBudget.notifications.show('Opening bulk update...', 'info');
+}
+
+function openStockTakeModal() {
+    STMBudget.notifications.show('Opening stock take...', 'info');
+}
+
+function viewLowStockItems() {
+    STMBudget.notifications.show('Filtering low stock items...', 'info');
+}
+
+function openReorderModal() {
+    STMBudget.notifications.show('Opening reorder modal...', 'info');
+}
+
+function viewAllAlerts() {
+    STMBudget.notifications.show('Loading all alerts...', 'info');
+}
+
+function loadRecentActivities() {
+    STMBudget.notifications.show('Refreshing activities...', 'info');
+}
+
+function filterInventoryTable(searchTerm) {
+    console.log('Searching inventory:', searchTerm);
+}
+
+function updateChartPeriod(period) {
+    console.log('Updating chart period:', period);
+}
+
+// Export functions for global access
+window.inventoryManagement = {
+    refresh: refreshInventoryData,
+    addItem: openAddItemModal,
+    adjustStock: openStockAdjustmentModal,
+    report: generateInventoryReport
+};
+</script>
+
+<style>
+.inventory-dashboard {
+    animation: fadeInLeft 0.6s ease;
+}
+
+.stats-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.quick-action {
+    transition: all 0.3s ease;
+    min-height: 120px;
+}
+
+.quick-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.alert-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    width: 2px;
+    height: calc(100% - 20px);
+    background: #e5e7eb;
+}
+
+.alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    z-index: 1;
+    position: relative;
+}
+
+.activity-timeline {
+    position: relative;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.activity-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    width: 2px;
+    height: calc(100% - 20px);
+    background: #e5e7eb;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    z-index: 1;
+    position: relative;
+}
+
+.trend-positive {
+    color: #10b981;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.trend-negative {
+    color: #ef4444;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        text-align: center;
+    }
+    
+    .page-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .page-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-action {
+        min-height: 100px;
+    }
+    
+    .alert-list,
+    .activity-timeline {
+        max-height: 250px;
+    }
+}
+</style>

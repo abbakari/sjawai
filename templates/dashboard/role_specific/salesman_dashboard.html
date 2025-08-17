@@ -1,0 +1,592 @@
+<!-- Salesman Dashboard Content -->
+<div class="salesman-dashboard">
+    <!-- Communication Demo Info -->
+    <div class="alert alert-success border-0 mb-4" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+        <div class="d-flex align-items-start">
+            <div class="alert-icon me-3">
+                <i class="icon-message-circle text-green-600"></i>
+            </div>
+            <div>
+                <h6 class="alert-heading text-green-800 mb-1">Communication Center Available</h6>
+                <p class="mb-2 text-green-700">Stay connected with managers and get real-time updates on your requests and approvals.</p>
+                <button class="btn btn-sm btn-success" onclick="router.navigate('/communication')">
+                    <i class="icon-message-square me-1"></i> Open Communication Center
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salesman Stats Grid -->
+    <div class="stats-grid mb-5">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="sales">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-primary mb-1">$156K</h3>
+                                <p class="stats-label text-muted mb-0">My Sales</p>
+                                <small class="stats-subtitle text-muted">This month</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-trending-up text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +12.5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="stock-requests">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-success mb-1">8</h3>
+                                <p class="stats-label text-muted mb-0">Stock Requests</p>
+                                <small class="stats-subtitle text-muted">3 pending review</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-package text-success"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-check-circle"></i> +5 approved
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="budget">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-info mb-1">$45K</h3>
+                                <p class="stats-label text-muted mb-0">My Budget</p>
+                                <small class="stats-subtitle text-muted">Remaining</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-pie-chart text-info"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-negative">
+                                <i class="icon-trending-down"></i> -$12K used
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="alerts">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-warning mb-1">5</h3>
+                                <p class="stats-label text-muted mb-0">Stock Alerts</p>
+                                <small class="stats-subtitle text-muted">Active alerts</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-alert-triangle text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-negative">
+                                <i class="icon-alert-circle"></i> 2 critical
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions for Salesman -->
+    <div class="quick-actions-section mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+                <p class="text-muted small mb-0">Manage your sales activities</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-primary w-100 h-100 p-3" data-action="my-budget" onclick="router.navigate('/sales/budget')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-pie-chart fs-1 mb-2 text-primary"></i>
+                                <strong class="mb-1">My Budget</strong>
+                                <small class="text-muted">Manage personal budget</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-success w-100 h-100 p-3" data-action="sales-tracking" onclick="openSalesTracking()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-trending-up fs-1 mb-2 text-success"></i>
+                                <strong class="mb-1">Sales Tracking</strong>
+                                <small class="text-muted">Track my sales progress</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-info w-100 h-100 p-3" data-action="my-forecast" onclick="router.navigate('/sales/forecast')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-bar-chart fs-1 mb-2 text-info"></i>
+                                <strong class="mb-1">My Forecast</strong>
+                                <small class="text-muted">Create sales forecast</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-warning w-100 h-100 p-3" data-action="my-targets" onclick="openMyTargets()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-target fs-1 mb-2 text-warning"></i>
+                                <strong class="mb-1">My Targets</strong>
+                                <small class="text-muted">View personal targets</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-secondary w-100 h-100 p-3" data-action="communication" onclick="router.navigate('/communication')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-message-square fs-1 mb-2 text-secondary"></i>
+                                <strong class="mb-1">Communication</strong>
+                                <small class="text-muted">Messages and notifications</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button class="quick-action btn btn-outline-danger w-100 h-100 p-3" data-action="stock-requests" onclick="openStockRequestModal()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-package fs-1 mb-2 text-danger"></i>
+                                <strong class="mb-1">Stock Requests</strong>
+                                <small class="text-muted">Request inventory items</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content Row -->
+    <div class="row g-4 mb-5">
+        <!-- Sales Performance Chart -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Sales Performance</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary active" data-period="week">Week</button>
+                            <button class="btn btn-outline-primary" data-period="month">Month</button>
+                            <button class="btn btn-outline-primary" data-period="year">Year</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesPerformanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Recent Activities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success">
+                                <i class="icon-check-circle text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Stock request approved</strong>
+                                <p class="text-muted mb-1">100 units of Product A approved by manager</p>
+                                <small class="text-muted">2 hours ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-primary">
+                                <i class="icon-dollar-sign text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Sale completed</strong>
+                                <p class="text-muted mb-1">$5,200 sale to ABC Corporation</p>
+                                <small class="text-muted">4 hours ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning">
+                                <i class="icon-alert-triangle text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Stock alert</strong>
+                                <p class="text-muted mb-1">Low stock warning for Product X</p>
+                                <small class="text-muted">1 day ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info">
+                                <i class="icon-file-text text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Forecast updated</strong>
+                                <p class="text-muted mb-1">Q4 forecast submitted for review</p>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Summary and Alerts -->
+    <div class="row g-4">
+        <!-- Stock Summary -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">My Stock Summary</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshStockSummary()">
+                            <i class="icon-refresh me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Current Stock</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-summary-table">
+                                <tr>
+                                    <td>
+                                        <strong>Product A</strong>
+                                        <br><small class="text-muted">SKU: PA001</small>
+                                    </td>
+                                    <td>85 units</td>
+                                    <td><span class="badge bg-success">Good</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="requestStock('PA001')">
+                                            <i class="icon-plus"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Product B</strong>
+                                        <br><small class="text-muted">SKU: PB002</small>
+                                    </td>
+                                    <td>23 units</td>
+                                    <td><span class="badge bg-warning">Low</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="requestStock('PB002')">
+                                            <i class="icon-alert-triangle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Product C</strong>
+                                        <br><small class="text-muted">SKU: PC003</small>
+                                    </td>
+                                    <td>5 units</td>
+                                    <td><span class="badge bg-danger">Critical</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="requestStock('PC003')">
+                                            <i class="icon-alert-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Target Progress -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Target Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="target-progress">
+                        <div class="progress-item mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="progress-label">Monthly Sales Target</span>
+                                <span class="progress-value">$156K / $200K</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-primary" style="width: 78%"></div>
+                            </div>
+                            <small class="text-muted">78% completed</small>
+                        </div>
+                        
+                        <div class="progress-item mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="progress-label">Quarterly Target</span>
+                                <span class="progress-value">$425K / $600K</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: 71%"></div>
+                            </div>
+                            <small class="text-muted">71% completed</small>
+                        </div>
+                        
+                        <div class="progress-item mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="progress-label">Annual Target</span>
+                                <span class="progress-value">$1.2M / $2.4M</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-warning" style="width: 50%"></div>
+                            </div>
+                            <small class="text-muted">50% completed</small>
+                        </div>
+                        
+                        <div class="target-summary mt-4 p-3 bg-light rounded">
+                            <div class="text-center">
+                                <h6 class="mb-1">Overall Performance</h6>
+                                <h4 class="text-success mb-0">Above Average</h4>
+                                <small class="text-muted">Keep up the great work!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSalesTracking() {
+    STMBudget.notifications.show('Sales tracking opened', 'success');
+    // Would open sales tracking modal or navigate to dedicated page
+}
+
+function openMyTargets() {
+    STMBudget.notifications.show('Personal targets opened', 'success');
+    // Would open targets modal
+}
+
+function openStockRequestModal() {
+    STMBudget.events.trigger('open-stock-request-modal');
+}
+
+function requestStock(sku) {
+    STMBudget.notifications.show(`Stock request initiated for ${sku}`, 'info');
+    // Would open stock request modal with pre-filled SKU
+}
+
+function refreshStockSummary() {
+    const table = document.getElementById('stock-summary-table');
+    const refreshBtn = event.target;
+    
+    // Show loading state
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="icon-refresh me-1 spinning"></i> Loading...';
+    
+    // Simulate loading
+    setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="icon-refresh me-1"></i> Refresh';
+        STMBudget.notifications.show('Stock summary refreshed', 'success');
+    }, 1000);
+}
+
+// Initialize sales performance chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesPerformanceChart');
+    if (ctx && typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Target',
+                    data: [20000, 20000, 20000, 20000, 20000, 20000, 20000],
+                    borderColor: '#ef4444',
+                    borderDash: [5, 5],
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'K';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Period selector
+    const periodButtons = document.querySelectorAll('[data-period]');
+    periodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            periodButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            // Would update chart data based on period
+        });
+    });
+});
+</script>
+
+<style>
+.salesman-dashboard {
+    animation: slideInRight 0.6s ease;
+}
+
+.stats-grid .stats-card {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stats-grid .stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stats-grid .stats-card:nth-child(1) { border-left-color: #3b82f6; }
+.stats-grid .stats-card:nth-child(2) { border-left-color: #10b981; }
+.stats-grid .stats-card:nth-child(3) { border-left-color: #06b6d4; }
+.stats-grid .stats-card:nth-child(4) { border-left-color: #f59e0b; }
+
+.trend-positive {
+    color: #10b981;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.trend-negative {
+    color: #ef4444;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.activity-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    width: 2px;
+    height: calc(100% - 20px);
+    background: #e5e7eb;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    z-index: 1;
+    position: relative;
+}
+
+.progress-item {
+    position: relative;
+}
+
+.progress-label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.progress-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+.target-summary {
+    border: 1px solid #e5e7eb;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .quick-action {
+        min-height: 100px;
+    }
+    
+    .activity-list {
+        max-height: 300px;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>

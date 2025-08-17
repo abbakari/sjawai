@@ -1,0 +1,669 @@
+<!-- Rolling Forecast Management -->
+<div class="forecast-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="icon-trending-up me-2 text-success"></i>
+                    Rolling Forecast
+                </h1>
+                <p class="page-subtitle text-muted mb-0">
+                    Create and manage dynamic sales forecasts with real-time adjustments
+                </p>
+            </div>
+            <div class="page-actions d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="refreshForecastData()" id="refresh-forecast-btn">
+                    <i class="icon-refresh me-2"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-success" onclick="openCreateForecastModal()" id="create-forecast-btn">
+                    <i class="icon-plus me-2"></i>
+                    New Forecast
+                </button>
+                <button class="btn btn-primary" onclick="generateForecastReport()" id="generate-report-btn">
+                    <i class="icon-file-text me-2"></i>
+                    Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Filters -->
+    <div class="forecast-filters mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Forecast Period</label>
+                        <select class="form-select" id="forecast-period">
+                            <option value="3months">Next 3 Months</option>
+                            <option value="6months" selected>Next 6 Months</option>
+                            <option value="12months">Next 12 Months</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Product Category</label>
+                        <select class="form-select" id="product-category">
+                            <option value="all">All Categories</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="home">Home & Garden</option>
+                            <option value="sports">Sports</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Territory</label>
+                        <select class="form-select" id="territory">
+                            <option value="all">All Territories</option>
+                            <option value="north">North Region</option>
+                            <option value="south">South Region</option>
+                            <option value="east">East Region</option>
+                            <option value="west">West Region</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Confidence Level</label>
+                        <select class="form-select" id="confidence-level">
+                            <option value="all">All Levels</option>
+                            <option value="high">High (90%+)</option>
+                            <option value="medium">Medium (70-89%)</option>
+                            <option value="low">Low (<70%)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" onclick="applyForecastFilters()">
+                                <i class="icon-filter me-2"></i>Apply Filters
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetForecastFilters()">
+                                <i class="icon-x me-2"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Summary Cards -->
+    <div class="forecast-summary mb-5">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-primary mb-1">$3.2M</h3>
+                                <p class="summary-label text-muted mb-0">Projected Revenue</p>
+                                <small class="summary-period">Next 6 months</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-dollar-sign text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="summary-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +15.3% vs last period
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-success mb-1">85%</h3>
+                                <p class="summary-label text-muted mb-0">Forecast Accuracy</p>
+                                <small class="summary-period">Rolling 12 months</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-target text-success"></i>
+                            </div>
+                        </div>
+                        <div class="summary-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +3.2% improvement
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-info mb-1">45</h3>
+                                <p class="summary-label text-muted mb-0">Forecast Models</p>
+                                <small class="summary-period">Active scenarios</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-layers text-info"></i>
+                            </div>
+                        </div>
+                        <div class="summary-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-plus"></i> 8 new this month
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-warning mb-1">92%</h3>
+                                <p class="summary-label text-muted mb-0">Pipeline Conversion</p>
+                                <small class="summary-period">Weighted average</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-trending-up text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="summary-trend mt-3">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +2.1% this quarter
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Charts Section -->
+    <div class="forecast-charts mb-5">
+        <div class="row g-4">
+            <!-- Main Forecast Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Rolling Forecast Trend</h5>
+                            <div class="chart-controls">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" data-chart-view="revenue">Revenue</button>
+                                    <button class="btn btn-outline-primary" data-chart-view="units">Units</button>
+                                    <button class="btn btn-outline-primary" data-chart-view="comparison">Comparison</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="forecastTrendChart" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Accuracy Chart -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title mb-0">Forecast Accuracy</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="forecastAccuracyChart" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Scenarios -->
+    <div class="forecast-scenarios mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Forecast Scenarios</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openScenariosModal()">
+                        <i class="icon-settings me-1"></i>Manage Scenarios
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="scenario-card optimistic">
+                            <div class="scenario-header">
+                                <h6 class="scenario-title">Optimistic Scenario</h6>
+                                <span class="scenario-confidence badge bg-success">High Confidence</span>
+                            </div>
+                            <div class="scenario-value">
+                                <h3 class="text-success">$3.8M</h3>
+                                <p class="text-muted mb-0">+19% above baseline</p>
+                            </div>
+                            <div class="scenario-factors">
+                                <small class="text-muted">
+                                    <i class="icon-arrow-up"></i> Market expansion<br>
+                                    <i class="icon-arrow-up"></i> New product launch<br>
+                                    <i class="icon-arrow-up"></i> Seasonal boost
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="scenario-card baseline active">
+                            <div class="scenario-header">
+                                <h6 class="scenario-title">Baseline Scenario</h6>
+                                <span class="scenario-confidence badge bg-primary">Current Active</span>
+                            </div>
+                            <div class="scenario-value">
+                                <h3 class="text-primary">$3.2M</h3>
+                                <p class="text-muted mb-0">Most likely outcome</p>
+                            </div>
+                            <div class="scenario-factors">
+                                <small class="text-muted">
+                                    <i class="icon-minus"></i> Current trends<br>
+                                    <i class="icon-minus"></i> Historical patterns<br>
+                                    <i class="icon-minus"></i> Market conditions
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="scenario-card conservative">
+                            <div class="scenario-header">
+                                <h6 class="scenario-title">Conservative Scenario</h6>
+                                <span class="scenario-confidence badge bg-warning">Medium Confidence</span>
+                            </div>
+                            <div class="scenario-value">
+                                <h3 class="text-warning">$2.6M</h3>
+                                <p class="text-muted mb-0">-19% below baseline</p>
+                            </div>
+                            <div class="scenario-factors">
+                                <small class="text-muted">
+                                    <i class="icon-arrow-down"></i> Economic downturn<br>
+                                    <i class="icon-arrow-down"></i> Competition increase<br>
+                                    <i class="icon-arrow-down"></i> Supply constraints
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Table -->
+    <div class="forecast-table-section">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Detailed Forecast Data</h5>
+                    <div class="table-controls d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="exportForecastData()">
+                            <i class="icon-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleForecastView()">
+                            <i class="icon-layout me-1"></i>Toggle View
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% include 'sales/forecast/forecast_table.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forecast Modals -->
+<div id="forecast-modals-container">
+    <!-- Create Forecast Modal -->
+    <div class="modal fade" id="createForecastModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Forecast</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'sales/forecast/forecast_form.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenarios Modal -->
+    <div class="modal fade" id="scenariosModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Forecast Scenarios</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="scenarios-content">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Forecast Management JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeForecastManagement();
+});
+
+function initializeForecastManagement() {
+    console.log('📈 Initializing forecast management...');
+    
+    // Initialize charts
+    initializeForecastCharts();
+    
+    // Initialize filters
+    initializeForecastFilters();
+    
+    // Setup event listeners
+    setupForecastEventListeners();
+}
+
+function initializeForecastCharts() {
+    // Forecast Trend Chart
+    const trendCtx = document.getElementById('forecastTrendChart');
+    if (trendCtx && typeof Chart !== 'undefined') {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Forecast',
+                    data: [450000, 520000, 480000, 580000, 620000, 675000, 720000, 680000, 740000, 780000, 825000, 870000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Actual',
+                    data: [430000, 510000, 495000, 575000, 605000, 660000, 715000, null, null, null, null, null],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: false
+                }, {
+                    label: 'Target',
+                    data: [500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000],
+                    borderColor: '#ef4444',
+                    borderDash: [5, 5],
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'K';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Forecast Accuracy Chart
+    const accuracyCtx = document.getElementById('forecastAccuracyChart');
+    if (accuracyCtx && typeof Chart !== 'undefined') {
+        new Chart(accuracyCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Accurate', 'Over-forecast', 'Under-forecast'],
+                datasets: [{
+                    data: [85, 8, 7],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initializeForecastFilters() {
+    const filterElements = ['forecast-period', 'product-category', 'territory', 'confidence-level'];
+    
+    filterElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('change', function() {
+                // Auto-apply filters on change
+                // applyForecastFilters();
+            });
+        }
+    });
+}
+
+function setupForecastEventListeners() {
+    // Chart view controls
+    const chartViewButtons = document.querySelectorAll('[data-chart-view]');
+    chartViewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            chartViewButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            updateForecastChartView(this.dataset.chartView);
+        });
+    });
+}
+
+function refreshForecastData() {
+    const refreshBtn = document.getElementById('refresh-forecast-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    setTimeout(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        STMBudget.notifications.show('Forecast data refreshed successfully', 'success');
+    }, 1500);
+}
+
+function openCreateForecastModal() {
+    const modal = new bootstrap.Modal(document.getElementById('createForecastModal'));
+    modal.show();
+}
+
+function generateForecastReport() {
+    STMBudget.notifications.show('Generating forecast report...', 'info');
+    
+    setTimeout(() => {
+        STMBudget.notifications.show('Forecast report generated successfully', 'success');
+    }, 2000);
+}
+
+function openScenariosModal() {
+    const modal = new bootstrap.Modal(document.getElementById('scenariosModal'));
+    modal.show();
+}
+
+function applyForecastFilters() {
+    console.log('Applying forecast filters...');
+    STMBudget.notifications.show('Filters applied', 'success');
+}
+
+function resetForecastFilters() {
+    const filterElements = ['forecast-period', 'product-category', 'territory', 'confidence-level'];
+    
+    filterElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.selectedIndex = 0;
+        }
+    });
+    
+    STMBudget.notifications.show('Filters reset', 'info');
+}
+
+function updateForecastChartView(view) {
+    console.log('Updating chart view:', view);
+    // Implementation for updating chart based on view
+}
+
+function exportForecastData() {
+    STMBudget.notifications.show('Exporting forecast data...', 'info');
+}
+
+function toggleForecastView() {
+    STMBudget.notifications.show('View toggled', 'info');
+}
+
+// Export functions for global access
+window.forecastManagement = {
+    refresh: refreshForecastData,
+    create: openCreateForecastModal,
+    report: generateForecastReport,
+    scenarios: openScenariosModal
+};
+</script>
+
+<style>
+.forecast-container {
+    animation: slideInUp 0.6s ease;
+}
+
+.forecast-filters .card {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #cbd5e1;
+}
+
+.summary-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.scenario-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.scenario-card.active {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.scenario-card.optimistic:hover {
+    border-color: #10b981;
+}
+
+.scenario-card.conservative:hover {
+    border-color: #f59e0b;
+}
+
+.scenario-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.scenario-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0;
+}
+
+.scenario-confidence {
+    font-size: 0.75rem;
+}
+
+.scenario-value h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.scenario-factors {
+    margin-top: 1rem;
+    line-height: 1.6;
+}
+
+.scenario-factors i {
+    width: 14px;
+    display: inline-block;
+}
+
+.trend-positive {
+    color: #10b981;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        text-align: center;
+    }
+    
+    .page-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .page-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .scenario-card {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-controls .btn-group {
+        flex-direction: column;
+    }
+}
+</style>

@@ -1,0 +1,799 @@
+<!-- Communication Center -->
+<div class="communication-center">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="icon-message-square me-2 text-primary"></i>
+                    Communication Center
+                </h1>
+                <p class="page-subtitle text-muted mb-0">
+                    Stay connected with your team through messages, notifications, and real-time updates
+                </p>
+            </div>
+            <div class="page-actions d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="refreshMessages()" id="refresh-messages-btn">
+                    <i class="icon-refresh me-2"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-success" onclick="openComposeModal()" id="compose-message-btn">
+                    <i class="icon-edit me-2"></i>
+                    Compose
+                </button>
+                <button class="btn btn-primary" onclick="markAllAsRead()" id="mark-read-btn">
+                    <i class="icon-check-circle me-2"></i>
+                    Mark All Read
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Communication Stats -->
+    <div class="comm-stats mb-4">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-primary mb-1">12</h3>
+                                <p class="stats-label text-muted mb-0">Unread Messages</p>
+                                <small class="stats-subtitle text-muted">Require attention</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-mail text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-success mb-1">8</h3>
+                                <p class="stats-label text-muted mb-0">Active Threads</p>
+                                <small class="stats-subtitle text-muted">Ongoing conversations</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-message-circle text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-warning mb-1">3</h3>
+                                <p class="stats-label text-muted mb-0">Priority Alerts</p>
+                                <small class="stats-subtitle text-muted">High importance</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-alert-triangle text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-info mb-1">24</h3>
+                                <p class="stats-label text-muted mb-0">Team Members</p>
+                                <small class="stats-subtitle text-muted">Available to chat</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-users text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Communication Layout -->
+    <div class="communication-layout">
+        <div class="row g-4 h-100">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="comm-sidebar">
+                    <!-- Search and Filters -->
+                    <div class="comm-search mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="icon-search"></i>
+                            </span>
+                            <input type="text" class="form-control" placeholder="Search messages..." id="message-search">
+                        </div>
+                    </div>
+
+                    <div class="comm-filters mb-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="unread">Unread</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="priority">Priority</button>
+                        </div>
+                    </div>
+
+                    <!-- Message Categories -->
+                    <div class="message-categories">
+                        <h6 class="category-title">Categories</h6>
+                        <div class="category-list">
+                            <a href="#" class="category-item active" data-category="all">
+                                <i class="icon-inbox me-2"></i>
+                                <span>All Messages</span>
+                                <span class="badge bg-primary ms-auto">45</span>
+                            </a>
+                            <a href="#" class="category-item" data-category="requests">
+                                <i class="icon-file-text me-2"></i>
+                                <span>Stock Requests</span>
+                                <span class="badge bg-warning ms-auto">8</span>
+                            </a>
+                            <a href="#" class="category-item" data-category="approvals">
+                                <i class="icon-check-circle me-2"></i>
+                                <span>Approvals</span>
+                                <span class="badge bg-success ms-auto">5</span>
+                            </a>
+                            <a href="#" class="category-item" data-category="alerts">
+                                <i class="icon-alert-triangle me-2"></i>
+                                <span>System Alerts</span>
+                                <span class="badge bg-danger ms-auto">3</span>
+                            </a>
+                            <a href="#" class="category-item" data-category="announcements">
+                                <i class="icon-megaphone me-2"></i>
+                                <span>Announcements</span>
+                                <span class="badge bg-info ms-auto">2</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Online Users -->
+                    <div class="online-users mt-4">
+                        <h6 class="category-title">Online Team Members</h6>
+                        <div class="user-list">
+                            <div class="user-item">
+                                <div class="user-avatar online">
+                                    <img src="/static/images/users/manager.jpg" alt="Jane Manager" class="avatar-img">
+                                    <span class="status-indicator"></span>
+                                </div>
+                                <div class="user-info">
+                                    <div class="user-name">Jane Manager</div>
+                                    <div class="user-role">Manager</div>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="startChat('jane-manager')">
+                                        <i class="icon-message-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="user-item">
+                                <div class="user-avatar online">
+                                    <img src="/static/images/users/admin.jpg" alt="System Admin" class="avatar-img">
+                                    <span class="status-indicator"></span>
+                                </div>
+                                <div class="user-info">
+                                    <div class="user-name">System Admin</div>
+                                    <div class="user-role">Administrator</div>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="startChat('system-admin')">
+                                        <i class="icon-message-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="user-item">
+                                <div class="user-avatar away">
+                                    <img src="/static/images/users/supply.jpg" alt="Bob Supply" class="avatar-img">
+                                    <span class="status-indicator"></span>
+                                </div>
+                                <div class="user-info">
+                                    <div class="user-name">Bob Supply</div>
+                                    <div class="user-role">Supply Chain</div>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="startChat('bob-supply')">
+                                        <i class="icon-message-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-6">
+                <div class="message-area">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Messages</h5>
+                                <div class="message-controls">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleMessageView()">
+                                        <i class="icon-layout"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="message-list" id="message-list">
+                                {% include 'communication/includes/message_thread.html' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Panel -->
+            <div class="col-lg-3">
+                <div class="details-panel">
+                    <!-- Quick Actions -->
+                    <div class="quick-actions mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent border-0">
+                                <h6 class="card-title mb-0">Quick Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="requestStock()">
+                                        <i class="icon-package me-2"></i>Request Stock
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="reportIssue()">
+                                        <i class="icon-alert-circle me-2"></i>Report Issue
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="askQuestion()">
+                                        <i class="icon-help-circle me-2"></i>Ask Question
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="scheduleCall()">
+                                        <i class="icon-phone me-2"></i>Schedule Call
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Notifications -->
+                    <div class="recent-notifications">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent border-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="card-title mb-0">Recent Notifications</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="loadNotifications()">
+                                        <i class="icon-refresh"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="notification-list">
+                                    <div class="notification-item unread">
+                                        <div class="notification-icon bg-success">
+                                            <i class="icon-check-circle text-white"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-title">Stock Request Approved</div>
+                                            <div class="notification-text">Your request for 100 units has been approved</div>
+                                            <div class="notification-time">5 minutes ago</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="notification-item unread">
+                                        <div class="notification-icon bg-primary">
+                                            <i class="icon-message-square text-white"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-title">New Message</div>
+                                            <div class="notification-text">Jane Manager sent you a message</div>
+                                            <div class="notification-time">10 minutes ago</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-icon bg-warning">
+                                            <i class="icon-alert-triangle text-white"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-title">Low Stock Alert</div>
+                                            <div class="notification-text">Product XYZ is running low</div>
+                                            <div class="notification-time">1 hour ago</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-icon bg-info">
+                                            <i class="icon-calendar text-white"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-title">Meeting Reminder</div>
+                                            <div class="notification-text">Team meeting in 30 minutes</div>
+                                            <div class="notification-time">2 hours ago</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewAllNotifications()">
+                                        View All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Communication Modals -->
+<div id="communication-modals-container">
+    <!-- Compose Message Modal -->
+    <div class="modal fade" id="composeMessageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Compose Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'communication/center/compose_message.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Details Modal -->
+    <div class="modal fade" id="messageDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Message Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="message-details-content">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Communication Center JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCommunicationCenter();
+});
+
+function initializeCommunicationCenter() {
+    console.log('💬 Initializing communication center...');
+    
+    // Initialize message search
+    initializeMessageSearch();
+    
+    // Initialize filters
+    initializeMessageFilters();
+    
+    // Setup event listeners
+    setupCommunicationEventListeners();
+    
+    // Load initial data
+    loadMessages();
+    loadNotifications();
+    
+    // Setup real-time updates
+    setupRealTimeUpdates();
+}
+
+function initializeMessageSearch() {
+    const searchInput = document.getElementById('message-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', STMBudget.utils.debounce(function() {
+            const searchTerm = this.value.toLowerCase();
+            filterMessages(searchTerm);
+        }, 300));
+    }
+}
+
+function initializeMessageFilters() {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            applyMessageFilter(this.dataset.filter);
+        });
+    });
+
+    const categoryItems = document.querySelectorAll('[data-category]');
+    categoryItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            categoryItems.forEach(cat => cat.classList.remove('active'));
+            this.classList.add('active');
+            filterByCategory(this.dataset.category);
+        });
+    });
+}
+
+function setupCommunicationEventListeners() {
+    // Auto-refresh messages every 30 seconds
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            loadMessages();
+            loadNotifications();
+        }
+    }, 30000);
+}
+
+function setupRealTimeUpdates() {
+    // Simulate real-time updates
+    // In a real application, this would use WebSockets or Server-Sent Events
+    setInterval(() => {
+        if (Math.random() < 0.1) { // 10% chance every 5 seconds
+            simulateNewMessage();
+        }
+    }, 5000);
+}
+
+function refreshMessages() {
+    const refreshBtn = document.getElementById('refresh-messages-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    loadMessages().then(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        STMBudget.notifications.show('Messages refreshed successfully', 'success');
+    });
+}
+
+function openComposeModal() {
+    const modal = new bootstrap.Modal(document.getElementById('composeMessageModal'));
+    modal.show();
+}
+
+function markAllAsRead() {
+    STMBudget.notifications.show('All messages marked as read', 'success');
+    
+    // Update UI
+    const unreadItems = document.querySelectorAll('.message-item.unread, .notification-item.unread');
+    unreadItems.forEach(item => item.classList.remove('unread'));
+    
+    // Update counters
+    updateMessageCounters();
+}
+
+function loadMessages() {
+    return new Promise(resolve => {
+        // Simulate API call
+        setTimeout(() => {
+            console.log('Messages loaded');
+            resolve();
+        }, 500);
+    });
+}
+
+function loadNotifications() {
+    const notificationList = document.querySelector('.notification-list');
+    if (notificationList) {
+        // Simulate loading new notifications
+        console.log('Notifications loaded');
+    }
+}
+
+function filterMessages(searchTerm) {
+    console.log('Filtering messages:', searchTerm);
+    // Implementation for message filtering
+}
+
+function applyMessageFilter(filter) {
+    console.log('Applying message filter:', filter);
+    // Implementation for filter application
+}
+
+function filterByCategory(category) {
+    console.log('Filtering by category:', category);
+    // Implementation for category filtering
+}
+
+function simulateNewMessage() {
+    STMBudget.notifications.show('New message received', 'info');
+    updateMessageCounters();
+}
+
+function updateMessageCounters() {
+    // Update various message counters in the UI
+    const badges = document.querySelectorAll('.badge');
+    badges.forEach(badge => {
+        if (badge.textContent && !isNaN(badge.textContent)) {
+            const currentCount = parseInt(badge.textContent);
+            // Simulate counter updates
+        }
+    });
+}
+
+function startChat(userId) {
+    console.log('Starting chat with:', userId);
+    STMBudget.notifications.show(`Starting chat with ${userId}`, 'info');
+}
+
+function toggleMessageView() {
+    console.log('Toggling message view');
+    STMBudget.notifications.show('View toggled', 'info');
+}
+
+function requestStock() {
+    STMBudget.notifications.show('Opening stock request form...', 'info');
+}
+
+function reportIssue() {
+    STMBudget.notifications.show('Opening issue report form...', 'info');
+}
+
+function askQuestion() {
+    STMBudget.notifications.show('Opening question form...', 'info');
+}
+
+function scheduleCall() {
+    STMBudget.notifications.show('Opening call scheduler...', 'info');
+}
+
+function viewAllNotifications() {
+    router.navigate('/communication/notifications');
+}
+
+function openMessageDetails(messageId) {
+    const modal = new bootstrap.Modal(document.getElementById('messageDetailsModal'));
+    
+    // Load message details
+    loadMessageDetails(messageId).then(details => {
+        document.getElementById('message-details-content').innerHTML = details;
+        modal.show();
+    });
+}
+
+async function loadMessageDetails(messageId) {
+    // Simulate API call
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(`<div>Details for message ${messageId}</div>`);
+        }, 500);
+    });
+}
+
+// Export functions for global access
+window.communicationCenter = {
+    refresh: refreshMessages,
+    compose: openComposeModal,
+    markAllRead: markAllAsRead,
+    messageDetails: openMessageDetails
+};
+</script>
+
+<style>
+.communication-center {
+    animation: fadeIn 0.6s ease;
+}
+
+.comm-sidebar {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+}
+
+.category-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: #6b7280;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.category-item:hover {
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+}
+
+.category-item.active {
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 500;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: 0.75rem;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.user-avatar.online .status-indicator {
+    background: #10b981;
+}
+
+.user-avatar.away .status-indicator {
+    background: #f59e0b;
+}
+
+.user-avatar.offline .status-indicator {
+    background: #6b7280;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #111827;
+    font-size: 0.875rem;
+    line-height: 1.2;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.message-area {
+    height: 600px;
+}
+
+.message-list {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.details-panel .card {
+    margin-bottom: 1rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.notification-item.unread {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+}
+
+.notification-item:hover {
+    background: #f9fafb;
+}
+
+.notification-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 500;
+    color: #111827;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.notification-text {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.notification-time {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+.communication-layout {
+    min-height: 600px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .communication-layout .col-lg-3:first-child,
+    .communication-layout .col-lg-3:last-child {
+        order: 2;
+    }
+    
+    .communication-layout .col-lg-6 {
+        order: 1;
+    }
+    
+    .message-area {
+        height: 400px;
+    }
+    
+    .comm-sidebar {
+        margin-top: 1rem;
+        padding: 1rem;
+    }
+    
+    .details-panel {
+        margin-top: 1rem;
+    }
+}
+</style>

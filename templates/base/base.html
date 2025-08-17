@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}STMBudget - Sales Budgeting & Rolling Forecast{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block description %}Advanced sales budgeting and rolling forecast management system{% endblock %}">
+    <meta name="keywords" content="sales, budget, forecast, management, analytics">
+    <meta name="author" content="STMBudget">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="{% load static %}{% static 'css/base.css' %}" as="style">
+    <link rel="preload" href="{% load static %}{% static 'js/base.js' %}" as="script">
+    
+    <!-- CSS -->
+    {% load static %}
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'css/components.css' %}" rel="stylesheet">
+    <link href="{% static 'css/animations.css' %}" rel="stylesheet">
+    <link href="{% static 'css/responsive.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+    
+    <!-- Critical inline styles for performance -->
+    <style>
+        /* Loading spinner */
+        .loading-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255, 255, 255, 0.9); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999; 
+        }
+        .spinner { 
+            width: 40px; 
+            height: 40px; 
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #3498db; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        /* Hide content until loaded */
+        .main-content { opacity: 0; transition: opacity 0.3s ease-in; }
+        .main-content.loaded { opacity: 1; }
+    </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div id="main-content" class="main-content">
+        {% block layout %}
+        <!-- Default layout structure -->
+        <div class="app-wrapper">
+            {% block header %}
+                {% include 'base/components/navbar.html' %}
+            {% endblock %}
+            
+            {% block sidebar %}
+                {% if user.is_authenticated and user.role != 'salesman' %}
+                    {% include 'base/components/sidebar.html' %}
+                {% endif %}
+            {% endblock %}
+            
+            <main class="main-content-area {% if user.is_authenticated and user.role != 'salesman' %}with-sidebar{% endif %}">
+                {% block content %}{% endblock %}
+            </main>
+            
+            {% block footer %}
+                {% include 'base/components/footer.html' %}
+            {% endblock %}
+        </div>
+        {% endblock %}
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container">
+        {% include 'base/components/notifications.html' %}
+    </div>
+
+    <!-- Global Modals -->
+    {% block modals %}
+        {% include 'base/components/modals/password_modal.html' %}
+        {% include 'base/components/modals/export_modal.html' %}
+    {% endblock %}
+
+    <!-- JavaScript -->
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/utils/api.js' %}"></script>
+    <script src="{% static 'js/utils/validation.js' %}"></script>
+    <script src="{% static 'js/components/notifications.js' %}"></script>
+    <script src="{% static 'js/components/modals.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
+    <!-- Initialize Application -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading overlay
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const mainContent = document.getElementById('main-content');
+            
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                mainContent.classList.add('loaded');
+            }, 500);
+
+            // Initialize global components
+            window.STMBudget = window.STMBudget || {};
+            STMBudget.init();
+            
+            {% block page_scripts %}{% endblock %}
+        });
+    </script>
+</body>
+</html>
