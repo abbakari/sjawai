@@ -1,0 +1,606 @@
+<!-- Sales Budget Management -->
+<div class="budget-management-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="icon-pie-chart me-2 text-primary"></i>
+                    Sales Budget Management
+                </h1>
+                <p class="page-subtitle text-muted mb-0">
+                    Manage and track your sales budget allocation and performance
+                </p>
+            </div>
+            <div class="page-actions d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="refreshBudgetData()" id="refresh-budget-btn">
+                    <i class="icon-refresh me-2"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-success" onclick="openCreateBudgetModal()" id="create-budget-btn">
+                    <i class="icon-plus me-2"></i>
+                    Create Budget
+                </button>
+                <button class="btn btn-primary" onclick="openExportModal('budget')" id="export-budget-btn">
+                    <i class="icon-download me-2"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Filters -->
+    <div class="budget-filters mb-4">
+        {% include 'sales/budget/budget_filters.html' %}
+    </div>
+
+    <!-- Budget Summary Cards -->
+    <div class="budget-summary mb-5">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-primary mb-1">$2.4M</h3>
+                                <p class="summary-label text-muted mb-0">Total Budget</p>
+                                <small class="summary-period">Current Year</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-dollar-sign text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="summary-progress mt-3">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: 75%"></div>
+                            </div>
+                            <small class="text-muted">75% allocated</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-success mb-1">$1.8M</h3>
+                                <p class="summary-label text-muted mb-0">Allocated</p>
+                                <small class="summary-period">Across all products</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-check-circle text-success"></i>
+                            </div>
+                        </div>
+                        <div class="summary-progress mt-3">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 85%"></div>
+                            </div>
+                            <small class="text-muted">85% utilized</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-info mb-1">$600K</h3>
+                                <p class="summary-label text-muted mb-0">Remaining</p>
+                                <small class="summary-period">Available to allocate</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-clock text-info"></i>
+                            </div>
+                        </div>
+                        <div class="summary-progress mt-3">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-info" style="width: 25%"></div>
+                            </div>
+                            <small class="text-muted">25% remaining</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="summary-card card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="summary-value text-warning mb-1">92%</h3>
+                                <p class="summary-label text-muted mb-0">Performance</p>
+                                <small class="summary-period">vs target</small>
+                            </div>
+                            <div class="summary-icon">
+                                <i class="icon-target text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="summary-progress mt-3">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: 92%"></div>
+                            </div>
+                            <small class="text-muted">Above target</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Charts Section -->
+    <div class="budget-charts mb-5">
+        <div class="row g-4">
+            <!-- Budget Allocation Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Budget Allocation by Category</h5>
+                            <div class="chart-controls">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" data-chart-period="monthly">Monthly</button>
+                                    <button class="btn btn-outline-primary" data-chart-period="quarterly">Quarterly</button>
+                                    <button class="btn btn-outline-primary" data-chart-period="yearly">Yearly</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="budgetAllocationChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget vs Actual Chart -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title mb-0">Budget vs Actual</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="budgetVsActualChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Table -->
+    <div class="budget-table-section">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Budget Details</h5>
+                    <div class="table-controls d-flex gap-2">
+                        <div class="search-box">
+                            <input type="text" class="form-control form-control-sm" placeholder="Search budgets..." id="budget-search">
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="icon-filter me-1"></i> Filter
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-filter="all">All Budgets</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="active">Active Only</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="pending">Pending Approval</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="overbudget">Over Budget</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% include 'sales/budget/budget_table.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Management Modals -->
+<div id="budget-modals-container">
+    <!-- Create Budget Modal -->
+    <div class="modal fade" id="createBudgetModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'sales/budget/budget_form.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Budget Modal -->
+    <div class="modal fade" id="editBudgetModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="edit-budget-content">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Details Modal -->
+    <div class="modal fade" id="budgetDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Budget Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="budget-details-content">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Budget Management JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBudgetManagement();
+});
+
+function initializeBudgetManagement() {
+    console.log('📊 Initializing budget management...');
+    
+    // Initialize charts
+    initializeBudgetCharts();
+    
+    // Initialize table
+    initializeBudgetTable();
+    
+    // Initialize filters
+    initializeBudgetFilters();
+    
+    // Initialize search
+    initializeBudgetSearch();
+    
+    // Setup event listeners
+    setupEventListeners();
+}
+
+function initializeBudgetCharts() {
+    // Budget Allocation Chart
+    const allocationCtx = document.getElementById('budgetAllocationChart');
+    if (allocationCtx && typeof Chart !== 'undefined') {
+        new Chart(allocationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Product Marketing', 'Sales Operations', 'Customer Acquisition', 'Territory Development', 'Channel Support'],
+                datasets: [{
+                    data: [35, 25, 20, 12, 8],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Budget vs Actual Chart
+    const vsActualCtx = document.getElementById('budgetVsActualChart');
+    if (vsActualCtx && typeof Chart !== 'undefined') {
+        new Chart(vsActualCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Budget',
+                    data: [600000, 650000, 700000, 750000],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }, {
+                    label: 'Actual',
+                    data: [580000, 680000, 720000, 690000],
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'K';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initializeBudgetTable() {
+    // Initialize DataTable if available
+    const table = document.getElementById('budget-table');
+    if (table && typeof $ !== 'undefined' && $.fn.DataTable) {
+        $(table).DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [-1] }
+            ]
+        });
+    }
+}
+
+function initializeBudgetFilters() {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filter = this.dataset.filter;
+            applyBudgetFilter(filter);
+        });
+    });
+}
+
+function initializeBudgetSearch() {
+    const searchInput = document.getElementById('budget-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', STMBudget.utils.debounce(function() {
+            const searchTerm = this.value.toLowerCase();
+            filterBudgetTable(searchTerm);
+        }, 300));
+    }
+}
+
+function setupEventListeners() {
+    // Chart period controls
+    const chartPeriodButtons = document.querySelectorAll('[data-chart-period]');
+    chartPeriodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            chartPeriodButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            updateChartPeriod(this.dataset.chartPeriod);
+        });
+    });
+}
+
+function refreshBudgetData() {
+    const refreshBtn = document.getElementById('refresh-budget-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    // Show loading state
+    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Simulate refresh
+    setTimeout(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        STMBudget.notifications.show('Budget data refreshed successfully', 'success');
+        
+        // Trigger refresh event
+        STMBudget.events.trigger('budget-refreshed');
+    }, 1500);
+}
+
+function openCreateBudgetModal() {
+    const modal = new bootstrap.Modal(document.getElementById('createBudgetModal'));
+    modal.show();
+}
+
+function openEditBudgetModal(budgetId) {
+    const modal = new bootstrap.Modal(document.getElementById('editBudgetModal'));
+    
+    // Load budget data
+    loadBudgetForEdit(budgetId).then(budgetData => {
+        document.getElementById('edit-budget-content').innerHTML = budgetData;
+        modal.show();
+    });
+}
+
+function openBudgetDetailsModal(budgetId) {
+    const modal = new bootstrap.Modal(document.getElementById('budgetDetailsModal'));
+    
+    // Load budget details
+    loadBudgetDetails(budgetId).then(details => {
+        document.getElementById('budget-details-content').innerHTML = details;
+        modal.show();
+    });
+}
+
+function applyBudgetFilter(filter) {
+    console.log('Applying budget filter:', filter);
+    // Implementation for filtering budget table
+}
+
+function filterBudgetTable(searchTerm) {
+    console.log('Searching budgets:', searchTerm);
+    // Implementation for search functionality
+}
+
+function updateChartPeriod(period) {
+    console.log('Updating chart period:', period);
+    // Implementation for updating chart data based on period
+}
+
+async function loadBudgetForEdit(budgetId) {
+    // Simulate API call
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(`<div>Edit form for budget ${budgetId}</div>`);
+        }, 500);
+    });
+}
+
+async function loadBudgetDetails(budgetId) {
+    // Simulate API call
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(`<div>Details for budget ${budgetId}</div>`);
+        }, 500);
+    });
+}
+
+function deleteBudget(budgetId) {
+    if (confirm('Are you sure you want to delete this budget?')) {
+        // Simulate deletion
+        STMBudget.notifications.show('Budget deleted successfully', 'success');
+    }
+}
+
+// Export functions for global access
+window.budgetManagement = {
+    refresh: refreshBudgetData,
+    create: openCreateBudgetModal,
+    edit: openEditBudgetModal,
+    details: openBudgetDetailsModal,
+    delete: deleteBudget
+};
+</script>
+
+<style>
+.budget-management-container {
+    animation: fadeInUp 0.6s ease;
+}
+
+.page-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+}
+
+.summary-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.summary-icon i {
+    font-size: 2rem;
+    opacity: 0.7;
+}
+
+.summary-progress .progress {
+    border-radius: 3px;
+    background: #f1f5f9;
+}
+
+.budget-filters {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.chart-controls .btn-group {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-controls {
+    align-items: center;
+}
+
+.search-box {
+    min-width: 200px;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .page-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .page-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-value {
+        font-size: 1.5rem;
+    }
+    
+    .table-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-box {
+        min-width: 100%;
+    }
+}
+</style>
