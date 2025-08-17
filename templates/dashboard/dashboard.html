@@ -1,0 +1,426 @@
+<!-- Dashboard Content - Dynamically loaded via SPA -->
+<div class="dashboard-container" data-role="{{ user.role }}">
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="dashboard-title">
+                    <span class="text-muted fw-light">Dashboard /</span> 
+                    <span class="role-title">{{ user.get_role_display }}</span>
+                </h1>
+                <p class="dashboard-subtitle text-muted mb-0">
+                    Welcome back, {{ user.get_full_name|default:user.username }}! 
+                    <span class="last-updated">Last updated: <span id="last-update-time"></span></span>
+                </p>
+            </div>
+            <div class="dashboard-actions d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="refreshDashboard()" id="refresh-btn">
+                    <i class="icon-refresh me-2"></i>
+                    <span>Refresh</span>
+                </button>
+                <button class="btn btn-primary" onclick="openExportModal()" id="export-btn">
+                    <i class="icon-download me-2"></i>
+                    <span>Export Report</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Role Badge -->
+        <div class="role-badge-container mb-4">
+            {% include 'dashboard/widgets/role_badge.html' %}
+        </div>
+    </div>
+
+    <!-- Dashboard Content Based on Role -->
+    <div class="dashboard-content">
+        {% if user.role == 'admin' %}
+            {% include 'dashboard/role_specific/admin_dashboard.html' %}
+        {% elif user.role == 'salesman' %}
+            {% include 'dashboard/role_specific/salesman_dashboard.html' %}
+        {% elif user.role == 'manager' %}
+            {% include 'dashboard/role_specific/manager_dashboard.html' %}
+        {% elif user.role == 'supply_chain' %}
+            {% include 'dashboard/role_specific/supply_chain_dashboard.html' %}
+        {% else %}
+            {% include 'dashboard/role_specific/default_dashboard.html' %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dashboard Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+});
+
+function initializeDashboard() {
+    console.log('🏠 Initializing dashboard for role:', '{{ user.role }}');
+    
+    // Update last refresh time
+    updateLastRefreshTime();
+    
+    // Initialize role-specific functionality
+    const userRole = '{{ user.role }}';
+    
+    switch(userRole) {
+        case 'admin':
+            initializeAdminDashboard();
+            break;
+        case 'salesman':
+            initializeSalesmanDashboard();
+            break;
+        case 'manager':
+            initializeManagerDashboard();
+            break;
+        case 'supply_chain':
+            initializeSupplyChainDashboard();
+            break;
+    }
+    
+    // Initialize common dashboard features
+    initializeStatsCards();
+    initializeQuickActions();
+    initializeCharts();
+    initializeNotifications();
+    
+    // Setup auto-refresh
+    setupAutoRefresh();
+    
+    // Track dashboard view
+    trackDashboardView(userRole);
+}
+
+function refreshDashboard() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    // Show loading state
+    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Simulate refresh (in real app, this would reload data via API)
+    setTimeout(() => {
+        // Update timestamp
+        updateLastRefreshTime();
+        
+        // Refresh dashboard data
+        if (window.dashboardData && typeof window.dashboardData.refresh === 'function') {
+            window.dashboardData.refresh();
+        }
+        
+        // Restore button
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+        
+        // Show success notification
+        STMBudget.notifications.show('Dashboard refreshed successfully', 'success');
+        
+        // Trigger refresh event
+        STMBudget.events.trigger('dashboard-refreshed');
+    }, 1500);
+}
+
+function updateLastRefreshTime() {
+    const timeElement = document.getElementById('last-update-time');
+    if (timeElement) {
+        timeElement.textContent = new Date().toLocaleTimeString();
+    }
+}
+
+function openExportModal() {
+    // This will be handled by the global modal system
+    STMBudget.events.trigger('open-export-modal', {
+        type: 'dashboard',
+        title: 'Export Dashboard Report'
+    });
+}
+
+function setupAutoRefresh() {
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            refreshDashboard();
+        }
+    }, 5 * 60 * 1000);
+}
+
+function trackDashboardView(role) {
+    // Track dashboard view for analytics
+    if (window.gtag) {
+        gtag('event', 'dashboard_view', {
+            'user_role': role,
+            'timestamp': new Date().toISOString()
+        });
+    }
+}
+
+// Role-specific initialization functions
+function initializeAdminDashboard() {
+    console.log('👑 Initializing admin dashboard');
+    // Admin-specific functionality will be loaded
+}
+
+function initializeSalesmanDashboard() {
+    console.log('💼 Initializing salesman dashboard');
+    // Salesman-specific functionality will be loaded
+}
+
+function initializeManagerDashboard() {
+    console.log('👨‍💼 Initializing manager dashboard');
+    // Manager-specific functionality will be loaded
+}
+
+function initializeSupplyChainDashboard() {
+    console.log('🚚 Initializing supply chain dashboard');
+    // Supply chain-specific functionality will be loaded
+}
+
+function initializeStatsCards() {
+    // Initialize interactive stats cards
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const action = this.dataset.action;
+            if (action) {
+                handleStatsCardClick(action);
+            }
+        });
+    });
+}
+
+function initializeQuickActions() {
+    // Initialize quick action buttons
+    const quickActions = document.querySelectorAll('.quick-action');
+    quickActions.forEach(action => {
+        action.addEventListener('click', function() {
+            const actionType = this.dataset.action;
+            handleQuickAction(actionType);
+        });
+    });
+}
+
+function initializeCharts() {
+    // Initialize charts if Chart.js is available
+    if (typeof Chart !== 'undefined') {
+        const chartElements = document.querySelectorAll('[data-chart]');
+        chartElements.forEach(element => {
+            const chartType = element.dataset.chart;
+            const chartData = JSON.parse(element.dataset.chartData || '{}');
+            initializeChart(element, chartType, chartData);
+        });
+    }
+}
+
+function initializeNotifications() {
+    // Load and display notifications
+    loadNotifications();
+}
+
+function handleStatsCardClick(action) {
+    console.log('Stats card clicked:', action);
+    
+    switch(action) {
+        case 'users':
+            router.navigate('/admin/users');
+            break;
+        case 'sales':
+            router.navigate('/sales/budget');
+            break;
+        case 'inventory':
+            router.navigate('/inventory');
+            break;
+        case 'budget':
+            router.navigate('/sales/budget');
+            break;
+        default:
+            console.log('Unknown stats card action:', action);
+    }
+}
+
+function handleQuickAction(actionType) {
+    console.log('Quick action triggered:', actionType);
+    
+    switch(actionType) {
+        case 'add-user':
+            openAddUserModal();
+            break;
+        case 'generate-report':
+            openExportModal();
+            break;
+        case 'manage-stock':
+            router.navigate('/inventory');
+            break;
+        case 'review-approvals':
+            router.navigate('/approval-center');
+            break;
+        default:
+            console.log('Unknown quick action:', actionType);
+    }
+}
+
+function initializeChart(element, type, data) {
+    const ctx = element.getContext('2d');
+    const config = {
+        type: type,
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+}
+
+function loadNotifications() {
+    // Load and display recent notifications
+    fetch('/api/notifications/recent/')
+        .then(response => response.json())
+        .then(notifications => {
+            displayNotifications(notifications);
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+        });
+}
+
+function displayNotifications(notifications) {
+    const notificationContainer = document.getElementById('notification-list');
+    if (!notificationContainer) return;
+    
+    notificationContainer.innerHTML = '';
+    
+    notifications.forEach(notification => {
+        const notificationElement = createNotificationElement(notification);
+        notificationContainer.appendChild(notificationElement);
+    });
+}
+
+function createNotificationElement(notification) {
+    const element = document.createElement('div');
+    element.className = `notification-item ${notification.read ? '' : 'unread'}`;
+    element.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-text">${notification.message}</div>
+            <div class="notification-time">${STMBudget.utils.formatRelativeTime(notification.created_at)}</div>
+        </div>
+    `;
+    return element;
+}
+
+// Export functions for global access
+window.dashboardControls = {
+    refresh: refreshDashboard,
+    export: openExportModal,
+    updateTime: updateLastRefreshTime
+};
+</script>
+
+<style>
+.dashboard-container {
+    animation: fadeIn 0.5s ease;
+}
+
+.dashboard-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.role-title {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dashboard-subtitle {
+    font-size: 0.95rem;
+}
+
+.last-updated {
+    font-weight: 500;
+}
+
+.dashboard-actions .btn {
+    min-width: 120px;
+}
+
+.dashboard-content {
+    min-height: 60vh;
+}
+
+.role-badge-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.quick-action {
+    transition: all 0.3s ease;
+}
+
+.quick-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        text-align: center;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .dashboard-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
