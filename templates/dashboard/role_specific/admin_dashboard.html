@@ -1,0 +1,504 @@
+<!-- Admin Dashboard Content -->
+<div class="admin-dashboard">
+    <!-- Communication Demo Info -->
+    <div class="alert alert-info border-0 mb-4" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+        <div class="d-flex align-items-start">
+            <div class="alert-icon me-3">
+                <i class="icon-info-circle text-blue-600"></i>
+            </div>
+            <div>
+                <h6 class="alert-heading text-blue-800 mb-1">Communication Demo Active</h6>
+                <p class="mb-2 text-blue-700">The communication center demo is initialized with sample data for testing messaging and notifications.</p>
+                <small class="text-blue-600">Use the communication center to test inter-role messaging features.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Stats Grid -->
+    <div class="stats-grid mb-5">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="users">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-primary mb-1">24</h3>
+                                <p class="stats-label text-muted mb-0">Total System Users</p>
+                                <small class="stats-subtitle text-muted">Active users</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-users text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +3 new
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="sales">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-success mb-1">$2.4M</h3>
+                                <p class="stats-label text-muted mb-0">Total Sales</p>
+                                <small class="stats-subtitle text-muted">All regions</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-trending-up text-success"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +18.2%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="performance">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-info mb-1">99.2%</h3>
+                                <p class="stats-label text-muted mb-0">System Performance</p>
+                                <small class="stats-subtitle text-muted">Uptime</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-target text-info"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +0.1%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card card border-0 shadow-sm h-100" data-action="budget">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="stats-value text-warning mb-1">87%</h3>
+                                <p class="stats-label text-muted mb-0">Budget Utilization</p>
+                                <small class="stats-subtitle text-muted">Organization wide</small>
+                            </div>
+                            <div class="stats-icon">
+                                <i class="icon-bar-chart text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="stats-trend mt-2">
+                            <span class="trend-positive">
+                                <i class="icon-trending-up"></i> +5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GIT Overview Widget -->
+    <div class="git-overview-section mb-5">
+        {% include 'dashboard/widgets/git_summary.html' %}
+    </div>
+
+    <!-- Admin Quick Actions -->
+    <div class="quick-actions-section mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="card-title mb-0">Admin Quick Actions</h5>
+                <p class="text-muted small mb-0">Manage your system efficiently</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-primary w-100 h-100 p-3" data-action="user-management" onclick="router.navigate('/admin/users')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-users fs-1 mb-2 text-primary"></i>
+                                <strong class="mb-1">User Management</strong>
+                                <small class="text-muted">Manage system users</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-success w-100 h-100 p-3" data-action="system-reports" onclick="openSystemReports()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-bar-chart fs-1 mb-2 text-success"></i>
+                                <strong class="mb-1">System Reports</strong>
+                                <small class="text-muted">View system analytics</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-info w-100 h-100 p-3" data-action="global-targets" onclick="openGlobalTargets()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-target fs-1 mb-2 text-info"></i>
+                                <strong class="mb-1">Global Targets</strong>
+                                <small class="text-muted">Set organization goals</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-warning w-100 h-100 p-3" data-action="system-alerts" onclick="openSystemAlerts()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-alert-triangle fs-1 mb-2 text-warning"></i>
+                                <strong class="mb-1">System Alerts</strong>
+                                <small class="text-muted">Monitor system health</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-secondary w-100 h-100 p-3" data-action="git-eta" onclick="openGitEtaModal()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-truck fs-1 mb-2 text-secondary"></i>
+                                <strong class="mb-1">GIT & ETA Management</strong>
+                                <small class="text-muted">Manage Goods in Transit</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-danger w-100 h-100 p-3" data-action="global-stock" onclick="openAdminStockModal()">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-package fs-1 mb-2 text-danger"></i>
+                                <strong class="mb-1">Global Stock Management</strong>
+                                <small class="text-muted">Set stock quantities for all users</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-dark w-100 h-100 p-3" data-action="advanced-admin" onclick="router.navigate('/admin/advanced')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-settings fs-1 mb-2 text-dark"></i>
+                                <strong class="mb-1">Advanced Control</strong>
+                                <small class="text-muted">Comprehensive system management</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <button class="quick-action btn btn-outline-primary w-100 h-100 p-3" data-action="data-sources" onclick="router.navigate('/admin/data-sources')">
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <i class="icon-database fs-1 mb-2 text-primary"></i>
+                                <strong class="mb-1">Data Sources</strong>
+                                <small class="text-muted">Manage data connections</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & System Status -->
+    <div class="row g-4 mb-5">
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent System Activity</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadRecentActivity()">
+                            <i class="icon-refresh me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="activity-timeline" id="activity-timeline">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success">
+                                <i class="icon-user-plus text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>New user registered</strong>
+                                <p class="text-muted mb-1">John Smith joined as Sales Manager</p>
+                                <small class="text-muted">5 minutes ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info">
+                                <i class="icon-file-text text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Report generated</strong>
+                                <p class="text-muted mb-1">Monthly sales report exported by Jane Manager</p>
+                                <small class="text-muted">15 minutes ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning">
+                                <i class="icon-alert-triangle text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Stock alert</strong>
+                                <p class="text-muted mb-1">Low inventory warning for Product XYZ</p>
+                                <small class="text-muted">1 hour ago</small>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-primary">
+                                <i class="icon-check-circle text-white"></i>
+                            </div>
+                            <div class="activity-content">
+                                <strong>Budget approved</strong>
+                                <p class="text-muted mb-1">Q4 budget approved by Finance Department</p>
+                                <small class="text-muted">2 hours ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="system-status">
+                        <div class="status-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="status-label">Server Health</span>
+                                <span class="badge bg-success">Excellent</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="status-label">Database Performance</span>
+                                <span class="badge bg-success">Good</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="status-label">API Response Time</span>
+                                <span class="badge bg-warning">Fair</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: 72%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="status-label">Storage Usage</span>
+                                <span class="badge bg-info">65%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-info" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="status-label">Active Sessions</span>
+                                <span class="badge bg-primary">24</span>
+                            </div>
+                            <small class="text-muted">Current active user sessions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSystemReports() {
+    STMBudget.notifications.show('System reports opened', 'success');
+    // Would open system reports modal or navigate to reports page
+}
+
+function openGlobalTargets() {
+    STMBudget.notifications.show('Global targets opened', 'success');
+    // Would open global targets modal
+}
+
+function openSystemAlerts() {
+    STMBudget.notifications.show('System alerts checked', 'success');
+    // Would open system alerts modal
+}
+
+function openGitEtaModal() {
+    STMBudget.events.trigger('open-git-eta-modal');
+}
+
+function openAdminStockModal() {
+    STMBudget.events.trigger('open-admin-stock-modal');
+}
+
+function loadRecentActivity() {
+    const timeline = document.getElementById('activity-timeline');
+    const refreshBtn = event.target;
+    
+    // Show loading state
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="icon-refresh me-1 spinning"></i> Loading...';
+    
+    // Simulate loading
+    setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="icon-refresh me-1"></i> Refresh';
+        STMBudget.notifications.show('Activity refreshed', 'success');
+    }, 1000);
+}
+</script>
+
+<style>
+.admin-dashboard {
+    animation: slideInUp 0.6s ease;
+}
+
+.stats-grid .stats-card {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.stats-grid .stats-card:nth-child(1) { border-left-color: #3b82f6; }
+.stats-grid .stats-card:nth-child(2) { border-left-color: #10b981; }
+.stats-grid .stats-card:nth-child(3) { border-left-color: #06b6d4; }
+.stats-grid .stats-card:nth-child(4) { border-left-color: #f59e0b; }
+
+.stats-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stats-icon i {
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+.trend-positive {
+    color: #10b981;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.quick-action {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    min-height: 120px;
+}
+
+.quick-action:hover {
+    border-color: currentColor;
+    transform: translateY(-2px);
+}
+
+.activity-timeline {
+    position: relative;
+}
+
+.activity-item {
+    display: flex;
+    align-items-flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.activity-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    width: 2px;
+    height: calc(100% - 20px);
+    background: #e5e7eb;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    z-index: 1;
+    position: relative;
+}
+
+.activity-content {
+    flex: 1;
+    padding-top: 0.25rem;
+}
+
+.status-item .progress {
+    border-radius: 3px;
+    background: #f1f5f9;
+}
+
+.status-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spinning {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinning {
+    animation: spinning 1s linear infinite;
+}
+
+@media (max-width: 768px) {
+    .stats-value {
+        font-size: 2rem;
+    }
+    
+    .stats-icon i {
+        font-size: 2rem;
+    }
+    
+    .quick-action {
+        min-height: 100px;
+    }
+    
+    .quick-action .fs-1 {
+        font-size: 1.5rem !important;
+    }
+}
+</style>
